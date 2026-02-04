@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import MobileDrawer from "./mobile-drawer";
 import { SignOutButton } from "./sign-out-button";
 
 export default function SiteHeader({ user, dashboardHref }) {
@@ -15,55 +16,80 @@ export default function SiteHeader({ user, dashboardHref }) {
     return null;
   }
 
+  const menuItems = [
+    {
+      label: "Join WhatsApp",
+      href: "https://whatsapp.com/channel/0029Vb73n7T8F2pCwHAumS0q",
+      external: true
+    },
+    ...(user?.role !== "ADMIN" ? [{ label: "Visit storefront", href: storefrontHref }] : []),
+    ...(user
+      ? [{ label: `${user.role === "ADMIN" ? "Admin" : "Agent"} dashboard`, href: dashboardHref }]
+      : [
+          { label: "Sign up", href: "/signup" },
+          { label: "Sign in", href: "/login" }
+        ])
+  ];
+  const menuFooter = user ? <SignOutButton className="w-full" /> : null;
+
   return (
     <header className="sticky top-0 z-40 border-b border-ink/10 bg-sand/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-3 text-sm sm:flex-row sm:items-center sm:justify-between sm:py-4">
-        <Link href="/" className="font-display text-base font-semibold text-ink sm:text-lg">
-          AmaBaKinaata Enterprise
-        </Link>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
-          <a
-            href="https://whatsapp.com/channel/0029Vb73n7T8F2pCwHAumS0q"
-            target="_blank"
-            rel="noreferrer"
-            className="w-full rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 sm:w-auto sm:px-4 sm:text-xs"
-          >
-            Join WhatsApp
-          </a>
-          {user?.role !== "ADMIN" && (
-            <Link
-              href={storefrontHref}
-              className="w-full rounded-full border border-ink/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink sm:w-auto sm:px-4 sm:text-xs"
+      <div className="mx-auto w-full max-w-6xl px-6 py-3 text-sm sm:py-4">
+        <div className="flex items-center justify-between sm:hidden">
+          <Link href="/" className="font-display text-base font-semibold text-ink">
+            AMK ENT
+          </Link>
+          <MobileDrawer title="Menu" buttonLabel="Menu" items={menuItems} footer={menuFooter} />
+        </div>
+
+        <div className="hidden sm:flex sm:items-center sm:justify-between">
+          <Link href="/" className="font-display text-lg font-semibold text-ink">
+            AmaBaKinaata Enterprise
+          </Link>
+          <div className="flex items-center gap-3">
+            <a
+              href="https://whatsapp.com/channel/0029Vb73n7T8F2pCwHAumS0q"
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700"
             >
-              Visit storefront
-            </Link>
-          )}
-          {user ? (
-            <>
+              Join WhatsApp
+            </a>
+            {user?.role !== "ADMIN" && (
               <Link
-                href={dashboardHref}
-                className="w-full rounded-full bg-ink px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white sm:w-auto sm:px-4 sm:text-xs"
+                href={storefrontHref}
+                className="rounded-full border border-ink/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
               >
-                {user.role === "ADMIN" ? "Admin" : "Agent"} dashboard
+                Visit storefront
               </Link>
-              <SignOutButton className="w-full sm:w-auto" />
-            </>
-          ) : (
-            <>
-              <Link
-                href="/signup"
-                className="w-full rounded-full border border-ink/10 bg-white/70 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink sm:w-auto sm:px-4 sm:text-xs"
-              >
-                Sign up
-              </Link>
-              <Link
-                href="/login"
-                className="w-full rounded-full bg-ink px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white sm:w-auto sm:px-4 sm:text-xs"
-              >
-                Sign in
-              </Link>
-            </>
-          )}
+            )}
+            {user ? (
+              <>
+                <Link
+                  href={dashboardHref}
+                  className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+                >
+                  {user.role === "ADMIN" ? "Admin" : "Agent"} dashboard
+                </Link>
+                <SignOutButton className="sm:w-auto" />
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/signup"
+                  className="rounded-full border border-ink/10 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
+                >
+                  Sign up
+                </Link>
+                <Link
+                  href="/login"
+                  className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+                >
+                  Sign in
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </header>
