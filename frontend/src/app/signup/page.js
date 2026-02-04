@@ -14,6 +14,7 @@ const initialForm = {
 
 export default function SignupPage() {
   const [form, setForm] = useState(initialForm);
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [status, setStatus] = useState({ type: "idle", message: "" });
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -147,16 +148,26 @@ export default function SignupPage() {
             </div>
             <div>
               <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Password</label>
-              <input
-                type="password"
-                name="password"
-                required
-                minLength={8}
-                value={form.password}
-                onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
-                placeholder="Create a secure password"
-              />
+              <div className="relative mt-2">
+                <input
+                  type={passwordVisible ? "text" : "password"}
+                  name="password"
+                  required
+                  minLength={8}
+                  value={form.password}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 pr-20 text-sm"
+                  placeholder="Create a secure password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPasswordVisible((prev) => !prev)}
+                  className="absolute inset-y-0 right-3 my-auto rounded-full border border-transparent bg-white/0 px-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink/60"
+                  aria-pressed={passwordVisible}
+                >
+                  {passwordVisible ? "Hide" : "View"}
+                </button>
+              </div>
             </div>
             <div>
               <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Referral code (optional)</label>
