@@ -131,6 +131,26 @@ export default function StorefrontClient({ store, slug }) {
               Search
             </button>
           </div>
+
+          <details className="group mt-5 rounded-2xl border border-amber-200/70 bg-amber-50/70 px-4 py-3 text-xs text-amber-800">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700">
+              Important notice
+              <span className="text-base font-bold transition-transform group-open:rotate-45">+</span>
+            </summary>
+            <div className="mt-3 space-y-2 text-xs text-amber-700/90">
+              <p>Make sure the phone number is correct before proceeding.</p>
+              <p>
+                SIMs not supported: Transfer/EVD, TurboNet/Fibre, Inactive/Dormant SIMs, SIMs owing airtime.
+              </p>
+              <p>Info: Packages do not expire. Check balance via MyMTN App.</p>
+              <p>Please allow between 15 to 60 minutes for delivery.</p>
+              <p>If not received within this timeframe, contact support within 24 hours for assistance.</p>
+              <p>
+                Disclaimer: AmabaKinaata Ent will not be responsible for any issues arising from a violation of
+                these conditions.
+              </p>
+            </div>
+          </details>
         </div>
 
         <div className="mt-8 flex items-center gap-3 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible">
