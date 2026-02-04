@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  font-family: var(--font-manrope), sans-serif;
+  background: radial-gradient(circle at top left, rgba(20, 184, 166, 0.15), transparent 45%),
+    radial-gradient(circle at 20% 20%, rgba(249, 115, 22, 0.15), transparent 40%),
+    #f5f3ef;
+  min-height: 100vh;
+}
+
+.page-glow {
+  position: fixed;
+  inset: -10% 0 auto 0;
+  height: 320px;
+  background: radial-gradient(circle at 50% 30%, rgba(15, 23, 42, 0.2), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page-noise {
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+
+main {
+  position: relative;
+  z-index: 1;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 25px 60px -50px rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(18px);
+}
+
+.card-outline {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 25px 60px -45px rgba(15, 23, 42, 0.35);
+}
+
+.badge {
+  @apply inline-flex items-center gap-2 rounded-full border border-ink/10 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em];
+}

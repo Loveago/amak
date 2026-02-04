@@ -1,0 +1,310 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  AGENT
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  GRACE
+  CANCELED
+}
+
+enum OrderStatus {
+  CREATED
+  PAID
+  FULFILLED
+  FAILED
+  CANCELED
+}
+
+enum WalletTransactionType {
+  PROFIT
+  COMMISSION
+  WITHDRAWAL
+  ADJUSTMENT
+  REVERSAL
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
+enum PaymentType {
+  ORDER
+  SUBSCRIPTION
+  AFA_REGISTRATION
+}
+
+enum PaymentStatus {
+  INITIALIZED
+  VERIFIED
+  FAILED
+}
+
+enum AfaRegistrationStatus {
+  PENDING_PAYMENT
+  SUBMITTED
+  PROCESSING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  passwordHash   String
+  name           String
+  phone          String?
+  role           Role     @default(AGENT)
+  status         Status   @default(ACTIVE)
+  slug           String?  @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  wallet         Wallet?
+  subscriptions  Subscription[]
+  agentProducts  AgentProduct[]
+  orders         Order[]
+  withdrawals    Withdrawal[]
+  referrals      Referral[]        @relation("ReferralsParent")
+  referredBy     Referral[]        @relation("ReferralsChild")
+  auditLogs      AuditLog[]
+  passwordResets PasswordReset[]
+  payments       Payment[]
+  afaRegistrations AfaRegistration[]
+}
+
+model Plan {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  priceGhs     Float
+  productLimit Int
+  status       Status  @default(ACTIVE)
+  createdAt    DateTime @default(now())
+  subscriptions Subscription[]
+  payments     Payment[]
+}
+
+model Subscription {
+  id          String   @id @default(cuid())
+  agentId     String
+  planId      String
+  status      SubscriptionStatus @default(ACTIVE)
+  startsAt    DateTime
+  expiresAt   DateTime
+  graceEndsAt DateTime
+  createdAt   DateTime @default(now())
+
+  agent User @relation(fields: [agentId], references: [id])
+  plan  Plan @relation(fields: [planId], references: [id])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  status    Status  @default(ACTIVE)
+  createdAt DateTime @default(now())
+  products  Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  categoryId  String
+  name        String
+  size        String
+  basePriceGhs Float?
+  status      Status   @default(ACTIVE)
+  createdAt   DateTime @default(now())
+
+  category    Category @relation(fields: [categoryId], references: [id])
+  agentProducts AgentProduct[]
+  orderItems  OrderItem[]
+}
+
+model AgentProduct {
+  id         String   @id @default(cuid())
+  agentId    String
+  productId  String
+  markupGhs  Float   @default(0)
+  isActive   Boolean @default(false)
+  createdAt  DateTime @default(now())
+
+  agent   User    @relation(fields: [agentId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([agentId, productId])
+}
+
+model Order {
+  id           String   @id @default(cuid())
+  agentId      String
+  customerName String
+  customerPhone String
+  totalAmountGhs Float
+  status       OrderStatus @default(CREATED)
+  paymentRef   String?
+  providerReference String?
+  providerStatus String?
+  providerPayload Json?
+  providerLastCheckedAt DateTime?
+  createdAt    DateTime @default(now())
+
+  agent User @relation(fields: [agentId], references: [id])
+  items OrderItem[]
+  payments Payment[]
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String
+  basePriceGhs Float
+  markupGhs   Float
+  quantity    Int
+  unitPriceGhs Float
+  totalPriceGhs Float
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  reference String   @unique
+  type      PaymentType
+  status    PaymentStatus @default(INITIALIZED)
+  amountGhs Float
+  agentId   String?
+  orderId   String?
+  planId    String?
+  afaRegistrationId String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  agent User? @relation(fields: [agentId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
+  plan  Plan? @relation(fields: [planId], references: [id])
+  afaRegistration AfaRegistration? @relation(fields: [afaRegistrationId], references: [id])
+
+  @@index([type, status])
+}
+
+model AfaConfig {
+  id String @id
+  registrationFeeGhs Float @default(20)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AfaRegistration {
+  id String @id @default(cuid())
+  agentId String
+  fullName String
+  ghanaCardNumber String
+  dateOfBirth DateTime
+  occupation String
+  notes String?
+  status AfaRegistrationStatus @default(PENDING_PAYMENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agent User @relation(fields: [agentId], references: [id])
+  payments Payment[]
+}
+
+model PaymentEvent {
+  id        String   @id @default(cuid())
+  eventId   String   @unique
+  reference String?
+  payload   Json
+  createdAt DateTime @default(now())
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  agentId   String   @unique
+  balanceGhs Float   @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agent        User @relation(fields: [agentId], references: [id])
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id        String   @id @default(cuid())
+  walletId  String
+  type      WalletTransactionType
+  amountGhs Float
+  reference String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+}
+
+model Withdrawal {
+  id          String   @id @default(cuid())
+  agentId     String
+  amountGhs   Float
+  status      WithdrawalStatus @default(PENDING)
+  momoNetwork String
+  momoNumber  String
+  createdAt   DateTime @default(now())
+
+  agent User @relation(fields: [agentId], references: [id])
+}
+
+model Referral {
+  id        String   @id @default(cuid())
+  parentId  String
+  childId   String
+  level     Int
+  createdAt DateTime @default(now())
+
+  parent User @relation("ReferralsParent", fields: [parentId], references: [id])
+  child  User @relation("ReferralsChild", fields: [childId], references: [id])
+
+  @@unique([parentId, childId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  action    String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id])
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}

@@ -1,0 +1,327 @@
+You are an expert full-stack engineer and UI/UX designer. Build a production-ready, ultra-modern web platform for selling mobile data bundles in Ghana using Node.js, Express, and Next.js.
+
+The system must support agents with personal storefronts, wallet profits, subscriptions, a 3-level affiliate system, Paystack payments, and a powerful admin panel.
+
+Use clean architecture, secure coding practices, and scalable design.
+
+================================================
+PROJECT STRUCTURE
+================================================
+
+Create a monorepo:
+
+/backend   → Express.js API (Node.js)
+/frontend  → Next.js App (Node.js)
+
+Include setup instructions in README files.
+
+================================================
+CORE SYSTEM
+================================================
+
+This platform sells data products (MTN, Telecel, AirtelTigo).
+
+Admin sets base prices.
+Agents add their markup and sell via their storefront.
+
+Example:
+Admin price: 4.5 GHS
+Agent markup: 1 GHS
+Customer pays: 5.5 GHS
+Agent earns: 1 GHS → wallet
+
+================================================
+USER ROLES
+================================================
+
+1. Admin (full control)
+2. Agent (sells data, earns profit + commissions)
+3. Customer (buys data, no account needed)
+
+Implement RBAC and route guards.
+
+================================================
+AUTHENTICATION
+================================================
+
+- Email + password
+- bcrypt hashing
+- JWT + refresh token
+- Forgot password system
+- Seed admin from env
+
+================================================
+STOREFRONT SYSTEM
+================================================
+
+Each agent gets:
+
+/store/{agentSlug}
+
+Storefront shows:
+- Agent branding
+- Categories
+- Products
+- Checkout
+- Receipt page
+
+================================================
+PRODUCTS & CATEGORIES
+================================================
+
+Default categories:
+- MTN
+- Telecel
+- AirtelTigo iShare
+- AirtelTigo BigTime
+
+Admin:
+- Create/edit categories
+- Set base prices
+- Enable/disable products
+
+Agent:
+- Activate products
+- Set markup
+- Cannot edit base price
+- No negative markup
+
+================================================
+SUBSCRIPTIONS
+================================================
+
+Monthly plans:
+
+Basic → 10 products → 10 GHS
+Premium → 20 products → 25 GHS
+Elite → 50 products → 40 GHS
+
+Rules:
+- Enforce limits
+- Expiry handling
+- Grace period
+- Auto-disable excess products
+- Paystack payment
+- Admin can manage plans
+
+================================================
+AFFILIATE SYSTEM (3 LEVELS)
+================================================
+
+Each agent has referral link.
+
+Commission:
+Level 1 → 3%
+Level 2 → 2%
+Level 3 → 1%
+
+Rules:
+- Max 3 levels
+- No loops
+- No self-referral
+- Auto credit wallet
+- Admin configurable
+- Ledger tracking
+- Fraud prevention
+
+Agent dashboard:
+- Downlines
+- Earnings
+- Referrals
+- Commission history
+
+================================================
+WALLET SYSTEM
+================================================
+
+Ledger-based wallet.
+
+Sources:
+- Agent profit
+- Affiliate commission
+
+Withdrawals:
+- Request
+- Admin approve/reject
+- Mobile money info
+- Audit logs
+
+Transaction types:
+- PROFIT
+- COMMISSION
+- WITHDRAWAL
+- ADJUSTMENT
+- REVERSAL
+
+================================================
+PAYMENTS (PAYSTACK)
+================================================
+
+Use Paystack for:
+- Storefront payments
+- Subscription payments
+
+Requirements:
+- Initialize + verify
+- Webhook handling
+- Signature verification
+- Idempotency
+- Order lifecycle
+
+Order flow:
+CREATED → PAID → FULFILLED
+
+Manual fulfillment for now.
+
+================================================
+ADMIN PANEL (FULL CONTROL)
+================================================
+
+Dashboard:
+- Revenue
+- Orders
+- Agents
+- Subscriptions
+- Wallets
+
+Modules:
+
+Agents
+Products
+Categories
+Orders
+Subscriptions
+Wallets
+Withdrawals
+Affiliates
+Settings
+Audit Logs
+Payments
+
+Features:
+- Bulk pricing
+- Agent suspension
+- Wallet adjustment
+- Commission control
+- System settings
+- Logs
+
+================================================
+FILE UPLOADS
+================================================
+
+- Store locally
+- Use multer
+- Validate size/type
+- Secure serving
+- /backend/uploads
+
+================================================
+TECH STACK
+================================================
+
+Backend:
+- Express.js
+- PostgreSQL
+- Prisma ORM
+- Zod/Joi validation
+- Winston/Pino logging
+
+Frontend:
+- Next.js
+- Tailwind CSS
+- shadcn/ui
+- Responsive
+- Modern UI
+- Toasts, loaders, animations
+
+================================================
+API DESIGN
+================================================
+
+REST API:
+ /api/v1/auth
+ /api/v1/store
+ /api/v1/agent
+ /api/v1/admin
+ /api/v1/payments
+ /api/v1/webhooks
+
+Standard response:
+{ success, data, error }
+
+Pagination & filtering.
+
+================================================
+FRONTEND PAGES
+================================================
+
+Public:
+- Landing
+- Storefront
+- Checkout
+- Success/Fail
+- Receipt
+
+Agent:
+- Dashboard
+- Wallet
+- Withdrawals
+- Products
+- Orders
+- Subscription
+- Affiliate
+
+Admin:
+- Dashboard
+- Agents
+- Products
+- Orders
+- Wallets
+- Affiliates
+- Settings
+- Logs
+
+================================================
+SEED DATA
+================================================
+
+Seed:
+- Categories
+- Plans
+- Admin account
+
+Leave product prices empty.
+
+================================================
+SECURITY
+================================================
+
+- Rate limit auth
+- Validate inputs
+- CORS
+- Secure cookies
+- Webhook verification
+- Prevent double credit
+- Enforce subscription limits
+
+================================================
+DELIVERABLES
+================================================
+
+- Complete backend/frontend
+- Prisma schema
+- Migrations
+- README files
+- Dev workflow
+- Commented code
+- Extensible architecture
+- mobile friendly
+Build clean, scalable, and future-ready software.
+Use best practices.
+Ensure smooth modern UI.
+No bland pages.
+
+================================================
+END
+================================================

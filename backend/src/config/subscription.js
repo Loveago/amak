@@ -1,0 +1,4 @@
+const SUBSCRIPTION_DAYS = 30;
+const GRACE_DAYS = 7;
+
+module.exports = { SUBSCRIPTION_DAYS, GRACE_DAYS };
