@@ -1,0 +1,415 @@
+
+BASE URL
+
+https://encartastores.com/api
+RESTful
+Standard HTTP methods
+
+JSON
+Clean response format
+
+
+
+Test Your Connection
+Make your first API call to verify your key is working correctly.
+
+EXAMPLE REQUEST
+curl -X GET "https://encartastores.com/api/balance" \
+-H "X-API-Key: your_api_key"
+
+3
+
+
+
+Start Building
+You're all set! Explore the endpoints below to integrate the services you need.
+
+Page 4
+
+AUTHENTICATION
+All API requests require authentication using the X-API-Key header. Your API key is unique to your account and
+should be kept confidential.
+AUTHENTICATION HEADER
+X-API-Key: api_817411c42ccea3cfe8dfdf9c68af682733c8febb70331775fddf9a6a32af56bd
+
+SECURITY CHECKLIST
+•
+
+Never expose keys in client-side code
+
+•
+
+Store keys in environment variables
+
+•
+
+Enable domain restrictions in settings
+
+•
+
+Rotate keys if compromised
+
+•
+
+I
+
+Page 5
+
+API ENDPOINTS
+
+
+
+Page 6
+
+GET
+
+/api/balance
+
+Check Balance
+Retrieve your current wallet balance
+EXAMPLE
+curl -X GET "https://encartastores.com/api/balance" \
+-H "X-API-Key: your_key"
+
+
+
+Page 7
+
+POST
+
+/api/purchase
+
+Purchase Data
+Purchase data bundles for recipients
+
+PARAMETERS
+networkKey
+
+string
+
+Network identifier
+
+recipient
+
+string
+
+Phone number (10 digits)
+
+capacity
+
+number
+
+Data in GB
+
+EXAMPLE
+curl -X POST "https://encartastores.com/api/purchase" \
+-H "X-API-Key: your_key" \
+-H "Content-Type: application/json" \
+-d '{"networkKey":"YELLO","recipient":"0241234567","capacity":1}'
+
+MapTech API
+
+Page 8
+
+POST
+
+/api/afa
+
+AFA Registration
+Register for Address Finder App
+
+PARAMETERS
+full_name
+
+string
+
+Full name (min 3 chars)
+
+phone
+
+string
+
+Phone number
+
+ghana_card
+
+string
+
+Ghana Card ID
+
+location
+
+string
+
+Location
+
+EXAMPLE
+curl -X POST "https://encartastores.com/api/afa" \
+-H "X-API-Key: your_key" \
+-d '{"full_name":"John Doe","phone":"0241234567"}'
+
+
+Page 9
+
+POST
+
+/api/result-checker
+
+Result Checker
+Purchase exam result checker cards
+
+PARAMETERS
+type
+
+string
+
+BECE or WASSCE
+
+EXAMPLE
+curl -X POST "https://encartastores.com/api/result-checker" \
+-H "X-API-Key: your_key" \
+-d '{"type":"WASSCE"}'
+
+
+Page 10
+
+GET
+
+/api/orders?reference=XXX
+
+Order Status
+Check order status by reference
+
+PARAMETERS
+reference
+
+string
+
+Order reference
+
+EXAMPLE
+curl -X GET "https://encartastores.com/api/orders?reference=REF123" \
+-H "X-API-Key: your_key"
+
+
+
+Page 11
+
+GET
+
+/api/transactions
+
+Transactions
+Get transaction history
+
+PARAMETERS
+page
+
+integer
+
+Page number (default: 1)
+
+limit
+
+integer
+
+Per page (max: 100)
+
+EXAMPLE
+curl -X GET "https://encartastores.com/api/transactions?page=1" \
+-H "X-API-Key: your_key"
+
+
+
+Page 12
+
+NETWORK KEYS
+Use these network keys when purchasing data bundles:
+
+MTN Data
+
+AirtelTigo iShare
+
+Telecel Data
+
+AirtelTigo BigTime
+
+
+
+YELLO
+
+AT_PREMIUM
+
+TELECEL
+
+AT_BIGTIME
+
+Page 13
+
+HTTP STATUS CODES
+200
+201
+400
+401
+403
+404
+429
+500
+
+
+
+OK
+
+Success
+
+Created
+
+Resource created
+
+Bad Request
+
+Invalid parameters
+
+Unauthorized
+
+Invalid API key
+
+Forbidden
+
+Access denied
+
+Not Found
+
+Resource not found
+
+Too Many Requests
+
+Rate limited
+
+Server Error
+
+Internal error
+
+Page 14
+
+RATE LIMITING
+Fair Usage
+Maximum 100 requests per minute per API key. Exceeding limits returns HTTP 429.
+
+RESPONSE HEADERS
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1706198400
+
+BEST PRACTICES
+•
+
+Monitor rate limit headers
+
+•
+
+Implement exponential backoff
+
+•
+
+Cache responses when possible
+
+•
+
+Batch operations together
+
+•
+
+Respect the limits
+
+
+
+Page 15
+
+BEST PRACTICES
+Security
+?
+
+Use environment variables for API keys
+
+?
+
+Enable HTTPS for all requests
+
+?
+
+Implement domain restrictions
+
+?
+
+Rotate keys regularly
+
+Performance
+?
+
+Use connection pooling
+
+?
+
+Cache API responses
+
+?
+
+Batch operations when possible
+
+?
+
+Monitor your balance
+
+Error Handling
+?
+
+Check HTTP status codes
+
+?
+
+Parse error messages
+
+?
+
+Implement retry logic
+
+?
+
+Log all failures
+
+MapTech API
+
+Page 16
+
+
+
+Website
+
+https://encartastores.com
+
+Documentation
+
+https://encartastores.com/docs
+
+WHEN CONTACTING SUPPORT
+•
+
+Include your API key
+
+•
+
+Provide error details
+
+•
+
+Share request parameters
+
+•
+
+Include timestamps
+
+•
+
+
+

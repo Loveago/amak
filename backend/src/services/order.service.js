@@ -2,7 +2,7 @@ const prisma = require("../config/prisma");
 const env = require("../config/env");
 const { creditWallet } = require("./wallet.service");
 const { creditAffiliateCommissions } = require("./affiliate.service");
-const { purchaseDataBundle, fetchOrderStatus, normalizeStatus } = require("./ackmorre.service");
+const { purchaseDataBundle, fetchOrderStatus, normalizeStatus } = require("./encarta.service");
 
 const NETWORK_KEY_BY_CATEGORY = {
   mtn: "YELLO",
@@ -39,7 +39,7 @@ const shouldRefreshStatus = (lastCheckedAt) => {
   if (!lastCheckedAt) return true;
   const last = new Date(lastCheckedAt).getTime();
   if (!Number.isFinite(last)) return true;
-  return Date.now() - last > env.ackmorreStatusThrottleMs;
+  return Date.now() - last > env.encartaStatusThrottleMs;
 };
 
 async function dispatchOrderToProvider(orderId) {
@@ -60,13 +60,13 @@ async function dispatchOrderToProvider(orderId) {
     return order;
   }
 
-  if (!env.ackmorreApiKey) {
+  if (!env.encartaApiKey) {
     await prisma.order.update({
       where: { id: orderId },
       data: {
         providerStatus: "NOT_SUBMITTED",
         providerLastCheckedAt: new Date(),
-        providerPayload: { error: "Ackmorre API key missing" }
+        providerPayload: { error: "Encarta API key missing" }
       }
     });
     return order;
@@ -129,7 +129,7 @@ async function dispatchOrderToProvider(orderId) {
 }
 
 async function refreshOrderProviderStatus(order) {
-  if (!order?.providerReference || !env.ackmorreApiKey) {
+  if (!order?.providerReference || !env.encartaApiKey) {
     return order;
   }
 
