@@ -1,0 +1,85 @@
+# Render + Vercel Hosting Guide (Noob Friendly)
+
+This is the simplest way to host your backend on **Render** and frontend on **Vercel**.
+
+---
+## ✅ 1. You need accounts
+Create free accounts:
+- Render: https://render.com
+- Vercel: https://vercel.com
+
+---
+## ✅ 2. Prepare your environment variables (copy from your local `.env`)
+You will paste these into Render later:
+- `DATABASE_URL`
+- `JWT_SECRET`, `JWT_REFRESH_SECRET`, `JWT_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+- `PAYSTACK_SECRET_KEY`, `PAYSTACK_PUBLIC_KEY`, `PAYSTACK_WEBHOOK_SECRET`
+- `BASE_URL` (will become your Vercel URL)
+- `ACKMORRE_BASE_URL`, `ACKMORRE_STATUS_URL`, `ACKMORRE_API_KEY`, `ACKMORRE_STATUS_THROTTLE_MS`
+
+---
+## ✅ 3. Create the database (Render)
+1. On Render dashboard, click **New ➜ PostgreSQL**.
+2. Name it (e.g., `amak-db`).
+3. After it is created, copy the **Internal Database URL**.
+4. This becomes your `DATABASE_URL` in Render.
+
+---
+## ✅ 4. Deploy the backend on Render
+1. Click **New ➜ Web Service**.
+2. Connect GitHub and select: `Loveago/amak`.
+3. Settings:
+   - **Root directory:** `backend`
+   - **Branch:** `main`
+   - **Build command:** `npm install && npm run prisma:generate`
+   - **Start command (no shell access):** `npx prisma migrate deploy && npm run prisma:seed && npm start`
+4. Add all environment variables from step 2.
+   - Set `DATABASE_URL` to the Render Postgres URL.
+   - Temporarily set `BASE_URL` to `https://your-project.vercel.app` (update later).
+5. Click **Deploy**.
+
+### After the first deploy (important)
+If you **do have** Render Shell access, run:
+```bash
+npx prisma migrate deploy
+npm run prisma:seed
+```
+If you **do not** have Shell access, keep the start command above (it runs migrations + seed automatically).
+
+Save your backend URL (looks like):
+```
+https://your-backend.onrender.com/api/v1
+```
+
+---
+## ✅ 5. Deploy the frontend on Vercel
+1. In Vercel, click **New Project**.
+2. Import the repo `Loveago/amak`.
+3. Settings:
+   - **Root directory:** `frontend`
+   - **Install command:** `npm install`
+   - **Build command:** `npm run build`
+4. Add environment variable:
+   - `NEXT_PUBLIC_API_URL` = your Render backend URL (from step 4)
+5. Click **Deploy**.
+
+---
+## ✅ 6. Update BASE_URL in Render
+1. Copy your Vercel URL (example: `https://amak.vercel.app`).
+2. Go back to Render backend service ➜ Environment.
+3. Set:
+   ```
+   BASE_URL=https://your-vercel-domain
+   ```
+4. Click **Save** ➜ **Manual Deploy** to restart backend.
+
+---
+## ✅ 7. Test everything
+1. Open your Vercel site (frontend).
+2. Try checkout with a small bundle.
+3. Ensure you land on `/checkout/success` after Paystack.
+4. Verify order shows in backend (Render logs or DB).
+
+---
+✅ Done! Your app is live on Render + Vercel.

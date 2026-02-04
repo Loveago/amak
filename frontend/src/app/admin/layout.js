@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "../../lib/auth";
 import { serverApi } from "../../lib/server-api";
+import MobileDrawer from "../../components/mobile-drawer";
 
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard" },
@@ -43,8 +44,12 @@ export default async function AdminLayout({ children }) {
           </div>
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[240px_1fr]">
-          <aside className="glass rounded-3xl p-5">
+        <div className="mt-6 flex items-center justify-end lg:hidden">
+          <MobileDrawer title="Admin menu" buttonLabel="Menu" items={navItems} />
+        </div>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
+          <aside className="hidden lg:block glass rounded-3xl p-5">
             <div className="space-y-4">
               {navItems.map((item) => (
                 <Link

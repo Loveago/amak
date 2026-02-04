@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { requireAgent } from "../../lib/auth";
 import { serverApi } from "../../lib/server-api";
+import MobileDrawer from "../../components/mobile-drawer";
 
 const navItems = [
   { href: "/agent/dashboard", label: "Dashboard" },
@@ -23,7 +25,19 @@ export default async function AgentLayout({ children }) {
   }
 
   const balance = Number(wallet?.balanceGhs || 0).toFixed(2);
-  const storefront = user.slug ? `/store/${user.slug}` : "Storefront pending";
+  const headerList = headers();
+  const host = headerList.get("x-forwarded-host") || headerList.get("host");
+  const proto = headerList.get("x-forwarded-proto") || "https";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : "");
+  const storefrontPath = user.slug ? `/store/${user.slug}` : "";
+  const storefront = storefrontPath ? (baseUrl ? `${baseUrl}${storefrontPath}` : storefrontPath) : "Storefront pending";
+  const mobileFooter = storefrontPath ? (
+    <div className="rounded-2xl bg-ink px-4 py-4 text-sm text-white">
+      <p className="text-xs uppercase tracking-[0.2em] text-white/60">Storefront</p>
+      <p className="mt-2 font-semibold break-all">{storefront}</p>
+      <p className="mt-4 text-xs text-white/70">Share this URL with customers to order bundles.</p>
+    </div>
+  ) : null;
 
   return (
     <main className="min-h-screen">
@@ -40,8 +54,12 @@ export default async function AgentLayout({ children }) {
           </div>
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[240px_1fr]">
-          <aside className="glass rounded-3xl p-5">
+        <div className="mt-6 flex items-center justify-end lg:hidden">
+          <MobileDrawer title="Agent menu" buttonLabel="Menu" items={navItems} footer={mobileFooter} />
+        </div>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
+          <aside className="hidden lg:block glass rounded-3xl p-5">
             <div className="space-y-4">
               {navItems.map((item) => (
                 <Link

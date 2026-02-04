@@ -2,6 +2,15 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "../../../lib/auth";
 import { serverApi } from "../../../lib/server-api";
 
+const sizeValue = (value) => {
+  if (!value) return Number.POSITIVE_INFINITY;
+  const match = String(value).match(/[\d.]+/);
+  if (!match) return Number.POSITIVE_INFINITY;
+  const numeric = Number.parseFloat(match[0]);
+  if (!Number.isFinite(numeric)) return Number.POSITIVE_INFINITY;
+  return String(value).toLowerCase().includes("mb") ? numeric / 1000 : numeric;
+};
+
 async function createCategory(formData) {
   "use server";
   const name = String(formData.get("name") || "").trim();
@@ -83,6 +92,20 @@ export default async function AdminProductsPage() {
     products = [];
     categories = [];
   }
+  const grouped = products.reduce((acc, product) => {
+    const category = product.category || {};
+    const key = category.id || product.categoryId || category.slug || category.name || "uncategorized";
+    if (!acc[key]) {
+      acc[key] = {
+        id: key,
+        name: category.name || "Uncategorized",
+        products: []
+      };
+    }
+    acc[key].products.push(product);
+    return acc;
+  }, {});
+  const categoryBlocks = Object.values(grouped).sort((a, b) => a.name.localeCompare(b.name));
   return (
     <div className="space-y-6">
       <div className="glass rounded-3xl p-6">
@@ -172,75 +195,95 @@ export default async function AdminProductsPage() {
         </div>
       </div>
 
-      <div className="card-outline rounded-3xl bg-white/90 p-6">
-        <div className="space-y-3">
-          {products.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-ink/20 px-4 py-6 text-center text-sm text-ink/60">
-              No products have been created yet.
-            </div>
-          ) : (
-            products.map((product) => (
-              <div key={product.id || product.name} className="rounded-2xl border border-ink/10 bg-white/80 p-4 text-sm">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="space-y-4">
+        {categoryBlocks.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-ink/20 bg-white/70 p-8 text-center text-sm text-ink/60">
+            No products have been created yet.
+          </div>
+        ) : (
+          categoryBlocks.map((category, index) => {
+            const sortedProducts = [...category.products].sort((a, b) => {
+              const bySize = sizeValue(a.size) - sizeValue(b.size);
+              if (bySize !== 0) return bySize;
+              return String(a.name || "").localeCompare(String(b.name || ""));
+            });
+            return (
+              <details key={category.id} open={index === 0} className="card-outline rounded-3xl bg-white/90 p-6">
+                <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-ink">{product.name}</p>
-                    <p className="text-xs text-ink/60">{product.category?.name || "Category"}</p>
+                    <p className="badge">Category</p>
+                    <h3 className="mt-2 font-display text-2xl text-ink">{category.name}</h3>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-ink">GHS {Number(product.basePriceGhs || 0).toFixed(2)}</p>
-                    <p className="text-xs text-ink/60">{product.status}</p>
-                  </div>
+                  <span className="text-xs uppercase tracking-[0.2em] text-ink/60">
+                    {category.products.length} bundles
+                  </span>
+                </summary>
+                <div className="mt-6 space-y-4">
+                  {sortedProducts.map((product) => (
+                    <div key={product.id || product.name} className="rounded-2xl border border-ink/10 bg-white/80 p-4 text-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-ink">{product.name}</p>
+                          <p className="text-xs text-ink/60">{product.size}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-ink">GHS {Number(product.basePriceGhs || 0).toFixed(2)}</p>
+                          <p className="text-xs text-ink/60">{product.status}</p>
+                        </div>
+                      </div>
+                      <form action={updateProduct} className="mt-4 grid gap-3 md:grid-cols-2">
+                        <input type="hidden" name="productId" value={product.id} />
+                        <input
+                          name="name"
+                          defaultValue={product.name}
+                          className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                          placeholder="Product name"
+                        />
+                        <input
+                          name="size"
+                          defaultValue={product.size}
+                          className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                          placeholder="Bundle size"
+                        />
+                        <select
+                          name="categoryId"
+                          defaultValue={product.categoryId || product.category?.id || ""}
+                          className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                        >
+                          {categories.map((categoryItem) => (
+                            <option key={categoryItem.id} value={categoryItem.id}>
+                              {categoryItem.name}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          name="basePriceGhs"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          defaultValue={product.basePriceGhs ?? ""}
+                          className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                          placeholder="Base price (GHS)"
+                        />
+                        <select
+                          name="status"
+                          defaultValue={product.status || "ACTIVE"}
+                          className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                        >
+                          <option value="ACTIVE">ACTIVE</option>
+                          <option value="INACTIVE">INACTIVE</option>
+                        </select>
+                        <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                          Update product
+                        </button>
+                      </form>
+                    </div>
+                  ))}
                 </div>
-                <form action={updateProduct} className="mt-4 grid gap-3 md:grid-cols-2">
-                  <input type="hidden" name="productId" value={product.id} />
-                  <input
-                    name="name"
-                    defaultValue={product.name}
-                    className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
-                    placeholder="Product name"
-                  />
-                  <input
-                    name="size"
-                    defaultValue={product.size}
-                    className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
-                    placeholder="Bundle size"
-                  />
-                  <select
-                    name="categoryId"
-                    defaultValue={product.categoryId || product.category?.id || ""}
-                    className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
-                  >
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    name="basePriceGhs"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    defaultValue={product.basePriceGhs ?? ""}
-                    className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
-                    placeholder="Base price (GHS)"
-                  />
-                  <select
-                    name="status"
-                    defaultValue={product.status || "ACTIVE"}
-                    className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
-                  >
-                    <option value="ACTIVE">ACTIVE</option>
-                    <option value="INACTIVE">INACTIVE</option>
-                  </select>
-                  <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
-                    Update product
-                  </button>
-                </form>
-              </div>
-            ))
-          )}
-        </div>
+              </details>
+            );
+          })
+        )}
       </div>
     </div>
   );

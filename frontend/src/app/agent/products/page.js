@@ -4,6 +4,15 @@ import { redirect } from "next/navigation";
 import { requireAgent } from "../../../lib/auth";
 import { serverApi } from "../../../lib/server-api";
 
+const sizeValue = (value) => {
+  if (!value) return Number.POSITIVE_INFINITY;
+  const match = String(value).match(/[\d.]+/);
+  if (!match) return Number.POSITIVE_INFINITY;
+  const numeric = Number.parseFloat(match[0]);
+  if (!Number.isFinite(numeric)) return Number.POSITIVE_INFINITY;
+  return String(value).toLowerCase().includes("mb") ? numeric / 1000 : numeric;
+};
+
 async function updateProductMarkup(formData) {
   "use server";
   const productId = String(formData.get("productId") || "").trim();
@@ -88,7 +97,13 @@ export default async function AgentProductsPage() {
             No products have been assigned yet. Ask the admin team to publish bundles for your storefront.
           </div>
         ) : (
-          categories.map((category, index) => (
+          categories.map((category, index) => {
+            const sortedProducts = [...category.products].sort((a, b) => {
+              const bySize = sizeValue(a.size) - sizeValue(b.size);
+              if (bySize !== 0) return bySize;
+              return String(a.name || "").localeCompare(String(b.name || ""));
+            });
+            return (
             <details key={category.id} open={index === 0} className="card-outline rounded-3xl bg-white/90 p-6">
               <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
                 <div>
@@ -100,7 +115,7 @@ export default async function AgentProductsPage() {
                 </span>
               </summary>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
-                {category.products.map((product) => {
+                {sortedProducts.map((product) => {
                   const base = product.basePriceGhs !== null && product.basePriceGhs !== undefined
                     ? `GHS ${Number(product.basePriceGhs).toFixed(2)}`
                     : "Pending";
@@ -147,7 +162,8 @@ export default async function AgentProductsPage() {
                 })}
               </div>
             </details>
-          ))
+          );
+          })
         )}
       </div>
     </div>

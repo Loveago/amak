@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { requireAgent } from "../../../lib/auth";
 import { serverApi } from "../../../lib/server-api";
 
@@ -10,7 +11,16 @@ export default async function AgentAffiliatePage() {
     downlines = [];
   }
 
-  const referralLink = user.slug ? `/signup?ref=${user.slug}` : "Referral link pending";
+  const headerList = headers();
+  const host = headerList.get("x-forwarded-host") || headerList.get("host");
+  const proto = headerList.get("x-forwarded-proto") || "https";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : "");
+  const referralPath = user.slug ? `/signup?ref=${user.slug}` : "";
+  const referralLink = referralPath
+    ? baseUrl
+      ? `${baseUrl}${referralPath}`
+      : referralPath
+    : "Referral link pending";
   return (
     <div className="space-y-6">
       <div className="glass rounded-3xl p-6">
