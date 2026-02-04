@@ -4,6 +4,11 @@ import { redirect } from "next/navigation";
 import { requireAgent } from "../../../lib/auth";
 import { serverApi } from "../../../lib/server-api";
 
+const PREFERRED_CATEGORY_ORDER = ["MTN", "Telecel", "AT Ishare", "AT Bigtime"];
+const categoryPriority = new Map(
+  PREFERRED_CATEGORY_ORDER.map((label, index) => [label.toLowerCase(), index])
+);
+
 const sizeValue = (value) => {
   if (!value) return Number.POSITIVE_INFINITY;
   const match = String(value).match(/[\d.]+/);
@@ -11,6 +16,14 @@ const sizeValue = (value) => {
   const numeric = Number.parseFloat(match[0]);
   if (!Number.isFinite(numeric)) return Number.POSITIVE_INFINITY;
   return String(value).toLowerCase().includes("mb") ? numeric / 1000 : numeric;
+};
+
+const categorySortValue = (name = "") => {
+  const normalized = name.trim().toLowerCase();
+  if (categoryPriority.has(normalized)) {
+    return { priority: categoryPriority.get(normalized), name: normalized };
+  }
+  return { priority: PREFERRED_CATEGORY_ORDER.length, name: normalized };
 };
 
 async function updateProductMarkup(formData) {
@@ -73,7 +86,14 @@ export default async function AgentProductsPage() {
     acc[key].products.push(product);
     return acc;
   }, {});
-  const categories = Object.values(grouped).sort((a, b) => a.name.localeCompare(b.name));
+  const categories = Object.values(grouped).sort((a, b) => {
+    const sortA = categorySortValue(a.name);
+    const sortB = categorySortValue(b.name);
+    if (sortA.priority !== sortB.priority) {
+      return sortA.priority - sortB.priority;
+    }
+    return sortA.name.localeCompare(sortB.name);
+  });
   return (
     <div className="space-y-6">
       <div className="glass rounded-3xl p-6">
