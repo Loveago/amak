@@ -30,25 +30,52 @@ const resolveNetworkMeta = (name = "") => {
   return { key: "default", ...NETWORK_ASSETS.default };
 };
 
+const parseSizeToMb = (label = "") => {
+  const valueMatch = label.replace(/,/g, "").match(/([\d.]+)/);
+  if (!valueMatch) return null;
+  const value = Number(valueMatch[1]);
+  const unitMatch = label.match(/(tb|gb|mb|kb)/i);
+  const unit = unitMatch ? unitMatch[1].toLowerCase() : "gb";
+  switch (unit) {
+    case "tb":
+      return value * 1024 * 1024;
+    case "gb":
+      return value * 1024;
+    case "mb":
+      return value;
+    case "kb":
+      return value / 1024;
+    default:
+      return value;
+  }
+};
+
+const getBundleSortKey = (bundle) => {
+  const sizeMb = parseSizeToMb(bundle.size || bundle.name || "");
+  if (sizeMb !== null) {
+    return sizeMb;
+  }
+  return bundle.price || 0;
+};
+
 export default function StorefrontClient({ store, slug }) {
   const router = useRouter();
   const categories = store?.categories || [];
-  const bundles = useMemo(
-    () =>
-      categories.flatMap((category) => {
-        const networkMeta = resolveNetworkMeta(category.name);
-        return category.products.map((product) => ({
-          id: product.id,
-          name: product.name,
-          size: product.size,
-          price: Number(product.sellPriceGhs || 0),
-          network: networkMeta.label,
-          networkKey: networkMeta.key,
-          networkIcon: networkMeta.icon
-        }));
-      }),
-    [categories]
-  );
+  const bundles = useMemo(() => {
+    const unsorted = categories.flatMap((category) => {
+      const networkMeta = resolveNetworkMeta(category.name);
+      return category.products.map((product) => ({
+        id: product.id,
+        name: product.name,
+        size: product.size,
+        price: Number(product.sellPriceGhs || 0),
+        network: networkMeta.label,
+        networkKey: networkMeta.key,
+        networkIcon: networkMeta.icon
+      }));
+    });
+    return unsorted.sort((a, b) => getBundleSortKey(a) - getBundleSortKey(b));
+  }, [categories]);
   const filterOptions = useMemo(() => {
     const uniqueNetworks = new Map();
     categories.forEach((category) => {
