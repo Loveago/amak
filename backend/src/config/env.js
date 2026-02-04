@@ -13,10 +13,13 @@ const env = {
   paystackPublic: process.env.PAYSTACK_PUBLIC_KEY || "",
   paystackWebhookSecret: process.env.PAYSTACK_WEBHOOK_SECRET || "",
   baseUrl: process.env.BASE_URL || "http://localhost:3000",
-  encartaBaseUrl: process.env.ENCARTA_BASE_URL || "https://encartastores.com/api",
-  encartaStatusUrl: process.env.ENCARTA_STATUS_URL || "",
-  encartaApiKey: process.env.ENCARTA_API_KEY || "",
-  encartaStatusThrottleMs: Number(process.env.ENCARTA_STATUS_THROTTLE_MS || 60000)
+  encartaBaseUrl:
+    process.env.ENCARTA_BASE_URL || process.env.ACKMORRE_BASE_URL || "https://encartastores.com/api",
+  encartaStatusUrl: process.env.ENCARTA_STATUS_URL || process.env.ACKMORRE_STATUS_URL || "",
+  encartaApiKey: process.env.ENCARTA_API_KEY || process.env.ACKMORRE_API_KEY || "",
+  encartaStatusThrottleMs: Number(
+    process.env.ENCARTA_STATUS_THROTTLE_MS || process.env.ACKMORRE_STATUS_THROTTLE_MS || 60000
+  )
 };
 
 module.exports = env;

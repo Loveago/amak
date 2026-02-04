@@ -1,0 +1,233 @@
+PM2-ONLY HOSTING GUIDE FOR AMABAKENT.UK (FRONTEND + BACKEND + POSTGRESQL)
+=====================================================================
+Domain setup
+- Frontend: https://amabakent.uk
+- API: https://api.amabakent.uk (hits backend Express API)
+- Backend listens on port 5000 (local only)
+- Frontend (Next.js) listens on port 3000 (local only)
+
+READ THIS FIRST (SUPER SIMPLE)
+- Every step below is copy/paste.
+- Only replace YOUR_VPS_IP, CHANGE_ME, and <your-github-user> with your values.
+- Follow the order and you will be fine.
+
+PART 1) POINT NAMECHEAP DNS TO YOUR VPS
+----------------------------------------
+1) Log in to Namecheap ➜ Domain List ➜ amabakent.uk ➜ Manage ➜ Advanced DNS.
+2) Add/Update these A records:
+   • Host: @   | Value: YOUR_VPS_IP | TTL: Automatic
+   • Host: www | Value: YOUR_VPS_IP | TTL: Automatic
+   • Host: api | Value: YOUR_VPS_IP | TTL: Automatic
+3) Wait a few minutes.
+4) Optional check from your laptop (copy/paste):
+   nslookup amabakent.uk
+   nslookup api.amabakent.uk
+
+PART 2) PREP THE VPS (UBUNTU 22.04/20.04)
+-----------------------------------------
+SSH in (from your laptop):
+ssh root@YOUR_VPS_IP
+
+Update packages + install basics (copy/paste):
+apt update && apt -y upgrade
+apt -y install ca-certificates curl gnupg ufw git build-essential
+
+Open firewall ports (copy/paste):
+ufw allow OpenSSH
+ufw allow 80
+ufw allow 443
+ufw --force enable
+ufw status
+
+PART 3) INSTALL NODE 20 + PM2
+-----------------------------
+Copy/paste these commands:
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs
+npm install -g pm2
+node -v
+npm -v
+pm2 -v
+
+PART 4) INSTALL POSTGRESQL (LOCAL ONLY)
+---------------------------------------
+apt install -y postgresql postgresql-contrib
+systemctl enable postgresql
+systemctl start postgresql
+
+Create database + user (copy/paste ONE block):
+sudo -u postgres psql <<'SQL'
+CREATE DATABASE amabkinaata;
+CREATE USER amak_user WITH PASSWORD 'CHANGE_ME_STRONG_DB_PASSWORD';
+ALTER ROLE amak_user SET client_encoding TO 'utf8';
+ALTER ROLE amak_user SET default_transaction_isolation TO 'read committed';
+ALTER ROLE amak_user SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE amabkinaata TO amak_user;
+SQL
+
+PART 5) CLONE THE PROJECT UNDER /var/www/amak
+---------------------------------------------
+mkdir -p /var/www/amak
+cd /var/www/amak
+git clone https://github.com/<your-github-user>/amaK.git .
+
+(If repo already there, run `git pull` instead.)
+
+PART 6) BACKEND ENV FILE (/var/www/amak/backend/.env)
+-----------------------------------------------------
+Copy/paste:
+cat <<'EOF' > /var/www/amak/backend/.env
+NODE_ENV=production
+PORT=5000
+DATABASE_URL=postgresql://amak_user:CHANGE_ME_STRONG_DB_PASSWORD@localhost:5432/amabkinaata
+JWT_SECRET=CHANGE_ME_LONG_RANDOM
+JWT_REFRESH_SECRET=CHANGE_ME_LONG_RANDOM
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+ADMIN_EMAIL=CHANGE_ME_ADMIN_EMAIL
+ADMIN_PASSWORD=CHANGE_ME_ADMIN_PASSWORD
+PAYSTACK_SECRET_KEY=CHANGE_ME
+PAYSTACK_PUBLIC_KEY=CHANGE_ME
+PAYSTACK_WEBHOOK_SECRET=CHANGE_ME
+BASE_URL=https://amabakent.uk
+ENCARTA_BASE_URL=https://encartastores.com/api
+ENCARTA_API_KEY=CHANGE_ME
+ENCARTA_STATUS_URL=
+ENCARTA_STATUS_THROTTLE_MS=60000
+EOF
+
+PART 7) FRONTEND ENV FILE (/var/www/amak/frontend/.env.production)
+-------------------------------------------------------------------
+Copy/paste:
+cat <<'EOF' > /var/www/amak/frontend/.env.production
+NEXT_PUBLIC_API_URL=https://api.amabakent.uk/api/v1
+EOF
+
+PART 8) INSTALL DEPENDENCIES + BUILD
+------------------------------------
+Backend (copy/paste):
+cd /var/www/amak/backend
+npm install
+npx prisma generate
+npm run prisma:seed   # optional but recommended once
+
+Run migrations (copy/paste):
+npx prisma migrate deploy
+
+Frontend (copy/paste):
+cd /var/www/amak/frontend
+npm install
+npm run build
+
+PART 9) START BACKEND + FRONTEND WITH PM2
+-----------------------------------------
+Backend service (copy/paste):
+cd /var/www/amak/backend
+pm2 start src/server.js --name amak-backend --time
+
+Frontend service (Next.js) (copy/paste):
+cd /var/www/amak/frontend
+pm2 start npm --name amak-frontend -- run start -- -p 3000
+
+Enable PM2 auto-start on reboot (copy/paste):
+pm2 save
+pm2 startup systemd -u root --hp /root
+# PM2 prints another command. Copy/paste that command too, then run `pm2 save` again.
+pm2 save
+
+Check your processes:
+pm2 status
+pm2 logs amak-backend
+pm2 logs amak-frontend
+
+PART 10) NGINX (REVERSE PROXY + SSL)
+------------------------------------
+Install nginx:
+apt install -y nginx
+systemctl enable nginx
+systemctl start nginx
+
+Create config (copy/paste):
+cat <<'EOF' > /etc/nginx/sites-available/amak.conf
+server {
+  listen 80;
+  server_name amabakent.uk www.amabakent.uk;
+  location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+  }
+}
+
+server {
+  listen 80;
+  server_name api.amabakent.uk;
+  location / {
+    proxy_pass http://127.0.0.1:5000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
+EOF
+
+Enable the site and reload nginx:
+ln -s /etc/nginx/sites-available/amak.conf /etc/nginx/sites-enabled/
+nginx -t
+systemctl reload nginx
+
+PART 11) HTTPS WITH LET'S ENCRYPT
+---------------------------------
+Install certbot plugin:
+apt install -y certbot python3-certbot-nginx
+
+Request certificates (copy/paste):
+certbot --nginx \
+  -d amabakent.uk \
+  -d www.amabakent.uk \
+  -d api.amabakent.uk \
+  --email CHANGE_ME_YOUR_EMAIL \
+  --agree-tos \
+  --no-eff-email
+
+Choose the redirect option when prompted.
+Certbot auto-renews (check with `systemctl status certbot.timer`).
+
+PART 12) VERIFY EVERYTHING
+---------------------------
+1) Visit https://amabakent.uk ➜ frontend should load.
+2) Visit https://api.amabakent.uk/api/v1/health (or /docs) ➜ should respond.
+3) Test a real flow (login, checkout) to ensure backend ↔ DB works.
+4) Check PM2:
+pm2 status
+
+PART 13) DEPLOYING UPDATES LATER
+--------------------------------
+cd /var/www/amak
+git pull origin main
+cd backend && npm install && npx prisma migrate deploy && pm2 restart amak-backend
+cd ../frontend && npm install && npm run build && pm2 restart amak-frontend
+pm2 save
+
+PART 14) USEFUL PM2 COMMANDS
+----------------------------
+pm2 status                  # list processes
+pm2 logs <name>             # stream logs
+pm2 restart <name>          # restart one service
+pm2 reload all              # zero-downtime reload
+pm2 delete <name>           # remove from PM2 list
+pm2 save                    # persist the current list (run after changes)
+
+PART 15) DATABASE BACKUPS
+-------------------------
+Manual backup (copy/paste):
+sudo -u postgres pg_dump amabkinaata > /root/amabkinaata_backup.sql
+
+Restore (copy/paste):
+sudo -u postgres psql amabkinaata < /root/amabkinaata_backup.sql
+
+DONE! You now have a PM2-based deployment for amabakent.uk. Keep your secrets safe and rerun Certbot every 90 days if auto-renew ever fails.
