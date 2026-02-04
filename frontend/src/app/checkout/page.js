@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { computePaystackGross } from "../../lib/paystackFees";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
@@ -88,6 +89,7 @@ export default function CheckoutPage() {
     () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [items]
   );
+  const { fee: paystackFee, gross: paystackTotal } = useMemo(() => computePaystackGross(total), [total]);
   const itemCount = useMemo(
     () => items.reduce((sum, item) => sum + item.quantity, 0),
     [items]
@@ -289,13 +291,16 @@ export default function CheckoutPage() {
                 <span>GHS {total.toFixed(2)}</span>
               </div>
               <div className="mt-2 flex items-center justify-between">
-                <span>Agent service fee</span>
-                <span>GHS 0.00</span>
+                <span>Paystack processing fee</span>
+                <span>GHS {paystackFee.toFixed(2)}</span>
               </div>
               <div className="mt-4 flex items-center justify-between text-lg font-semibold text-ink">
                 <span>Total</span>
-                <span>GHS {total.toFixed(2)}</span>
+                <span>GHS {paystackTotal.toFixed(2)}</span>
               </div>
+              <p className="mt-2 text-[11px] text-ink/50">
+                Fees estimated using Paystack public rates (1.95% + GHS 0.50 over GHS 100, capped at GHS 20).
+              </p>
             </div>
           </section>
         </div>

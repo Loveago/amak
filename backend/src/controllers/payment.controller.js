@@ -7,6 +7,7 @@ const {
 const { validate } = require("../utils/validation");
 const { initializeTransaction, verifyTransaction } = require("../services/paystack.service");
 const { recordPaymentInit, markPaymentVerified } = require("../services/payment.service");
+const { computePaystackGross } = require("../utils/paystack");
 
 async function initializeOrderPayment(req, res, next) {
   try {
@@ -23,6 +24,7 @@ async function initializeOrderPayment(req, res, next) {
     }
 
     const reference = `order_${order.id}_${Date.now()}`;
+    const { fee: paystackFeeGhs, gross: paystackGrossGhs } = computePaystackGross(order.totalAmountGhs);
     const baseUrl = process.env.BASE_URL || "";
     const callbackParams = new URLSearchParams({
       orderId: order.id,
@@ -31,10 +33,10 @@ async function initializeOrderPayment(req, res, next) {
     const callbackUrl = `${baseUrl}/checkout/success?${callbackParams.toString()}`;
     const paystackData = await initializeTransaction({
       email: payload.email,
-      amountGhs: order.totalAmountGhs,
+      amountGhs: paystackGrossGhs,
       reference,
       callbackUrl,
-      metadata: { type: "order", orderId: order.id }
+      metadata: { type: "order", orderId: order.id, subtotalGhs: order.totalAmountGhs, feeGhs: paystackFeeGhs }
     });
 
     await prisma.$transaction(async (tx) => {
@@ -46,10 +48,10 @@ async function initializeOrderPayment(req, res, next) {
         data: {
           reference,
           type: "ORDER",
-          amountGhs: order.totalAmountGhs,
+          amountGhs: paystackGrossGhs,
           agentId: order.agentId,
           orderId: order.id,
-          metadata: { email: payload.email }
+          metadata: { email: payload.email, subtotalGhs: order.totalAmountGhs, feeGhs: paystackFeeGhs }
         }
       });
     });
