@@ -68,11 +68,23 @@ async function updateProductMarkup(formData) {
 export default async function AgentProductsPage() {
   requireAgent("/agent/products");
   let products = [];
+  let subscription = null;
   try {
     products = await serverApi("/agent/products");
   } catch (error) {
     products = [];
   }
+  try {
+    subscription = await serverApi("/agent/subscription");
+  } catch (error) {
+    subscription = null;
+  }
+  const activeCount = products.filter((product) => product.isActive).length;
+  const productLimit = subscription?.plan?.productLimit ?? 0;
+  const subscriptionStatus = subscription?.status || "INACTIVE";
+  const usageRatio = productLimit ? Math.min(activeCount / productLimit, 1) : 0;
+  const usagePercent = Math.round(usageRatio * 100);
+  const usageTone = usagePercent >= 100 ? "bg-rose-500" : usagePercent >= 80 ? "bg-amber-500" : "bg-emerald-500";
   const grouped = products.reduce((acc, product) => {
     const category = product.category || {};
     const key = category.id || category.slug || category.name || "uncategorized";
@@ -109,6 +121,24 @@ export default async function AgentProductsPage() {
             Browse catalog
           </Link>
         </div>
+        {productLimit > 0 ? (
+          <div className="mt-4 rounded-2xl border border-ink/10 bg-white/80 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-ink/50">
+              <span>Active bundles</span>
+              <span>
+                {activeCount} of {productLimit}
+              </span>
+            </div>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-ink/10">
+              <div className={`h-full ${usageTone}`} style={{ width: `${usagePercent}%` }} />
+            </div>
+            <p className="mt-2 text-xs text-ink/60">Subscription status: {subscriptionStatus}</p>
+          </div>
+        ) : (
+          <div className="mt-4 rounded-2xl border border-dashed border-ink/20 bg-white/70 p-4 text-xs text-ink/60">
+            Subscription inactive. Activate a plan to publish bundles.
+          </div>
+        )}
       </div>
 
       <div id="catalog" className="space-y-4">

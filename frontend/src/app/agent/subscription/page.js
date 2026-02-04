@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireAgent } from "../../../lib/auth";
 import { serverApi } from "../../../lib/server-api";
@@ -54,6 +55,23 @@ export default async function AgentSubscriptionPage({ searchParams = {} }) {
   const currentPlanName = current?.plan?.name || "No active plan";
   const currentStatus = current?.status || "INACTIVE";
   const currentLimit = current?.plan?.productLimit ?? 0;
+  const expiresAt = current?.expiresAt ? new Date(current.expiresAt) : null;
+  const graceEndsAt = current?.graceEndsAt ? new Date(current.graceEndsAt) : null;
+  const today = new Date();
+  const daysLeft = expiresAt
+    ? Math.max(0, Math.ceil((expiresAt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)))
+    : null;
+  const formatDate = (value) =>
+    value
+      ? new Date(value).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+      : "";
+  const isExpired = expiresAt ? expiresAt.getTime() < today.getTime() : false;
+  const inGrace = isExpired && graceEndsAt ? graceEndsAt.getTime() > today.getTime() : false;
+  const expiryMessage = expiresAt
+    ? isExpired
+      ? `Expired on ${formatDate(expiresAt)}${inGrace ? ` · Grace ends ${formatDate(graceEndsAt)}` : ""}`
+      : `${daysLeft} day${daysLeft === 1 ? "" : "s"} left · Expires ${formatDate(expiresAt)}`
+    : "No expiry date on file.";
   return (
     <div className="space-y-6">
       <div className="glass rounded-3xl p-6">
@@ -62,6 +80,29 @@ export default async function AgentSubscriptionPage({ searchParams = {} }) {
         <p className="text-sm text-ink/60">
           Status: {currentStatus} · {currentLimit} active bundles
         </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link
+            href="#plans"
+            className="rounded-full bg-ink px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-white"
+          >
+            Renew now
+          </Link>
+          <Link
+            href="#plans"
+            className="rounded-full border border-ink/15 bg-white/70 px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-ink"
+          >
+            Change plan
+          </Link>
+        </div>
+        <div className="mt-3 rounded-2xl border border-ink/10 bg-white/80 px-4 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-ink/50">Subscription timeline</p>
+          <p className="mt-2 text-sm text-ink/70">{expiryMessage}</p>
+        </div>
+        {isExpired && (
+          <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
+            Your subscription has expired{inGrace ? " and is in grace mode" : ""}. Renew now to keep bundles active.
+          </div>
+        )}
         {statusFlag === "verified" && (
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600">
             Payment verified. Subscription activated.
@@ -74,7 +115,7 @@ export default async function AgentSubscriptionPage({ searchParams = {} }) {
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div id="plans" className="grid gap-4 md:grid-cols-3">
         {plans.length === 0 ? (
           <div className="col-span-full rounded-3xl border border-dashed border-ink/20 bg-white/70 p-8 text-center text-sm text-ink/60">
             No plans available at the moment. Contact support to provision subscriptions.
