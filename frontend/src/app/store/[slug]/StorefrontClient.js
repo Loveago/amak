@@ -132,12 +132,12 @@ export default function StorefrontClient({ store, slug }) {
             </button>
           </div>
 
-          <details className="group mt-5 rounded-2xl border border-amber-200/70 bg-amber-50/70 px-4 py-3 text-xs text-amber-800">
-            <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700">
+          <details className="group mt-4 rounded-xl border border-amber-200/50 bg-amber-50/40 px-3 py-2 text-[11px] text-amber-800">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-600">
               Important notice
-              <span className="text-base font-bold transition-transform group-open:rotate-45">+</span>
+              <span className="text-sm font-bold text-amber-500 transition-transform group-open:rotate-45">+</span>
             </summary>
-            <div className="mt-3 space-y-2 text-xs text-amber-700/90">
+            <div className="mt-2 space-y-1.5 text-[11px] text-amber-700/90">
               <p>Make sure the phone number is correct before proceeding.</p>
               <p>
                 SIMs not supported: Transfer/EVD, TurboNet/Fibre, Inactive/Dormant SIMs, SIMs owing airtime.
