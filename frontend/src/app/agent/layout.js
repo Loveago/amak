@@ -54,7 +54,7 @@ export default async function AgentLayout({ children }) {
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-end lg:hidden">
+        <div className="mt-6 flex items-center justify-start lg:hidden">
           <MobileDrawer title="Agent menu" buttonLabel="Menu" items={navItems} footer={mobileFooter} />
         </div>
 
