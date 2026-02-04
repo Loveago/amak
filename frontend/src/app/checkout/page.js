@@ -232,7 +232,7 @@ export default function CheckoutPage() {
               onClick={handlePay}
               disabled={status.type === "loading" || loadingItems}
             >
-              Pay with Paystack
+              Pay with MoMo
             </button>
             {status.message && (
               <div
