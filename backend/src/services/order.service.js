@@ -52,6 +52,10 @@ async function dispatchOrderToProvider(orderId) {
     return order;
   }
 
+  if (order.status !== "PAID" && order.status !== "FULFILLED") {
+    return order;
+  }
+
   if (order.providerReference) {
     return order;
   }
