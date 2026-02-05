@@ -11,6 +11,7 @@ const navItems = [
   { href: "/agent/wallet", label: "Wallet" },
   { href: "/agent/withdrawals", label: "Withdrawals" },
   { href: "/agent/subscription", label: "Subscription" },
+  { href: "/agent/affiliate-pricing", label: "Affiliate Pricing" },
   { href: "/agent/affiliate", label: "Affiliate" },
   { href: "/agent/afa-registration", label: "AFA Registration" }
 ];

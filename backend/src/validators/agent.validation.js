@@ -5,10 +5,14 @@ const activateProductSchema = z.object({
   isActive: z.boolean().optional()
 });
 
+const affiliatePricingSchema = z.object({
+  affiliateMarkupGhs: z.number().min(0)
+});
+
 const withdrawalSchema = z.object({
   amountGhs: z.number().positive(),
   momoNetwork: z.string().min(2),
   momoNumber: z.string().min(6)
 });
 
-module.exports = { activateProductSchema, withdrawalSchema };
+module.exports = { activateProductSchema, affiliatePricingSchema, withdrawalSchema };

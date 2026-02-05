@@ -146,6 +146,7 @@ model AgentProduct {
   agentId    String
   productId  String
   markupGhs  Float   @default(0)
+  affiliateMarkupGhs Float @default(0)
   isActive   Boolean @default(false)
   createdAt  DateTime @default(now())
 

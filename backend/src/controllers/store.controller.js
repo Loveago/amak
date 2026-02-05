@@ -2,12 +2,22 @@ const prisma = require("../config/prisma");
 const { createOrderSchema } = require("../validators/store.validation");
 const { validate } = require("../utils/validation");
 const { enforceProductLimit } = require("../services/subscription.service");
+const { getAncestorAffiliateMarkupMap, getEffectiveBasePrice } = require("../services/pricing.service");
 
-function mapAgentProducts(agentProducts) {
+function mapAgentProducts(agentProducts, affiliateMarkupMap) {
   const categories = new Map();
 
   agentProducts.forEach((item) => {
     if (!item.product || !item.product.category || item.product.basePriceGhs === null) {
+      return;
+    }
+
+    const parentBasePriceGhs = getEffectiveBasePrice({
+      basePriceGhs: item.product.basePriceGhs,
+      affiliateMarkupMap,
+      productId: item.product.id
+    });
+    if (parentBasePriceGhs === null) {
       return;
     }
 
@@ -21,12 +31,12 @@ function mapAgentProducts(agentProducts) {
       });
     }
 
-    const sellPrice = Number(item.product.basePriceGhs) + Number(item.markupGhs || 0);
+    const sellPrice = Number(parentBasePriceGhs) + Number(item.markupGhs || 0);
     categories.get(categoryId).products.push({
       id: item.product.id,
       name: item.product.name,
       size: item.product.size,
-      basePriceGhs: item.product.basePriceGhs,
+      basePriceGhs: parentBasePriceGhs,
       markupGhs: item.markupGhs,
       sellPriceGhs: sellPrice
     });
@@ -56,7 +66,9 @@ async function getStorefront(req, res, next) {
       include: { product: { include: { category: true } } }
     });
 
-    const categories = mapAgentProducts(agentProducts);
+    const productIds = agentProducts.map((item) => item.productId);
+    const ancestorMarkupMap = await getAncestorAffiliateMarkupMap(agent.id, productIds);
+    const categories = mapAgentProducts(agentProducts, ancestorMarkupMap);
 
     return res.json({
       success: true,
@@ -98,6 +110,8 @@ async function createOrder(req, res, next) {
       include: { product: true }
     });
 
+    const ancestorMarkupMap = await getAncestorAffiliateMarkupMap(agent.id, productIds);
+
     const productMap = new Map();
     agentProducts.forEach((entry) => productMap.set(entry.productId, entry));
 
@@ -109,7 +123,17 @@ async function createOrder(req, res, next) {
         throw error;
       }
 
-      const basePrice = Number(entry.product.basePriceGhs);
+      const parentBasePriceGhs = getEffectiveBasePrice({
+        basePriceGhs: entry.product.basePriceGhs,
+        affiliateMarkupMap: ancestorMarkupMap,
+        productId: entry.productId
+      });
+      if (parentBasePriceGhs === null) {
+        const error = new Error("Invalid product selection");
+        error.statusCode = 400;
+        throw error;
+      }
+      const basePrice = Number(parentBasePriceGhs);
       const markup = Number(entry.markupGhs || 0);
       const unitPrice = basePrice + markup;
       const totalPrice = unitPrice * item.quantity;

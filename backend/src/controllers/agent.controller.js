@@ -1,8 +1,9 @@
 const prisma = require("../config/prisma");
-const { activateProductSchema, withdrawalSchema } = require("../validators/agent.validation");
+const { activateProductSchema, affiliatePricingSchema, withdrawalSchema } = require("../validators/agent.validation");
 const { validate } = require("../utils/validation");
 const { ensureActiveSubscription, enforceProductLimit, getCurrentSubscription } = require("../services/subscription.service");
 const { refreshOrderProviderStatus } = require("../services/order.service");
+const { getAncestorAffiliateMarkupMap, getEffectiveBasePrice } = require("../services/pricing.service");
 
 async function dashboard(req, res, next) {
   try {
@@ -24,6 +25,75 @@ async function dashboard(req, res, next) {
   }
 }
 
+async function listAffiliatePricing(req, res, next) {
+  try {
+    const agentId = req.user.sub;
+    const products = await prisma.product.findMany({
+      include: { category: true, agentProducts: { where: { agentId } } }
+    });
+
+    const productIds = products.map((product) => product.id);
+    const ancestorMarkupMap = await getAncestorAffiliateMarkupMap(agentId, productIds);
+
+    const data = products.map((product) => {
+      const agentProduct = product.agentProducts[0];
+      const parentBasePriceGhs = getEffectiveBasePrice({
+        basePriceGhs: product.basePriceGhs,
+        affiliateMarkupMap: ancestorMarkupMap,
+        productId: product.id
+      });
+      const affiliateMarkupGhs = agentProduct ? agentProduct.affiliateMarkupGhs : 0;
+      const affiliateBasePriceGhs = parentBasePriceGhs !== null
+        ? Number(parentBasePriceGhs) + Number(affiliateMarkupGhs)
+        : null;
+
+      return {
+        id: product.id,
+        name: product.name,
+        size: product.size,
+        category: product.category,
+        basePriceGhs: product.basePriceGhs,
+        parentBasePriceGhs,
+        affiliateMarkupGhs,
+        affiliateBasePriceGhs
+      };
+    });
+
+    return res.json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function updateAffiliatePricing(req, res, next) {
+  try {
+    const agentId = req.user.sub;
+    const { productId } = req.params;
+    const payload = validate(affiliatePricingSchema, req.body);
+
+    const product = await prisma.product.findUnique({ where: { id: productId } });
+    if (!product) {
+      return res.status(404).json({ success: false, error: "Product not found" });
+    }
+
+    const agentProduct = await prisma.agentProduct.upsert({
+      where: { agentId_productId: { agentId, productId } },
+      update: { affiliateMarkupGhs: payload.affiliateMarkupGhs },
+      create: {
+        agentId,
+        productId,
+        affiliateMarkupGhs: payload.affiliateMarkupGhs,
+        markupGhs: 0,
+        isActive: false
+      }
+    });
+
+    return res.json({ success: true, data: agentProduct });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function listProducts(req, res, next) {
   try {
     const agentId = req.user.sub;
@@ -31,21 +101,31 @@ async function listProducts(req, res, next) {
       include: { category: true, agentProducts: { where: { agentId } } }
     });
 
+    const productIds = products.map((product) => product.id);
+    const ancestorMarkupMap = await getAncestorAffiliateMarkupMap(agentId, productIds);
+
     const data = products.map((product) => {
       const agentProduct = product.agentProducts[0];
       const markupGhs = agentProduct ? agentProduct.markupGhs : 0;
-      const sellPriceGhs = product.basePriceGhs !== null
-        ? Number(product.basePriceGhs) + Number(markupGhs)
+      const affiliateMarkupGhs = agentProduct ? agentProduct.affiliateMarkupGhs : 0;
+      const parentBasePriceGhs = getEffectiveBasePrice({
+        basePriceGhs: product.basePriceGhs,
+        affiliateMarkupMap: ancestorMarkupMap,
+        productId: product.id
+      });
+      const sellPriceGhs = parentBasePriceGhs !== null
+        ? Number(parentBasePriceGhs) + Number(markupGhs)
         : null;
 
       return {
         id: product.id,
         name: product.name,
         size: product.size,
-        basePriceGhs: product.basePriceGhs,
+        basePriceGhs: parentBasePriceGhs,
         category: product.category,
         isActive: agentProduct ? agentProduct.isActive : false,
         markupGhs,
+        affiliateMarkupGhs,
         sellPriceGhs
       };
     });
@@ -262,6 +342,8 @@ async function listAfaRegistrations(req, res, next) {
 
 module.exports = {
   dashboard,
+  listAffiliatePricing,
+  updateAffiliatePricing,
   listProducts,
   updateAgentProduct,
   wallet,

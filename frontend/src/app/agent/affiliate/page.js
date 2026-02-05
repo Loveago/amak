@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { requireAgent } from "../../../lib/auth";
 import { serverApi } from "../../../lib/server-api";
+import CopyReferralButton from "./CopyReferralButton";
 
 export default async function AgentAffiliatePage() {
   const user = requireAgent("/agent/affiliate");
@@ -27,7 +28,10 @@ export default async function AgentAffiliatePage() {
         <p className="badge">Affiliate network</p>
         <h2 className="mt-3 font-display text-2xl text-ink">Your referral link</h2>
         <div className="mt-4 rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm">
-          <span className="font-semibold text-ink break-all">{referralLink}</span>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="font-semibold text-ink break-all">{referralLink}</span>
+            <CopyReferralButton value={referralLink} />
+          </div>
           <p className="mt-2 text-xs text-ink/60">Share this referral URL to grow your network.</p>
         </div>
       </div>

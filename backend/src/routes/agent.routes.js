@@ -3,6 +3,8 @@ const authenticate = require("../middleware/auth");
 const requireRole = require("../middleware/rbac");
 const {
   dashboard,
+  listAffiliatePricing,
+  updateAffiliatePricing,
   listProducts,
   updateAgentProduct,
   wallet,
@@ -21,6 +23,8 @@ const router = express.Router();
 router.use(authenticate, requireRole("AGENT"));
 
 router.get("/dashboard", dashboard);
+router.get("/affiliate-pricing", listAffiliatePricing);
+router.put("/affiliate-pricing/:productId", updateAffiliatePricing);
 router.get("/products", listProducts);
 router.put("/products/:productId", updateAgentProduct);
 router.get("/wallet", wallet);
