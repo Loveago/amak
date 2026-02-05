@@ -184,7 +184,7 @@ export default function SignupPage() {
                 onChange={handleChange}
                 readOnly={referralLocked}
                 className="mt-2 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
-                placeholder="amaba11 or agent code"
+                placeholder="Enter referral code"
               />
               {referralLocked && (
                 <p className="mt-2 text-xs text-ink/60">Referral code applied from your invite link.</p>

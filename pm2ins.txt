@@ -275,4 +275,32 @@ sudo -u postgres pg_dump amabkinaata > /root/amabkinaata_backup.sql
 Restore (copy/paste):
 sudo -u postgres psql amabkinaata < /root/amabkinaata_backup.sql
 
+PART 16) UPDATE WEBSITE (FRONTEND + BACKEND)
+--------------------------------------------
+Use this when you changed website UI/content and backend APIs.
+
+Copy/paste:
+cd /var/www/amak
+git pull origin main
+
+Backend update (copy/paste):
+cd /var/www/amak/backend
+npm install
+npx prisma migrate deploy
+pm2 restart amak-backend
+
+Go back to project root:
+cd ..
+
+Frontend update (copy/paste):
+cd /var/www/amak/frontend
+npm install
+npm run build
+pm2 restart amak-frontend
+
+Go back to project root:
+cd ..
+
+pm2 save
+
 DONE! You now have a PM2-based deployment for amabakent.uk. Keep your secrets safe and rerun Certbot every 90 days if auto-renew ever fails.
