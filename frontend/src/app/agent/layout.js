@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { requireAgent } from "../../lib/auth";
 import { serverApi } from "../../lib/server-api";
 import MobileDrawer from "../../components/mobile-drawer";
+import CopyButton from "../../components/CopyButton";
 
 const navItems = [
   { href: "/agent/dashboard", label: "Dashboard" },
@@ -31,11 +32,23 @@ export default async function AgentLayout({ children }) {
   const proto = headerList.get("x-forwarded-proto") || "https";
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : "");
   const storefrontPath = user.slug ? `/store/${user.slug}` : "";
-  const storefront = storefrontPath ? (baseUrl ? `${baseUrl}${storefrontPath}` : storefrontPath) : "Storefront pending";
-  const mobileFooter = storefrontPath ? (
+  const hasStorefrontLink = Boolean(storefrontPath);
+  const storefront = hasStorefrontLink
+    ? baseUrl
+      ? `${baseUrl}${storefrontPath}`
+      : storefrontPath
+    : "Storefront pending";
+  const mobileFooter = hasStorefrontLink ? (
     <div className="rounded-2xl bg-ink px-4 py-4 text-sm text-white">
       <p className="text-xs uppercase tracking-[0.2em] text-white/60">Storefront</p>
-      <p className="mt-2 font-semibold break-all">{storefront}</p>
+      <div className="mt-2 flex items-start justify-between gap-3">
+        <p className="font-semibold break-all">{storefront}</p>
+        <CopyButton
+          value={storefront}
+          ariaLabel="Copy storefront link"
+          className="bg-white/10 text-white border-white/30"
+        />
+      </div>
       <p className="mt-4 text-xs text-white/70">Share this URL with customers to order bundles.</p>
     </div>
   ) : null;
@@ -75,7 +88,16 @@ export default async function AgentLayout({ children }) {
             </div>
             <div className="mt-6 rounded-2xl bg-ink px-4 py-4 text-sm text-white">
               <p className="text-xs uppercase tracking-[0.2em] text-white/60">Storefront</p>
-              <p className="mt-2 font-semibold break-all">{storefront}</p>
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <p className="font-semibold break-all">{storefront}</p>
+                {hasStorefrontLink ? (
+                  <CopyButton
+                    value={storefront}
+                    ariaLabel="Copy storefront link"
+                    className="bg-white/10 text-white border-white/30"
+                  />
+                ) : null}
+              </div>
               <p className="mt-4 text-xs text-white/70">
                 Share this URL with customers to let them order bundles directly.
               </p>
