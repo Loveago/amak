@@ -112,7 +112,7 @@ export default async function AgentProductsPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="badge">Product catalog</p>
-            <h2 className="mt-3 font-display text-2xl text-ink">Activate bundles and set markup.</h2>
+            <h2 className="mt-3 font-display text-2xl text-ink">Activate bundles and set profit.</h2>
           </div>
           <Link
             href="#catalog"
@@ -171,7 +171,7 @@ export default async function AgentProductsPage() {
                     : "Pending";
                   const markup = `GHS ${Number(product.markupGhs || 0).toFixed(2)}`;
                   const status = product.isActive ? "Active" : "Inactive";
-                  const actionLabel = product.isActive ? "Update markup" : "Activate product";
+                  const actionLabel = product.isActive ? "Update profit" : "Activate product";
                   return (
                     <div key={product.id || product.name} className="rounded-3xl border border-ink/10 bg-white/70 p-5">
                       <div className="flex items-center justify-between">
@@ -180,7 +180,7 @@ export default async function AgentProductsPage() {
                       </div>
                       <div className="mt-3 space-y-2 text-sm text-ink/70">
                         <p>Base price: {base}</p>
-                        <p>Markup: {markup}</p>
+                        <p>Profit: {markup}</p>
                         <p>Status: {status}</p>
                       </div>
                       <form action={updateProductMarkup} className="mt-4 space-y-3">
@@ -192,7 +192,7 @@ export default async function AgentProductsPage() {
                           step="0.01"
                           defaultValue={Number(product.markupGhs || 0)}
                           className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
-                          placeholder="Markup (GHS)"
+                          placeholder="Profit (GHS)"
                         />
                         <button className="w-full rounded-full bg-ink px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white">
                           {actionLabel}

@@ -7,7 +7,7 @@ const highlights = [
   },
   {
     title: "Wallet-first profits",
-    description: "Every markup and commission lands directly in your wallet with transparent ledgers and audit trails."
+    description: "Every profit and commission lands directly in your wallet with transparent ledgers and audit trails."
   },
   {
     title: "Affiliate momentum",
@@ -24,7 +24,7 @@ const workflow = [
   {
     step: "02",
     title: "Agents activate bundles",
-    description: "Agents select products, add markup, and publish branded storefronts instantly."
+    description: "Agents select products, add profit, and publish branded storefronts instantly."
   },
   {
     step: "03",

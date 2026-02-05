@@ -36,13 +36,18 @@ export default function SignupPage() {
     event.preventDefault();
     setStatus({ type: "loading", message: "Creating your account..." });
 
+    if (!form.referralCode.trim()) {
+      setStatus({ type: "error", message: "Referral code is required." });
+      return;
+    }
+
     try {
       const payload = {
         name: form.name.trim(),
         email: form.email.trim(),
         password: form.password,
         phone: form.phone.trim() || undefined,
-        referralCode: form.referralCode.trim() || undefined
+        referralCode: form.referralCode.trim()
       };
 
       const response = await fetch("/api/register", {
@@ -170,15 +175,16 @@ export default function SignupPage() {
               </div>
             </div>
             <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Referral code (optional)</label>
+              <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Referral code (required)</label>
               <input
                 type="text"
                 name="referralCode"
+                required
                 value={form.referralCode}
                 onChange={handleChange}
                 readOnly={referralLocked}
                 className="mt-2 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
-                placeholder="agent-slug"
+                placeholder="amaba11 or agent code"
               />
               {referralLocked && (
                 <p className="mt-2 text-xs text-ink/60">Referral code applied from your invite link.</p>

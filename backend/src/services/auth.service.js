@@ -4,6 +4,8 @@ const prisma = require("../config/prisma");
 const slugify = require("../utils/slug");
 const { startTrialSubscription } = require("./subscription.service");
 
+const ADMIN_REFERRAL_CODE = "amaba11";
+
 async function generateUniqueSlug(name) {
   const base = slugify(name);
   let slug = base;
@@ -25,6 +27,33 @@ async function registerAgent({ name, email, password, phone, referralCode }) {
     throw error;
   }
 
+  const normalizedReferral = referralCode?.trim().toLowerCase();
+  if (!normalizedReferral) {
+    const error = new Error("Referral code is required");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  let referrer = null;
+  if (normalizedReferral === ADMIN_REFERRAL_CODE) {
+    referrer = await prisma.user.findFirst({ where: { slug: ADMIN_REFERRAL_CODE, role: "ADMIN" } });
+    if (!referrer) {
+      referrer = await prisma.user.findFirst({ where: { role: "ADMIN" } });
+    }
+    if (!referrer) {
+      const error = new Error("Invalid referral code");
+      error.statusCode = 400;
+      throw error;
+    }
+  } else {
+    referrer = await prisma.user.findFirst({ where: { slug: normalizedReferral, role: "AGENT" } });
+    if (!referrer) {
+      const error = new Error("Invalid referral code");
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
   const slug = await generateUniqueSlug(name);
   const passwordHash = await bcrypt.hash(password, 12);
 
@@ -40,32 +69,26 @@ async function registerAgent({ name, email, password, phone, referralCode }) {
     }
   });
 
-  if (referralCode) {
-    const referrer = await prisma.user.findFirst({
-      where: { slug: referralCode, role: "AGENT" }
+  if (referrer && referrer.id !== agent.id) {
+    await prisma.referral.create({
+      data: { parentId: referrer.id, childId: agent.id, level: 1 }
     });
 
-    if (referrer && referrer.id !== agent.id) {
-      await prisma.referral.create({
-        data: { parentId: referrer.id, childId: agent.id, level: 1 }
-      });
+    const parentRefs = await prisma.referral.findMany({
+      where: { childId: referrer.id },
+      orderBy: { level: "asc" }
+    });
 
-      const parentRefs = await prisma.referral.findMany({
-        where: { childId: referrer.id },
-        orderBy: { level: "asc" }
-      });
-
-      for (const parentRef of parentRefs) {
-        const newLevel = parentRef.level + 1;
-        if (newLevel <= 3) {
-          await prisma.referral.create({
-            data: {
-              parentId: parentRef.parentId,
-              childId: agent.id,
-              level: newLevel
-            }
-          });
-        }
+    for (const parentRef of parentRefs) {
+      const newLevel = parentRef.level + 1;
+      if (newLevel <= 3) {
+        await prisma.referral.create({
+          data: {
+            parentId: parentRef.parentId,
+            childId: agent.id,
+            level: newLevel
+          }
+        });
       }
     }
   }

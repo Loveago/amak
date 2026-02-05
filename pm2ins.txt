@@ -11,6 +11,22 @@ READ THIS FIRST (SUPER SIMPLE)
 - Only replace YOUR_VPS_IP, CHANGE_ME, and <your-github-user> with your values.
 - Follow the order and you will be fine.
 
+FOLDER NAVIGATION (COPY/PASTE CHEATSHEET)
+----------------------------------------
+Where am I?
+pwd
+
+Go into a folder:
+cd /var/www/amak
+
+Go up one folder ("exit" current folder):
+cd ..
+
+Go back to your home folder:
+cd ~
+
+Tip: Most commands below already include the correct `cd ...`.
+
 PART 1) POINT NAMECHEAP DNS TO YOUR VPS
 ----------------------------------------
 1) Log in to Namecheap ➜ Domain List ➜ amabakent.uk ➜ Manage ➜ Advanced DNS.
@@ -111,6 +127,9 @@ npm install
 npx prisma generate
 npm run prisma:seed   # optional but recommended once
 
+(Exit backend folder if you want):
+cd ..
+
 Run migrations (copy/paste):
 npx prisma migrate deploy
 
@@ -119,15 +138,24 @@ cd /var/www/amak/frontend
 npm install
 npm run build
 
+(Exit frontend folder if you want):
+cd ..
+
 PART 9) START BACKEND + FRONTEND WITH PM2
 -----------------------------------------
 Backend service (copy/paste):
 cd /var/www/amak/backend
 pm2 start src/server.js --name amak-backend --time
 
+(Exit backend folder if you want):
+cd ..
+
 Frontend service (Next.js) (copy/paste):
 cd /var/www/amak/frontend
 pm2 start npm --name amak-frontend -- run start -- -p 3000
+
+(Exit frontend folder if you want):
+cd ..
 
 Enable PM2 auto-start on reboot (copy/paste):
 pm2 save
@@ -209,8 +237,25 @@ PART 13) DEPLOYING UPDATES LATER
 --------------------------------
 cd /var/www/amak
 git pull origin main
-cd backend && npm install && npx prisma migrate deploy && pm2 restart amak-backend
-cd ../frontend && npm install && npm run build && pm2 restart amak-frontend
+
+Backend update (copy/paste):
+cd /var/www/amak/backend
+npm install
+npx prisma migrate deploy
+pm2 restart amak-backend
+
+Go back to project root:
+cd ..
+
+Frontend update (copy/paste):
+cd /var/www/amak/frontend
+npm install
+npm run build
+pm2 restart amak-frontend
+
+Go back to project root:
+cd ..
+
 pm2 save
 
 PART 14) USEFUL PM2 COMMANDS
