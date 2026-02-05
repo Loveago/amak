@@ -14,6 +14,11 @@ const NETWORK_ASSETS = {
   default: { label: "Other", icon: "/icons/data.svg" }
 };
 
+const PREFERRED_NETWORK_ORDER = ["mtn", "telecel", "airteltigoIshare", "airteltigoBigtime"];
+const preferredNetworkPriority = new Map(
+  PREFERRED_NETWORK_ORDER.map((key, index) => [key, index])
+);
+
 const resolveNetworkMeta = (name = "") => {
   const normalized = name.toLowerCase();
   if (normalized.includes("mtn")) return { key: "mtn", ...NETWORK_ASSETS.mtn };
@@ -58,6 +63,11 @@ const getBundleSortKey = (bundle) => {
   return bundle.price || 0;
 };
 
+const getNetworkSortValue = (networkKey = "") => {
+  const priority = preferredNetworkPriority.get(networkKey);
+  return priority !== undefined ? priority : PREFERRED_NETWORK_ORDER.length;
+};
+
 export default function StorefrontClient({ store, slug }) {
   const router = useRouter();
   const categories = store?.categories || [];
@@ -74,7 +84,13 @@ export default function StorefrontClient({ store, slug }) {
         networkIcon: networkMeta.icon
       }));
     });
-    return unsorted.sort((a, b) => getBundleSortKey(a) - getBundleSortKey(b));
+    return unsorted.sort((a, b) => {
+      const networkPriority = getNetworkSortValue(a.networkKey) - getNetworkSortValue(b.networkKey);
+      if (networkPriority !== 0) {
+        return networkPriority;
+      }
+      return getBundleSortKey(a) - getBundleSortKey(b);
+    });
   }, [categories]);
   const filterOptions = useMemo(() => {
     const uniqueNetworks = new Map();
@@ -88,6 +104,13 @@ export default function StorefrontClient({ store, slug }) {
       key,
       label: meta.label
     }));
+    options.sort((a, b) => {
+      const priority = getNetworkSortValue(a.key) - getNetworkSortValue(b.key);
+      if (priority !== 0) {
+        return priority;
+      }
+      return a.label.localeCompare(b.label);
+    });
     return [{ key: "all", label: "All networks" }, ...options];
   }, [categories]);
   const [activeFilter, setActiveFilter] = useState("all");
