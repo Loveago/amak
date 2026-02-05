@@ -19,6 +19,23 @@ async function generateUniqueSlug(name) {
   return slug;
 }
 
+async function assignAdminBaseProducts(agentId) {
+  const products = await prisma.product.findMany({ select: { id: true } });
+  if (!products.length) {
+    return;
+  }
+  await prisma.agentProduct.createMany({
+    data: products.map((product) => ({
+      agentId,
+      productId: product.id,
+      markupGhs: 0,
+      affiliateMarkupGhs: 0,
+      isActive: true
+    })),
+    skipDuplicates: true
+  });
+}
+
 async function registerAgent({ name, email, password, phone, referralCode }) {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -68,6 +85,10 @@ async function registerAgent({ name, email, password, phone, referralCode }) {
       wallet: { create: {} }
     }
   });
+
+  if (normalizedReferral === ADMIN_REFERRAL_CODE) {
+    await assignAdminBaseProducts(agent.id);
+  }
 
   if (referrer && referrer.id !== agent.id) {
     await prisma.referral.create({
