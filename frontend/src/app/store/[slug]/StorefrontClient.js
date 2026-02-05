@@ -119,6 +119,7 @@ export default function StorefrontClient({ store, slug }) {
     return bundles.filter((bundle) => bundle.networkKey === activeFilter);
   }, [bundles, activeFilter]);
   const agentName = store?.agent?.name || slug.replace(/-/g, " ");
+  const whatsappLink = store?.agent?.whatsappLink || "";
 
   const [selectedBundle, setSelectedBundle] = useState(null);
   const [recipientPhone, setRecipientPhone] = useState("");
@@ -253,6 +254,25 @@ export default function StorefrontClient({ store, slug }) {
           )}
         </div>
       </div>
+
+      {whatsappLink ? (
+        <a
+          href={whatsappLink}
+          target="_blank"
+          rel="noreferrer"
+          className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl"
+          aria-label="Chat on WhatsApp"
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className="h-7 w-7"
+            fill="currentColor"
+          >
+            <path d="M20.52 3.5A11.87 11.87 0 0012.05 0C5.45 0 .1 5.35.1 11.95c0 2.1.55 4.15 1.6 5.95L0 24l6.3-1.65A11.87 11.87 0 0012.05 24h.05c6.6 0 11.95-5.35 11.95-11.95 0-3.2-1.25-6.2-3.53-8.55zm-8.47 18.4a9.9 9.9 0 01-5.05-1.4l-.35-.2-3.75 1 1-3.65-.25-.4a9.85 9.85 0 01-1.5-5.2c0-5.4 4.4-9.8 9.8-9.8 2.6 0 5.05 1 6.9 2.85a9.72 9.72 0 012.9 6.95c0 5.4-4.4 9.85-9.7 9.85zm5.35-7.35c-.3-.15-1.75-.85-2.05-.95-.3-.1-.5-.15-.7.15-.2.3-.8.95-.95 1.15-.2.2-.35.25-.65.1-.3-.15-1.25-.45-2.4-1.45-.9-.8-1.5-1.75-1.65-2.05-.15-.3 0-.45.1-.6.1-.1.3-.35.45-.55.15-.2.2-.35.3-.55.1-.2.05-.4-.05-.55-.15-.15-.7-1.65-.95-2.25-.25-.6-.5-.5-.7-.5-.2 0-.4 0-.6 0-.2 0-.55.1-.85.4-.3.3-1.1 1.05-1.1 2.55 0 1.5 1.1 2.95 1.25 3.15.15.2 2.15 3.25 5.2 4.55.75.3 1.35.5 1.8.65.75.25 1.45.2 2 .1.6-.1 1.75-.7 2-1.35.25-.65.25-1.2.2-1.35-.05-.15-.25-.25-.55-.4z" />
+          </svg>
+        </a>
+      ) : null}
 
       {selectedBundle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-8 backdrop-blur-sm">

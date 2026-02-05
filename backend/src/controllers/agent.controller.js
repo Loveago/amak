@@ -1,5 +1,10 @@
 const prisma = require("../config/prisma");
-const { activateProductSchema, affiliatePricingSchema, withdrawalSchema } = require("../validators/agent.validation");
+const {
+  activateProductSchema,
+  affiliatePricingSchema,
+  agentProfileSchema,
+  withdrawalSchema
+} = require("../validators/agent.validation");
 const { validate } = require("../utils/validation");
 const { ensureActiveSubscription, enforceProductLimit, getCurrentSubscription } = require("../services/subscription.service");
 const { refreshOrderProviderStatus } = require("../services/order.service");
@@ -20,6 +25,51 @@ async function dashboard(req, res, next) {
         walletBalanceGhs: wallet ? wallet.balanceGhs : 0
       }
     });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getProfile(req, res, next) {
+  try {
+    const agentId = req.user.sub;
+    const agent = await prisma.user.findUnique({
+      where: { id: agentId },
+      select: { id: true, name: true, email: true, phone: true, slug: true, whatsappLink: true }
+    });
+    return res.json({ success: true, data: agent });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function updateProfile(req, res, next) {
+  try {
+    const agentId = req.user.sub;
+    const payload = validate(agentProfileSchema, req.body);
+    let whatsappLink = payload.whatsappLink;
+
+    if (whatsappLink !== undefined) {
+      const trimmed = whatsappLink.trim();
+      if (!trimmed) {
+        whatsappLink = null;
+      } else {
+        const digits = trimmed.replace(/[^\d+]/g, "");
+        if (/^\+?\d{8,15}$/.test(digits)) {
+          whatsappLink = `https://wa.me/${digits.replace(/\+/g, "")}`;
+        } else if (!/^https?:\/\//i.test(trimmed)) {
+          whatsappLink = `https://${trimmed}`;
+        } else {
+          whatsappLink = trimmed;
+        }
+      }
+    }
+
+    const agent = await prisma.user.update({
+      where: { id: agentId },
+      data: whatsappLink !== undefined ? { whatsappLink } : {}
+    });
+    return res.json({ success: true, data: agent });
   } catch (error) {
     return next(error);
   }
@@ -342,6 +392,8 @@ async function listAfaRegistrations(req, res, next) {
 
 module.exports = {
   dashboard,
+  getProfile,
+  updateProfile,
   listAffiliatePricing,
   updateAffiliatePricing,
   listProducts,

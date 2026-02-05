@@ -9,10 +9,19 @@ const affiliatePricingSchema = z.object({
   affiliateMarkupGhs: z.number().min(0)
 });
 
+const agentProfileSchema = z.object({
+  whatsappLink: z.string().optional()
+});
+
 const withdrawalSchema = z.object({
   amountGhs: z.number().positive(),
   momoNetwork: z.string().min(2),
   momoNumber: z.string().min(6)
 });
 
-module.exports = { activateProductSchema, affiliatePricingSchema, withdrawalSchema };
+module.exports = {
+  activateProductSchema,
+  affiliatePricingSchema,
+  agentProfileSchema,
+  withdrawalSchema
+};

@@ -73,7 +73,7 @@ async function getStorefront(req, res, next) {
     return res.json({
       success: true,
       data: {
-        agent: { id: agent.id, name: agent.name, slug: agent.slug },
+        agent: { id: agent.id, name: agent.name, slug: agent.slug, whatsappLink: agent.whatsappLink },
         categories
       }
     });
