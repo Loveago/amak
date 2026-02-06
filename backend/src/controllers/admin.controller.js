@@ -17,7 +17,6 @@ const { validate } = require("../utils/validation");
 const slugify = require("../utils/slug");
 const { COMMISSION_RATES } = require("../config/affiliate");
 const env = require("../config/env");
-const { SUBSCRIPTION_DAYS, GRACE_DAYS } = require("../config/subscription");
 const { enforceProductLimit } = require("../services/subscription.service");
 const { refreshOrderProviderStatus } = require("../services/order.service");
 
@@ -26,7 +25,7 @@ async function dashboard(req, res, next) {
     const [orders, agents, subscriptions, revenueAgg, payoutsAgg, afaRegistrations] = await Promise.all([
       prisma.order.count(),
       prisma.user.count({ where: { role: "AGENT", status: "ACTIVE" } }),
-      prisma.subscription.count({ where: { status: { in: ["ACTIVE", "GRACE"] } } }),
+      prisma.subscription.count({ where: { status: { not: "CANCELED" } } }),
       prisma.order.aggregate({
         _sum: { totalAmountGhs: true },
         where: { status: { in: ["PAID", "FULFILLED"] } }
@@ -405,14 +404,10 @@ async function updateAgentSubscription(req, res, next) {
     }
 
     const startsAt = new Date();
-    const expiresAt = new Date(startsAt);
-    expiresAt.setDate(expiresAt.getDate() + SUBSCRIPTION_DAYS);
-    const graceEndsAt = new Date(expiresAt);
-    graceEndsAt.setDate(graceEndsAt.getDate() + GRACE_DAYS);
 
     const subscription = await prisma.$transaction(async (tx) => {
       await tx.subscription.updateMany({
-        where: { agentId: id, status: { in: ["ACTIVE", "GRACE"] } },
+        where: { agentId: id, status: { not: "CANCELED" } },
         data: { status: "CANCELED" }
       });
       const created = await tx.subscription.create({
@@ -421,8 +416,8 @@ async function updateAgentSubscription(req, res, next) {
           planId: payload.planId,
           status: "ACTIVE",
           startsAt,
-          expiresAt,
-          graceEndsAt
+          expiresAt: null,
+          graceEndsAt: null
         },
         include: { plan: true }
       });

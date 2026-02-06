@@ -111,8 +111,8 @@ model Subscription {
   planId      String
   status      SubscriptionStatus @default(ACTIVE)
   startsAt    DateTime
-  expiresAt   DateTime
-  graceEndsAt DateTime
+  expiresAt   DateTime?
+  graceEndsAt DateTime?
   createdAt   DateTime @default(now())
 
   agent User @relation(fields: [agentId], references: [id])

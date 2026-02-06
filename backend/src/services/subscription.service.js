@@ -1,18 +1,13 @@
 const prisma = require("../config/prisma");
-const { SUBSCRIPTION_DAYS, GRACE_DAYS } = require("../config/subscription");
 
 function evaluateSubscriptionStatus(subscription) {
   if (!subscription) {
     return null;
   }
-  const now = new Date();
-  if (subscription.expiresAt > now) {
-    return "ACTIVE";
+  if (subscription.status === "CANCELED") {
+    return "CANCELED";
   }
-  if (subscription.graceEndsAt > now) {
-    return "GRACE";
-  }
-  return "EXPIRED";
+  return "ACTIVE";
 }
 
 async function syncSubscriptionStatus(subscription) {
@@ -40,15 +35,11 @@ async function startTrialSubscription(agentId) {
   }
 
   await prisma.subscription.updateMany({
-    where: { agentId, status: { in: ["ACTIVE", "GRACE"] } },
+    where: { agentId, status: { not: "CANCELED" } },
     data: { status: "CANCELED" }
   });
 
   const startsAt = new Date();
-  const expiresAt = new Date(startsAt);
-  expiresAt.setDate(expiresAt.getDate() + SUBSCRIPTION_DAYS);
-  const graceEndsAt = new Date(expiresAt);
-  graceEndsAt.setDate(graceEndsAt.getDate() + GRACE_DAYS);
 
   const subscription = await prisma.subscription.create({
     data: {
@@ -56,8 +47,8 @@ async function startTrialSubscription(agentId) {
       planId: plan.id,
       status: "ACTIVE",
       startsAt,
-      expiresAt,
-      graceEndsAt
+      expiresAt: null,
+      graceEndsAt: null
     }
   });
 
@@ -76,8 +67,8 @@ async function startTrialSubscription(agentId) {
 
 async function getCurrentSubscription(agentId) {
   const subscription = await prisma.subscription.findFirst({
-    where: { agentId },
-    orderBy: { expiresAt: "desc" },
+    where: { agentId, status: { not: "CANCELED" } },
+    orderBy: { createdAt: "desc" },
     include: { plan: true }
   });
 
@@ -86,7 +77,7 @@ async function getCurrentSubscription(agentId) {
 
 async function enforceProductLimit(agentId) {
   const subscription = await getCurrentSubscription(agentId);
-  if (!subscription || !["ACTIVE", "GRACE"].includes(subscription.status)) {
+  if (!subscription || subscription.status === "CANCELED") {
     await prisma.agentProduct.updateMany({
       where: { agentId, isActive: true },
       data: { isActive: false }
@@ -119,15 +110,11 @@ async function activateSubscription(agentId, planId, reference) {
   }
 
   await prisma.subscription.updateMany({
-    where: { agentId, status: { in: ["ACTIVE", "GRACE"] } },
+    where: { agentId, status: { not: "CANCELED" } },
     data: { status: "CANCELED" }
   });
 
   const startsAt = new Date();
-  const expiresAt = new Date(startsAt);
-  expiresAt.setDate(expiresAt.getDate() + SUBSCRIPTION_DAYS);
-  const graceEndsAt = new Date(expiresAt);
-  graceEndsAt.setDate(graceEndsAt.getDate() + GRACE_DAYS);
 
   const subscription = await prisma.subscription.create({
     data: {
@@ -135,8 +122,8 @@ async function activateSubscription(agentId, planId, reference) {
       planId,
       status: "ACTIVE",
       startsAt,
-      expiresAt,
-      graceEndsAt
+      expiresAt: null,
+      graceEndsAt: null
     }
   });
 
@@ -155,7 +142,7 @@ async function activateSubscription(agentId, planId, reference) {
 
 async function ensureActiveSubscription(agentId) {
   const subscription = await getCurrentSubscription(agentId);
-  if (!subscription || !["ACTIVE", "GRACE"].includes(subscription.status)) {
+  if (!subscription || subscription.status === "CANCELED") {
     const error = new Error("Active subscription required");
     error.statusCode = 402;
     throw error;
