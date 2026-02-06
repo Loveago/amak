@@ -269,6 +269,7 @@ model Withdrawal {
   id          String   @id @default(cuid())
   agentId     String
   amountGhs   Float
+  feeGhs      Float            @default(0)
   status      WithdrawalStatus @default(PENDING)
   momoNetwork String
   momoNumber  String

@@ -46,6 +46,9 @@ export default async function AdminWithdrawalsPage() {
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-ink">GHS {Number(item.amountGhs || 0).toFixed(2)}</p>
+                  {Number(item.feeGhs) > 0 && (
+                    <p className="text-[10px] text-ink/50">Fee: GHS {Number(item.feeGhs).toFixed(2)}</p>
+                  )}
                   <p className="text-xs text-ink/60">{item.status}</p>
                 </div>
                 <form action={updateWithdrawalStatus} className="flex flex-wrap items-center gap-2">

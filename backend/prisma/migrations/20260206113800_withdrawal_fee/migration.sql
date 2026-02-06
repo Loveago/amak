@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Withdrawal" ADD COLUMN "feeGhs" DOUBLE PRECISION NOT NULL DEFAULT 0;

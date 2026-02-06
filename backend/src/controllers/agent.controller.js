@@ -263,9 +263,12 @@ async function createWithdrawal(req, res, next) {
     const agentId = req.user.sub;
     const payload = validate(withdrawalSchema, req.body);
 
+    const fee = +(payload.amountGhs * 0.02).toFixed(2);
+    const totalDebit = +(payload.amountGhs + fee).toFixed(2);
+
     const walletData = await prisma.wallet.findUnique({ where: { agentId } });
-    if (!walletData || walletData.balanceGhs < payload.amountGhs) {
-      return res.status(400).json({ success: false, error: "Insufficient balance" });
+    if (!walletData || walletData.balanceGhs < totalDebit) {
+      return res.status(400).json({ success: false, error: "Insufficient balance (amount + 2% fee)" });
     }
 
     const [withdrawal] = await prisma.$transaction([
@@ -273,6 +276,7 @@ async function createWithdrawal(req, res, next) {
         data: {
           agentId,
           amountGhs: payload.amountGhs,
+          feeGhs: fee,
           momoNetwork: payload.momoNetwork,
           momoNumber: payload.momoNumber
         }
@@ -280,11 +284,11 @@ async function createWithdrawal(req, res, next) {
       prisma.wallet.update({
         where: { agentId },
         data: {
-          balanceGhs: { decrement: payload.amountGhs },
+          balanceGhs: { decrement: totalDebit },
           transactions: {
             create: {
               type: "WITHDRAWAL",
-              amountGhs: -Math.abs(payload.amountGhs),
+              amountGhs: -Math.abs(totalDebit),
               reference: "WITHDRAWAL_REQUEST"
             }
           }
@@ -292,7 +296,7 @@ async function createWithdrawal(req, res, next) {
       })
     ]);
 
-    return res.status(201).json({ success: true, data: withdrawal });
+    return res.status(201).json({ success: true, data: { ...withdrawal, feeGhs: fee } });
   } catch (error) {
     return next(error);
   }

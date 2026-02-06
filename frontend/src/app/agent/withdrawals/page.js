@@ -35,10 +35,10 @@ export default async function AgentWithdrawalsPage() {
           <input
             name="amountGhs"
             type="number"
-            min="1"
+            min="50"
             step="0.01"
             className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
-            placeholder="Amount (GHS)"
+            placeholder="Min GHS 50"
             required
           />
           <input
@@ -64,6 +64,7 @@ export default async function AgentWithdrawalsPage() {
             Submit request
           </button>
         </form>
+        <p className="mt-2 text-xs text-ink/50">A 2% processing fee is deducted from your wallet on each withdrawal.</p>
       </div>
 
       <div className="card-outline rounded-3xl bg-white/90 p-6">
@@ -80,7 +81,12 @@ export default async function AgentWithdrawalsPage() {
                   <p className="font-semibold text-ink">{item.id}</p>
                   <p className="text-xs text-ink/60">{item.status}</p>
                 </div>
-                <span className="font-semibold text-ink">GHS {Number(item.amountGhs || 0).toFixed(2)}</span>
+                <div className="text-right">
+                  <span className="font-semibold text-ink">GHS {Number(item.amountGhs || 0).toFixed(2)}</span>
+                  {Number(item.feeGhs) > 0 && (
+                    <p className="text-[10px] text-ink/50">Fee: GHS {Number(item.feeGhs).toFixed(2)}</p>
+                  )}
+                </div>
               </div>
             ))
           )}
