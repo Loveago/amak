@@ -600,6 +600,42 @@ async function adjustWallet(req, res, next) {
   }
 }
 
+async function deleteAgent(req, res, next) {
+  try {
+    const { id } = req.params;
+    const agent = await prisma.user.findFirst({ where: { id, role: "AGENT" } });
+    if (!agent) {
+      return res.status(404).json({ success: false, error: "Agent not found" });
+    }
+
+    await prisma.$transaction([
+      prisma.referral.deleteMany({ where: { OR: [{ parentId: id }, { childId: id }] } }),
+      prisma.agentProduct.deleteMany({ where: { agentId: id } }),
+      prisma.walletTransaction.deleteMany({ where: { wallet: { agentId: id } } }),
+      prisma.wallet.deleteMany({ where: { agentId: id } }),
+      prisma.subscription.deleteMany({ where: { agentId: id } }),
+      prisma.withdrawal.deleteMany({ where: { agentId: id } }),
+      prisma.passwordReset.deleteMany({ where: { userId: id } }),
+      prisma.order.deleteMany({ where: { agentId: id } }),
+      prisma.payment.deleteMany({ where: { userId: id } }),
+      prisma.auditLog.deleteMany({ where: { actorId: id } }),
+      prisma.afaRegistration.deleteMany({ where: { agentId: id } }),
+      prisma.user.delete({ where: { id } }),
+      prisma.auditLog.create({
+        data: {
+          actorId: req.user.sub,
+          action: "ADMIN_DELETE_AGENT",
+          meta: { agentId: id, agentEmail: agent.email, agentName: agent.name }
+        }
+      })
+    ]);
+
+    return res.json({ success: true, data: { id } });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   dashboard,
   getSettings,
@@ -630,5 +666,6 @@ module.exports = {
   listPayments,
   listAuditLogs,
   listAfaRegistrations,
-  updateAfaRegistrationStatus
+  updateAfaRegistrationStatus,
+  deleteAgent
 };

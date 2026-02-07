@@ -31,7 +31,8 @@ const {
   listAuditLogs,
   updateAfaConfig,
   listAfaRegistrations,
-  updateAfaRegistrationStatus
+  updateAfaRegistrationStatus,
+  deleteAgent
 } = require("../controllers/admin.controller");
 
 const router = express.Router();
@@ -58,6 +59,7 @@ router.patch("/agents/:id", updateAgentProfile);
 router.patch("/agents/:id/password", updateAgentPassword);
 router.patch("/agents/:id/wallet", updateAgentWallet);
 router.patch("/agents/:id/subscription", updateAgentSubscription);
+router.delete("/agents/:id", deleteAgent);
 router.get("/orders", listOrders);
 router.patch("/orders/:id/fulfill", fulfillOrder);
 router.get("/subscriptions", listSubscriptions);

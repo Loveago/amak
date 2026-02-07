@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 
 export default function AdminAgentsClient({
   agents,
@@ -9,10 +9,37 @@ export default function AdminAgentsClient({
   onUpdateProfile,
   onUpdatePassword,
   onUpdateWallet,
-  onUpdateSubscription
+  onUpdateSubscription,
+  onDeleteAgent
 }) {
   const [query, setQuery] = useState("");
   const [expandedIds, setExpandedIds] = useState([]);
+  const [feedback, setFeedback] = useState({});
+  const [pending, startTransition] = useTransition();
+
+  function withFeedback(agentId, key, action) {
+    return (formData) => {
+      startTransition(async () => {
+        setFeedback((prev) => ({ ...prev, [`${agentId}_${key}`]: { type: "loading" } }));
+        const result = await action(formData);
+        if (result?.error) {
+          setFeedback((prev) => ({ ...prev, [`${agentId}_${key}`]: { type: "error", message: result.error } }));
+        } else {
+          setFeedback((prev) => ({ ...prev, [`${agentId}_${key}`]: { type: "success", message: "Updated" } }));
+          setTimeout(() => setFeedback((prev) => ({ ...prev, [`${agentId}_${key}`]: null })), 3000);
+        }
+      });
+    };
+  }
+
+  function FeedbackMsg({ agentId, action }) {
+    const fb = feedback[`${agentId}_${action}`];
+    if (!fb) return null;
+    if (fb.type === "loading") return <p className="mt-1 text-xs text-ink/50">Saving...</p>;
+    if (fb.type === "error") return <p className="mt-1 text-xs text-red-600">{fb.message}</p>;
+    if (fb.type === "success") return <p className="mt-1 text-xs text-green-600">{fb.message}</p>;
+    return null;
+  }
   const normalizedQuery = query.trim().toLowerCase();
 
   const filteredAgents = useMemo(() => {
@@ -105,7 +132,7 @@ export default function AdminAgentsClient({
                       <div className="grid gap-4 lg:grid-cols-2">
                         <div className="rounded-2xl border border-ink/10 bg-white/70 p-4">
                           <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Profile</p>
-                          <form action={onUpdateProfile} className="mt-3 grid gap-2">
+                          <form action={withFeedback(agent.id, "profile", onUpdateProfile)} className="mt-3 grid gap-2">
                             <input type="hidden" name="agentId" value={agent.id} />
                             <input
                               name="name"
@@ -134,13 +161,14 @@ export default function AdminAgentsClient({
                             <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
                               Save profile
                             </button>
+                            <FeedbackMsg agentId={agent.id} action="profile" />
                           </form>
                         </div>
 
                         <div className="space-y-4">
                           <div className="rounded-2xl border border-ink/10 bg-white/70 p-4">
                             <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Status</p>
-                            <form action={onUpdateStatus} className="mt-3 flex flex-wrap items-center gap-2">
+                            <form action={withFeedback(agent.id, "status", onUpdateStatus)} className="mt-3 flex flex-wrap items-center gap-2">
                               <input type="hidden" name="agentId" value={agent.id} />
                               <select
                                 name="status"
@@ -155,11 +183,12 @@ export default function AdminAgentsClient({
                                 Update status
                               </button>
                             </form>
+                            <FeedbackMsg agentId={agent.id} action="status" />
                           </div>
 
                           <div className="rounded-2xl border border-ink/10 bg-white/70 p-4">
                             <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Wallet balance</p>
-                            <form action={onUpdateWallet} className="mt-3 grid gap-2">
+                            <form action={withFeedback(agent.id, "wallet", onUpdateWallet)} className="mt-3 grid gap-2">
                               <input type="hidden" name="agentId" value={agent.id} />
                               <input
                                 name="balanceGhs"
@@ -178,6 +207,7 @@ export default function AdminAgentsClient({
                               <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
                                 Set balance
                               </button>
+                              <FeedbackMsg agentId={agent.id} action="wallet" />
                             </form>
                           </div>
                         </div>
@@ -186,7 +216,7 @@ export default function AdminAgentsClient({
                       <div className="grid gap-4 lg:grid-cols-2">
                         <div className="rounded-2xl border border-ink/10 bg-white/70 p-4">
                           <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Subscription</p>
-                          <form action={onUpdateSubscription} className="mt-3 grid gap-2">
+                          <form action={withFeedback(agent.id, "subscription", onUpdateSubscription)} className="mt-3 grid gap-2">
                             <input type="hidden" name="agentId" value={agent.id} />
                             <select
                               name="planId"
@@ -205,30 +235,54 @@ export default function AdminAgentsClient({
                             <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
                               Update subscription
                             </button>
+                            <FeedbackMsg agentId={agent.id} action="subscription" />
                           </form>
                         </div>
 
                         <div className="rounded-2xl border border-ink/10 bg-white/70 p-4">
                           <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Reset password</p>
-                          <form action={onUpdatePassword} className="mt-3 grid gap-2">
+                          <form action={withFeedback(agent.id, "password", onUpdatePassword)} className="mt-3 grid gap-2">
                             <input type="hidden" name="agentId" value={agent.id} />
                             <input
                               name="password"
                               type="password"
                               className="rounded-2xl border border-ink/10 bg-white/80 px-3 py-2 text-sm"
-                              placeholder="New password"
+                              placeholder="New password (min 6 chars)"
+                              minLength={6}
                             />
                             <input
                               name="confirmPassword"
                               type="password"
                               className="rounded-2xl border border-ink/10 bg-white/80 px-3 py-2 text-sm"
                               placeholder="Confirm password"
+                              minLength={6}
                             />
                             <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
                               Update password
                             </button>
+                            <FeedbackMsg agentId={agent.id} action="password" />
                           </form>
                         </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-red-200 bg-red-50/50 p-4">
+                        <p className="text-xs uppercase tracking-[0.2em] text-red-500">Danger zone</p>
+                        <p className="mt-1 text-xs text-ink/60">Permanently delete this agent and all their data (orders, wallet, referrals, etc).</p>
+                        <form
+                          action={withFeedback(agent.id, "delete", onDeleteAgent)}
+                          onSubmit={(e) => {
+                            if (!window.confirm(`Are you sure you want to delete ${agent.name}? This cannot be undone.`)) {
+                              e.preventDefault();
+                            }
+                          }}
+                          className="mt-3"
+                        >
+                          <input type="hidden" name="agentId" value={agent.id} />
+                          <button className="rounded-full bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                            Delete agent
+                          </button>
+                          <FeedbackMsg agentId={agent.id} action="delete" />
+                        </form>
                       </div>
                     </div>
                   )}
