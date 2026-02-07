@@ -58,13 +58,18 @@ async function registerAgent({ name, email, password, phone, referralCode }) {
       referrer = await prisma.user.findFirst({ where: { role: "ADMIN" } });
     }
     if (!referrer) {
+      console.error("[register] Admin referral code lookup failed:", normalizedReferral);
       const error = new Error("Invalid referral code");
       error.statusCode = 400;
       throw error;
     }
   } else {
-    referrer = await prisma.user.findFirst({ where: { slug: normalizedReferral, role: "AGENT" } });
+    referrer = await prisma.user.findFirst({ where: { referralCode: normalizedReferral, role: "AGENT" } });
     if (!referrer) {
+      referrer = await prisma.user.findFirst({ where: { slug: normalizedReferral, role: "AGENT" } });
+    }
+    if (!referrer) {
+      console.error("[register] Referral code lookup failed:", normalizedReferral);
       const error = new Error("Invalid referral code");
       error.statusCode = 400;
       throw error;
@@ -81,6 +86,7 @@ async function registerAgent({ name, email, password, phone, referralCode }) {
       name,
       phone,
       slug,
+      referralCode: slug,
       role: "AGENT",
       wallet: { create: {} }
     }
