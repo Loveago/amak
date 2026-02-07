@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -13,6 +13,17 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
+
+  useEffect(() => {
+    try {
+      const raw = document.cookie.split("; ").find((c) => c.startsWith("user="));
+      if (raw) {
+        const user = JSON.parse(decodeURIComponent(raw.split("=").slice(1).join("=")));
+        if (user?.role === "ADMIN") { router.replace(next || "/admin/dashboard"); return; }
+        if (user?.role === "AGENT") { router.replace(next || "/agent/dashboard"); return; }
+      }
+    } catch (_) {}
+  }, [router, next]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;

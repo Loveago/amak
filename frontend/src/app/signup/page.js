@@ -22,6 +22,17 @@ export default function SignupPage() {
   const referralLocked = Boolean(referralFromQuery);
 
   useEffect(() => {
+    try {
+      const raw = document.cookie.split("; ").find((c) => c.startsWith("user="));
+      if (raw) {
+        const user = JSON.parse(decodeURIComponent(raw.split("=").slice(1).join("=")));
+        if (user?.role === "ADMIN") { router.replace("/admin/dashboard"); return; }
+        if (user?.role === "AGENT") { router.replace("/agent/dashboard"); return; }
+      }
+    } catch (_) {}
+  }, [router]);
+
+  useEffect(() => {
     if (referralFromQuery && !form.referralCode) {
       setForm((prev) => ({ ...prev, referralCode: referralFromQuery }));
     }
