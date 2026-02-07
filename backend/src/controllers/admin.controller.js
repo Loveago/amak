@@ -608,27 +608,27 @@ async function deleteAgent(req, res, next) {
       return res.status(404).json({ success: false, error: "Agent not found" });
     }
 
-    await prisma.$transaction([
-      prisma.referral.deleteMany({ where: { OR: [{ parentId: id }, { childId: id }] } }),
-      prisma.agentProduct.deleteMany({ where: { agentId: id } }),
-      prisma.walletTransaction.deleteMany({ where: { wallet: { agentId: id } } }),
-      prisma.wallet.deleteMany({ where: { agentId: id } }),
-      prisma.subscription.deleteMany({ where: { agentId: id } }),
-      prisma.withdrawal.deleteMany({ where: { agentId: id } }),
-      prisma.passwordReset.deleteMany({ where: { userId: id } }),
-      prisma.order.deleteMany({ where: { agentId: id } }),
-      prisma.payment.deleteMany({ where: { userId: id } }),
-      prisma.auditLog.deleteMany({ where: { actorId: id } }),
-      prisma.afaRegistration.deleteMany({ where: { agentId: id } }),
-      prisma.user.delete({ where: { id } }),
-      prisma.auditLog.create({
+    await prisma.$transaction(async (tx) => {
+      await tx.referral.deleteMany({ where: { OR: [{ parentId: id }, { childId: id }] } });
+      await tx.agentProduct.deleteMany({ where: { agentId: id } });
+      await tx.walletTransaction.deleteMany({ where: { wallet: { agentId: id } } });
+      await tx.wallet.deleteMany({ where: { agentId: id } });
+      await tx.subscription.deleteMany({ where: { agentId: id } });
+      await tx.withdrawal.deleteMany({ where: { agentId: id } });
+      await tx.passwordReset.deleteMany({ where: { userId: id } });
+      await tx.payment.updateMany({ where: { agentId: id }, data: { agentId: null } });
+      await tx.order.deleteMany({ where: { agentId: id } });
+      await tx.auditLog.deleteMany({ where: { actorId: id } });
+      await tx.afaRegistration.deleteMany({ where: { agentId: id } });
+      await tx.user.delete({ where: { id } });
+      await tx.auditLog.create({
         data: {
           actorId: req.user.sub,
           action: "ADMIN_DELETE_AGENT",
           meta: { agentId: id, agentEmail: agent.email, agentName: agent.name }
         }
-      })
-    ]);
+      });
+    });
 
     return res.json({ success: true, data: { id } });
   } catch (error) {
