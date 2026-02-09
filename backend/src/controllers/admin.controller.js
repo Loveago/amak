@@ -617,6 +617,7 @@ async function deleteAgent(req, res, next) {
       await tx.withdrawal.deleteMany({ where: { agentId: id } });
       await tx.passwordReset.deleteMany({ where: { userId: id } });
       await tx.payment.updateMany({ where: { agentId: id }, data: { agentId: null } });
+      await tx.orderItem.deleteMany({ where: { order: { agentId: id } } });
       await tx.order.deleteMany({ where: { agentId: id } });
       await tx.auditLog.deleteMany({ where: { actorId: id } });
       await tx.afaRegistration.deleteMany({ where: { agentId: id } });

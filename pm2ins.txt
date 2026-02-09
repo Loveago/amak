@@ -243,7 +243,7 @@ cd /var/www/amak/backend
 npm install
 npx prisma migrate deploy
 pm2 restart amak-backend
-
+https://pdd.gh.999yes.xyz/gh/?guid=4287197&key=friend
 Go back to project root:
 cd ..
 
