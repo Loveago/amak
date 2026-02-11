@@ -41,8 +41,9 @@ export default async function AdminWithdrawalsPage() {
             withdrawals.map((item) => (
               <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm">
                 <div>
-                  <p className="font-semibold text-ink">{item.id}</p>
-                  <p className="text-xs text-ink/60">{item.agent?.name || "Agent"}</p>
+                  <p className="font-semibold text-ink">{item.agent?.name || "Agent"}</p>
+                  <p className="text-xs text-ink/60">Request ID: {item.id}</p>
+                  <p className="text-xs text-ink/60">MoMo: {item.momoNetwork} · {item.momoNumber}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-ink">GHS {Number(item.amountGhs || 0).toFixed(2)}</p>
