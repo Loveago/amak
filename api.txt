@@ -1,0 +1,212 @@
+# DataHub API Documentation
+
+Base URL:
+https://www.datahubnet.online
+
+All endpoints require API Key authentication.
+
+---
+
+## Authentication
+
+Include your API key in request headers:
+
+Authorization: Api-Key YOUR_API_KEY
+
+### How to Get an API Key
+1. Sign up on the Data Hub platform.
+2. Go to Account Settings → API.
+3. Generate a new API Key.
+4. Copy and use it in requests.
+
+---
+
+## 1. Retrieve Packages
+
+Returns all available data packages.
+
+### Endpoint
+GET /api/v1/packages
+
+Full URL:
+https://www.datahubnet.online/api/v1/packages
+
+### Headers
+Authorization: Api-Key YOUR_API_KEY
+
+### Parameters
+None
+
+### Response
+Status: 200 OK  
+Content-Type: application/json
+
+### Response Fields
+
+- id (integer): Unique package ID
+- network (string): Network provider
+- data (string): Package data info
+- dealerprice (string): Dealer price (sometimes returned)
+- myprice (integer): User price (sometimes returned)
+
+Note: The API may return either dealerprice or myprice.
+
+### Example Response
+
+[
+  {
+    "id": 0,
+    "network": "",
+    "data": "",
+    "dealerprice": ""
+  }
+]
+
+OR
+
+[
+  {
+    "id": 0,
+    "network": "",
+    "data": "",
+    "myprice": 0
+  }
+]
+
+### Example Request (cURL)
+
+curl -X GET https://www.datahubnet.online/api/v1/packages \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+
+---
+
+## 2. Retrieve User Balance
+
+Returns the current wallet balance.
+
+### Endpoint
+GET /api/user/balance/
+
+Full URL:
+https://www.datahubnet.online/api/user/balance/
+
+### Headers
+Authorization: Api-Key YOUR_API_KEY
+
+### Parameters
+None
+
+### Response
+Status: 200 OK  
+Content-Type: application/json
+
+### Response Fields
+
+- success (boolean): Request status
+- balance (integer): Account balance
+
+### Example Response
+
+{
+  "success": true,
+  "balance": 0
+}
+
+### Example Request (cURL)
+
+curl -X GET https://www.datahubnet.online/api/user/balance/ \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+
+---
+
+## 3. Place Order
+
+Submits a data order.
+
+### Endpoint
+POST /api/v1/placeOrder/
+
+Full URL:
+https://www.datahubnet.online/api/v1/placeOrder/
+
+### Headers
+Authorization: Api-Key YOUR_API_KEY  
+Content-Type: application/json
+
+### Request Body Fields
+
+- phone (string): Recipient phone number
+- network (string): Network provider
+- capacity (integer): Package quantity
+- reference (string): Unique transaction ID
+- express (boolean): Optional express service
+
+### Supported Networks
+
+- mtn
+- telecel
+- ishare
+- bigtime
+- xpress
+
+### Example Request Body
+
+{
+  "phone": "0240000000",
+  "network": "MTN",
+  "capacity": 1,
+  "reference": "765765765657674676",
+  "express": true
+}
+
+### Response
+Status: 404 Not Found  
+Content-Type: application/json
+
+Note: This endpoint often returns 404 even when called correctly.
+
+### Response Fields
+
+- error (string): Error message
+
+### Example Response
+
+{
+  "error": ""
+}
+
+### Example Request (cURL)
+
+curl -X POST https://www.datahubnet.online/api/v1/placeOrder/ \
+  -H "Authorization: Api-Key YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone": "0240000000",
+    "network": "MTN",
+    "capacity": 1,
+    "reference": "75576465456365353"
+  }'
+
+---
+
+## Important Notes
+
+1. All endpoints require an API Key.
+2. Missing headers will cause authentication failure.
+3. placeOrder often returns 404 (likely backend issue).
+4. packages may return different price fields.
+5. Always generate unique reference values.
+
+---
+
+## Summary
+
+| Feature      | Endpoint              | Method |
+|--------------|-----------------------|--------|
+| Get Packages | /api/v1/packages      | GET    |
+| Get Balance  | /api/user/balance/    | GET    |
+| Place Order  | /api/v1/placeOrder/   | POST   |
+
+---
+
+End of Documentation
