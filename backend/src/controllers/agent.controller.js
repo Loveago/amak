@@ -264,11 +264,11 @@ async function createWithdrawal(req, res, next) {
     const payload = validate(withdrawalSchema, req.body);
 
     const fee = +(payload.amountGhs * 0.02).toFixed(2);
-    const totalDebit = +(payload.amountGhs + fee).toFixed(2);
+    const totalDebit = +payload.amountGhs.toFixed(2);
 
     const walletData = await prisma.wallet.findUnique({ where: { agentId } });
     if (!walletData || walletData.balanceGhs < totalDebit) {
-      return res.status(400).json({ success: false, error: "Insufficient balance (amount + 2% fee)" });
+      return res.status(400).json({ success: false, error: "Insufficient balance" });
     }
 
     const [withdrawal] = await prisma.$transaction([
@@ -289,7 +289,11 @@ async function createWithdrawal(req, res, next) {
             create: {
               type: "WITHDRAWAL",
               amountGhs: -Math.abs(totalDebit),
-              reference: "WITHDRAWAL_REQUEST"
+              reference: "WITHDRAWAL_REQUEST",
+              metadata: {
+                withdrawalAmountGhs: payload.amountGhs,
+                feeGhs: fee
+              }
             }
           }
         }
