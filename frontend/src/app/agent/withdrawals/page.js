@@ -9,14 +9,19 @@ async function createWithdrawal(formData) {
   const momoNetwork = String(formData.get("momoNetwork") || "").trim();
   const amountGhs = Number(amountRaw);
   if (!Number.isFinite(amountGhs) || amountGhs <= 0 || !momoNumber || !momoNetwork) {
-    return;
+    return { error: "Missing or invalid fields" };
   }
 
-  await serverApi("/agent/withdrawals", {
-    method: "POST",
-    body: { amountGhs, momoNetwork, momoNumber }
-  });
-  revalidatePath("/agent/withdrawals");
+  try {
+    await serverApi("/agent/withdrawals", {
+      method: "POST",
+      body: { amountGhs, momoNetwork, momoNumber }
+    });
+    revalidatePath("/agent/withdrawals");
+    return { success: true };
+  } catch (error) {
+    return { error: error.message || "Unable to submit withdrawal" };
+  }
 }
 
 export default async function AgentWithdrawalsPage() {
