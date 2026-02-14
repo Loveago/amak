@@ -4,10 +4,14 @@ const { creditWallet } = require("./wallet.service");
 const { creditAffiliateCommissions } = require("./affiliate.service");
 const {
   purchaseDataBundle: purchaseEncartaBundle,
-  fetchOrderStatus,
+  fetchOrderStatus: fetchEncartaOrderStatus,
   normalizeStatus
 } = require("./encarta.service");
-const { purchaseDataBundle: purchaseDatahubBundle } = require("./datahub.service");
+const {
+  purchaseDataBundle: purchaseGrandapiBundle,
+  fetchOrderStatus: fetchGrandapiOrderStatus
+} = require("./grandapi.service");
+const { resolveActiveProvider } = require("./provider.service");
 
 const NETWORK_KEY_BY_CATEGORY = {
   mtn: "YELLO",
@@ -16,16 +20,9 @@ const NETWORK_KEY_BY_CATEGORY = {
   "at-bigtime": "AT_BIGTIME"
 };
 
-const DATAHUB_NETWORK_BY_CATEGORY = {
-  telecel: "telecel",
-  vodafone: "telecel",
-  "at-ishare": "ishare",
-  "at-bigtime": "bigtime"
-};
-
 const DELIVERED_STATUSES = new Set(["DELIVERED", "COMPLETED", "SUCCESS"]);
 
-const resolveEncartaNetworkKey = (category) => {
+const resolveNetworkKey = (category) => {
   if (!category) return null;
   const slug = category.slug?.toLowerCase();
   if (slug && NETWORK_KEY_BY_CATEGORY[slug]) {
@@ -36,38 +33,6 @@ const resolveEncartaNetworkKey = (category) => {
   if (name.includes("telecel") || name.includes("vodafone")) return "TELECEL";
   if (name.includes("ishare")) return "AT_PREMIUM";
   if (name.includes("bigtime")) return "AT_BIGTIME";
-  return null;
-};
-
-const resolveDatahubNetwork = (category) => {
-  if (!category) return null;
-  const slug = category.slug?.toLowerCase();
-  if (slug && DATAHUB_NETWORK_BY_CATEGORY[slug]) {
-    return DATAHUB_NETWORK_BY_CATEGORY[slug];
-  }
-  const name = category.name?.toLowerCase() || "";
-  if (name.includes("telecel") || name.includes("vodafone")) return "telecel";
-  if (name.includes("ishare")) return "ishare";
-  if (name.includes("bigtime")) return "bigtime";
-  return null;
-};
-
-const resolveProvider = (category) => {
-  const name = category?.name?.toLowerCase() || "";
-  const slug = category?.slug?.toLowerCase() || "";
-  if (slug.includes("mtn") || name.includes("mtn")) return "ENCARTA";
-  if (
-    slug.includes("telecel") ||
-    slug.includes("vodafone") ||
-    slug.includes("ishare") ||
-    slug.includes("bigtime") ||
-    name.includes("telecel") ||
-    name.includes("vodafone") ||
-    name.includes("ishare") ||
-    name.includes("bigtime")
-  ) {
-    return "DATAHUB";
-  }
   return null;
 };
 
@@ -106,13 +71,10 @@ async function dispatchOrderToProvider(orderId) {
 
   const primaryItem = order.items[0];
   const capacity = parseCapacity(primaryItem.product?.size, primaryItem.quantity);
-  const category = primaryItem.product?.category;
-  const provider = resolveProvider(category) || "ENCARTA";
-  const encartaNetworkKey = resolveEncartaNetworkKey(category);
-  const datahubNetwork = resolveDatahubNetwork(category);
+  const networkKey = resolveNetworkKey(primaryItem.product?.category);
   const recipient = order.customerPhone || "";
 
-  if (!capacity || !recipient) {
+  if (!capacity || !networkKey || !recipient) {
     await prisma.order.update({
       where: { id: orderId },
       data: {
@@ -121,9 +83,7 @@ async function dispatchOrderToProvider(orderId) {
         providerPayload: {
           error: "Unable to map product to provider payload",
           recipient,
-          provider,
-          encartaNetworkKey,
-          datahubNetwork,
+          networkKey,
           capacity
         }
       }
@@ -131,17 +91,7 @@ async function dispatchOrderToProvider(orderId) {
     return order;
   }
 
-  if (provider === "DATAHUB" && !env.datahubApiKey) {
-    await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        providerStatus: "NOT_SUBMITTED",
-        providerLastCheckedAt: new Date(),
-        providerPayload: { provider: "DATAHUB", error: "DataHub API key missing" }
-      }
-    });
-    return order;
-  }
+  const { provider, reason } = await resolveActiveProvider();
 
   if (provider === "ENCARTA" && !env.encartaApiKey) {
     await prisma.order.update({
@@ -149,7 +99,19 @@ async function dispatchOrderToProvider(orderId) {
       data: {
         providerStatus: "NOT_SUBMITTED",
         providerLastCheckedAt: new Date(),
-        providerPayload: { provider: "ENCARTA", error: "Encarta API key missing" }
+        providerPayload: { provider, reason, error: "Encarta API key missing" }
+      }
+    });
+    return order;
+  }
+
+  if (provider === "GRANDAPI" && !env.grandapiApiKey) {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        providerStatus: "NOT_SUBMITTED",
+        providerLastCheckedAt: new Date(),
+        providerPayload: { provider, reason, error: "GrandAPI key missing" }
       }
     });
     return order;
@@ -157,24 +119,15 @@ async function dispatchOrderToProvider(orderId) {
 
   try {
     const result =
-      provider === "DATAHUB"
-        ? await purchaseDatahubBundle({
-            network: datahubNetwork,
-            recipient,
-            capacity,
-            reference: order.id
-          })
-        : await purchaseEncartaBundle({
-            networkKey: encartaNetworkKey,
-            recipient,
-            capacity
-          });
+      provider === "GRANDAPI"
+        ? await purchaseGrandapiBundle({ networkKey, recipient, capacity })
+        : await purchaseEncartaBundle({ networkKey, recipient, capacity });
 
     const status = normalizeStatus(result.status) || "PLACED";
     const updates = {
-      providerReference: result.reference,
+      providerReference: result.reference ? String(result.reference) : null,
       providerStatus: status,
-      providerPayload: { provider, raw: result.raw },
+      providerPayload: { provider, reason, raw: result.raw },
       providerLastCheckedAt: new Date()
     };
 
@@ -189,7 +142,7 @@ async function dispatchOrderToProvider(orderId) {
       data: {
         providerStatus: "FAILED",
         providerLastCheckedAt: new Date(),
-        providerPayload: { error: error.message }
+        providerPayload: { provider, reason, error: error.message }
       }
     });
   }
@@ -198,12 +151,7 @@ async function dispatchOrderToProvider(orderId) {
 }
 
 async function refreshOrderProviderStatus(order) {
-  const provider = order?.providerPayload?.provider || "ENCARTA";
-  if (provider === "DATAHUB") {
-    return order;
-  }
-
-  if (!order?.providerReference || !env.encartaApiKey) {
+  if (!order?.providerReference) {
     return order;
   }
 
@@ -216,12 +164,22 @@ async function refreshOrderProviderStatus(order) {
     return order;
   }
 
+  const provider = order?.providerPayload?.provider || "ENCARTA";
+
   try {
-    const result = await fetchOrderStatus(order.providerReference);
+    let result;
+    if (provider === "GRANDAPI" && env.grandapiApiKey) {
+      result = await fetchGrandapiOrderStatus(order.providerReference);
+    } else if (env.encartaApiKey) {
+      result = await fetchEncartaOrderStatus(order.providerReference);
+    } else {
+      return order;
+    }
+
     const status = normalizeStatus(result.status);
     const updates = {
       providerStatus: status,
-      providerPayload: result.raw,
+      providerPayload: { provider, raw: result.raw },
       providerLastCheckedAt: new Date()
     };
     if (DELIVERED_STATUSES.has(status)) {

@@ -19,6 +19,8 @@ const { COMMISSION_RATES } = require("../config/affiliate");
 const env = require("../config/env");
 const { enforceProductLimit } = require("../services/subscription.service");
 const { refreshOrderProviderStatus } = require("../services/order.service");
+const { resolveActiveProvider, getProviderConfig, setForceProvider } = require("../services/provider.service");
+const { fetchBalance: fetchGrandapiBalance } = require("../services/grandapi.service");
 
 async function dashboard(req, res, next) {
   try {
@@ -57,13 +59,20 @@ async function getSettings(req, res, next) {
       update: {},
       create: { id: "default", registrationFeeGhs: 20 }
     });
+    const providerConfig = await getProviderConfig();
+    const { provider: activeProvider, reason: providerReason } = await resolveActiveProvider();
     return res.json({
       success: true,
       data: {
         commissionRates: COMMISSION_RATES,
         paystackConfigured: Boolean(env.paystackPublic),
         baseUrl: env.baseUrl,
-        afaRegistrationFeeGhs: afaConfig.registrationFeeGhs
+        afaRegistrationFeeGhs: afaConfig.registrationFeeGhs,
+        providerConfig: {
+          forceProvider: providerConfig.forceProvider || null,
+          activeProvider,
+          reason: providerReason
+        }
       }
     });
   } catch (error) {
@@ -637,6 +646,57 @@ async function deleteAgent(req, res, next) {
   }
 }
 
+async function getProviderConfigEndpoint(req, res, next) {
+  try {
+    const config = await getProviderConfig();
+    const { provider: activeProvider, reason } = await resolveActiveProvider();
+    return res.json({
+      success: true,
+      data: {
+        forceProvider: config.forceProvider || null,
+        activeProvider,
+        reason
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function updateProviderConfig(req, res, next) {
+  try {
+    const { forceProvider } = req.body;
+    const config = await setForceProvider(forceProvider || null);
+    await prisma.auditLog.create({
+      data: {
+        actorId: req.user.sub,
+        action: "ADMIN_UPDATE_PROVIDER",
+        meta: { forceProvider: config.forceProvider }
+      }
+    });
+    const { provider: activeProvider, reason } = await resolveActiveProvider();
+    return res.json({
+      success: true,
+      data: {
+        forceProvider: config.forceProvider || null,
+        activeProvider,
+        reason
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getProviderBalance(req, res, next) {
+  try {
+    const balance = await fetchGrandapiBalance();
+    return res.json({ success: true, data: balance });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   dashboard,
   getSettings,
@@ -668,5 +728,8 @@ module.exports = {
   listAuditLogs,
   listAfaRegistrations,
   updateAfaRegistrationStatus,
-  deleteAgent
+  deleteAgent,
+  getProviderConfigEndpoint,
+  updateProviderConfig,
+  getProviderBalance
 };

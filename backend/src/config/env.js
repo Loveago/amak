@@ -13,8 +13,10 @@ const env = {
   paystackPublic: process.env.PAYSTACK_PUBLIC_KEY || "",
   paystackWebhookSecret: process.env.PAYSTACK_WEBHOOK_SECRET || "",
   baseUrl: process.env.BASE_URL || "http://localhost:3000",
-  datahubBaseUrl: process.env.DATAHUB_BASE_URL || "https://www.datahubnet.online",
-  datahubApiKey: process.env.DATAHUB_API_KEY || "",
+  grandapiBaseUrl: process.env.GRANDAPI_BASE_URL || "https://grandapi.duckdns.org",
+  grandapiApiKey: process.env.GRANDAPI_API_KEY || "",
+  providerTimezone: process.env.PROVIDER_TIMEZONE || "Africa/Accra",
+  orderWorkerIntervalMs: Number(process.env.ORDER_WORKER_INTERVAL_MS || 10000),
   encartaBaseUrl:
     process.env.ENCARTA_BASE_URL || process.env.ACKMORRE_BASE_URL || "https://encartastores.com/api",
   encartaStatusUrl: process.env.ENCARTA_STATUS_URL || process.env.ACKMORRE_STATUS_URL || "",

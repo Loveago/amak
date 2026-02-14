@@ -312,3 +312,10 @@ model PasswordReset {
 
   user User @relation(fields: [userId], references: [id])
 }
+
+model ProviderConfig {
+  id              String   @id @default("default")
+  forceProvider   String?
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+}

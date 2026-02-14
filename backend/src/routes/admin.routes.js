@@ -32,7 +32,10 @@ const {
   updateAfaConfig,
   listAfaRegistrations,
   updateAfaRegistrationStatus,
-  deleteAgent
+  deleteAgent,
+  getProviderConfigEndpoint,
+  updateProviderConfig,
+  getProviderBalance
 } = require("../controllers/admin.controller");
 
 const router = express.Router();
@@ -70,5 +73,8 @@ router.get("/payments", listPayments);
 router.get("/afa-registrations", listAfaRegistrations);
 router.patch("/afa-registrations/:id", updateAfaRegistrationStatus);
 router.get("/logs", listAuditLogs);
+router.get("/provider", getProviderConfigEndpoint);
+router.patch("/provider", updateProviderConfig);
+router.get("/provider/balance", getProviderBalance);
 
 module.exports = router;
