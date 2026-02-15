@@ -3,6 +3,10 @@ const env = require("../config/env");
 const fetcher = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
+const PACKAGE_CACHE_TTL_MS = 5 * 60 * 1000;
+const PACKAGE_TYPES = ["EXPIRING", "NON_EXPIRING"];
+const packageCache = new Map();
+
 const STATUS_MAP = {
   completed: "COMPLETED",
   processing: "PROCESSING",
@@ -30,6 +34,90 @@ const resolveGrandapiNetwork = (encartaNetworkKey) => {
   return GRANDAPI_NETWORK_MAP[encartaNetworkKey] || null;
 };
 
+const approxEqual = (a, b) => Math.abs(a - b) < 0.01;
+
+const buildPackageCacheKey = (network, type) => `${network}:${type}`;
+
+async function fetchPackages({ network, type = "EXPIRING" }) {
+  if (!env.grandapiApiKey) {
+    const error = new Error("GrandAPI key missing");
+    error.statusCode = 500;
+    throw error;
+  }
+
+  if (!network) {
+    const error = new Error("GrandAPI network required");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const cacheKey = buildPackageCacheKey(network, type);
+  const cached = packageCache.get(cacheKey);
+  if (cached && Date.now() - cached.cachedAt < PACKAGE_CACHE_TTL_MS) {
+    return cached.packages;
+  }
+
+  const url = new URL(`${env.grandapiBaseUrl}/api/packages`);
+  url.searchParams.set("network", network);
+  if (type) {
+    url.searchParams.set("type", type);
+  }
+
+  const response = await fetcher(url.toString(), {
+    headers: {
+      "X-API-Key": env.grandapiApiKey
+    }
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!data || data.status === false || data.success === false) {
+    const msg = data?.error || data?.message || "Failed to fetch GrandAPI packages";
+    const error = new Error(msg);
+    error.statusCode = response.status || 502;
+    throw error;
+  }
+
+  const packages = data.payload || data.data || [];
+  packageCache.set(cacheKey, { packages, cachedAt: Date.now() });
+  return packages;
+}
+
+const normalizeSize = (value) => {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+};
+
+const matchPackageBySize = (packages, targetSize) => {
+  if (!Number.isFinite(targetSize) || targetSize <= 0) {
+    return null;
+  }
+
+  const candidates = packages
+    .map((pkg) => ({ ...pkg, sizeNumber: normalizeSize(pkg.size) }))
+    .filter((pkg) => Number.isFinite(pkg.sizeNumber));
+
+  const variants = [targetSize, targetSize * 1024, targetSize / 1024];
+  for (const variant of variants) {
+    const match = candidates.find((pkg) => approxEqual(pkg.sizeNumber, variant));
+    if (match) {
+      return match;
+    }
+  }
+  return null;
+};
+
+async function findPackageForCapacity(network, capacity) {
+  for (const type of PACKAGE_TYPES) {
+    const packages = await fetchPackages({ network, type });
+    const match = matchPackageBySize(packages, Number(capacity));
+    if (match) {
+      return match;
+    }
+  }
+  return null;
+}
+
 async function purchaseDataBundle({ networkKey, recipient, capacity }) {
   if (!env.grandapiApiKey) {
     const error = new Error("GrandAPI key missing");
@@ -44,13 +132,20 @@ async function purchaseDataBundle({ networkKey, recipient, capacity }) {
     throw error;
   }
 
+  const packageInfo = await findPackageForCapacity(network, capacity);
+  if (!packageInfo) {
+    const error = new Error(`GrandAPI package not found for ${network} capacity ${capacity}`);
+    error.statusCode = 400;
+    throw error;
+  }
+
   const payload = {
     packages: [
       {
-        packageId: String(Date.now()),
-        size: capacity,
-        network,
-        type: "EXPIRING",
+        packageId: packageInfo.id,
+        size: packageInfo.size,
+        network: packageInfo.network || network,
+        type: packageInfo.type || "EXPIRING",
         phone: recipient
       }
     ]
@@ -153,5 +248,6 @@ module.exports = {
   fetchOrderStatus,
   normalizeStatus,
   resolveGrandapiNetwork,
-  fetchBalance
+  fetchBalance,
+  fetchPackages
 };
