@@ -3,7 +3,7 @@ const env = require("../config/env");
 const fetcher = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
-const PACKAGE_CACHE_TTL_MS = 5 * 60 * 1000;
+ const PACKAGE_CACHE_TTL_MS = 5 * 60 * 1000;
 const PACKAGE_TYPES = ["EXPIRING", "NON_EXPIRING"];
 const packageCache = new Map();
 
@@ -32,6 +32,17 @@ const GRANDAPI_NETWORK_MAP = {
 const resolveGrandapiNetwork = (encartaNetworkKey) => {
   if (!encartaNetworkKey) return null;
   return GRANDAPI_NETWORK_MAP[encartaNetworkKey] || null;
+};
+
+const extractStatusFromPayload = (payload) => {
+  if (!payload) return "";
+  if (payload.status) return payload.status;
+  const packages =
+    payload.packages || payload.savedPackages || payload.orders || payload.data || payload.items || [];
+  if (Array.isArray(packages) && packages.length > 0) {
+    return packages[0]?.status || "";
+  }
+  return "";
 };
 
 const approxEqual = (a, b) => Math.abs(a - b) < 0.01;
@@ -139,7 +150,7 @@ async function purchaseDataBundle({ networkKey, recipient, capacity }) {
     throw error;
   }
 
-  const payload = {
+  const requestBody = {
     packages: [
       {
         packageId: packageInfo.id,
@@ -157,7 +168,7 @@ async function purchaseDataBundle({ networkKey, recipient, capacity }) {
       "Content-Type": "application/json",
       "X-API-Key": env.grandapiApiKey
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(requestBody)
   });
 
   const data = await response.json().catch(() => null);
@@ -169,9 +180,9 @@ async function purchaseDataBundle({ networkKey, recipient, capacity }) {
     throw error;
   }
 
-  const orderId = data?.payload?.orderId || data?.payload?.orders?.[0]?.id;
-  const firstOrder = data?.payload?.orders?.[0];
-  const status = normalizeStatus(firstOrder?.status || "PROCESSING");
+  const responsePayload = data?.payload || data?.data || {};
+  const orderId = responsePayload?.orderId || responsePayload?.id || responsePayload?.orders?.[0]?.id;
+  const status = normalizeStatus(extractStatusFromPayload(responsePayload) || "PROCESSING");
 
   return {
     raw: data,
@@ -203,7 +214,7 @@ async function fetchOrderStatus(orderId) {
   }
 
   const orderData = data?.data || data?.payload;
-  const status = normalizeStatus(orderData?.status || "");
+  const status = normalizeStatus(extractStatusFromPayload(orderData));
 
   return {
     raw: data,

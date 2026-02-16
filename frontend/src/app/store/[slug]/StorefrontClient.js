@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const PHONE_HINT = "Valid prefixes: 024, 054, 055, 059";
@@ -70,6 +70,7 @@ const getNetworkSortValue = (networkKey = "") => {
 
 export default function StorefrontClient({ store, slug }) {
   const router = useRouter();
+  const audioContextRef = useRef(null);
   const categories = store?.categories || [];
   const bundles = useMemo(() => {
     const unsorted = categories.flatMap((category) => {
@@ -114,10 +115,19 @@ export default function StorefrontClient({ store, slug }) {
     return [{ key: "all", label: "All networks" }, ...options];
   }, [categories]);
   const [activeFilter, setActiveFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isFiltering, setIsFiltering] = useState(false);
   const filteredBundles = useMemo(() => {
-    if (activeFilter === "all") return bundles;
-    return bundles.filter((bundle) => bundle.networkKey === activeFilter);
-  }, [bundles, activeFilter]);
+    const base = activeFilter === "all" ? bundles : bundles.filter((bundle) => bundle.networkKey === activeFilter);
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return base;
+    return base.filter((bundle) => {
+      const name = bundle.name?.toLowerCase() || "";
+      const size = bundle.size?.toLowerCase() || "";
+      const network = bundle.network?.toLowerCase() || "";
+      return name.includes(query) || size.includes(query) || network.includes(query);
+    });
+  }, [bundles, activeFilter, searchTerm]);
   const agentName = store?.agent?.name || slug.replace(/-/g, " ");
   const whatsappLink = store?.agent?.whatsappLink || "";
 
@@ -125,10 +135,51 @@ export default function StorefrontClient({ store, slug }) {
   const [recipientPhone, setRecipientPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
 
+  const triggerHaptics = () => {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(10);
+    }
+  };
+
+  const playClick = () => {
+    if (typeof window === "undefined") return;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContext();
+      }
+      const ctx = audioContextRef.current;
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.value = 220;
+      gain.gain.value = 0.04;
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.06);
+    } catch (error) {
+      // Ignore audio failures.
+    }
+  };
+
+  const microFeedback = () => {
+    triggerHaptics();
+    playClick();
+  };
+
+  useEffect(() => {
+    setIsFiltering(true);
+    const timeout = setTimeout(() => setIsFiltering(false), 280);
+    return () => clearTimeout(timeout);
+  }, [activeFilter, searchTerm]);
+
   const openModal = (bundle) => {
     setSelectedBundle(bundle);
     setRecipientPhone("");
     setPhoneError("");
+    microFeedback();
   };
 
   const closeModal = () => {
@@ -143,47 +194,76 @@ export default function StorefrontClient({ store, slug }) {
       setPhoneError("Please enter the recipient phone number.");
       return;
     }
+    microFeedback();
     const target = `/checkout?slug=${slug}&productId=${selectedBundle.id}&qty=1&recipient=${encodeURIComponent(
       trimmed
     )}`;
     router.push(target);
   };
 
+  const handleFilterChange = (filterKey) => {
+    microFeedback();
+    setActiveFilter(filterKey);
+  };
+
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen storefront-shell">
+      <div className="storefront-orb orb-1" />
+      <div className="storefront-orb orb-2" />
+      <div className="storefront-orb orb-3" />
       <div className="mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6 sm:pt-12">
-        <div className="glass rounded-3xl p-5 sm:p-6">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="storefront-hero card-outline fade-up rounded-[32px] p-6 sm:p-7">
+          <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-3">
               <div className="badge">Agent storefront</div>
-              <h1 className="font-display text-2xl text-ink sm:text-3xl md:text-4xl">
-                Welcome to {agentName} Store
+              <h1 className="font-display text-3xl text-ink sm:text-4xl md:text-5xl">
+                Welcome to <span className="text-emerald-600">{agentName}</span>
+                <span className="text-ink"> Store</span>
               </h1>
-              <p className="text-sm text-ink/70">Premium bundles with instant delivery in Ghana.</p>
+              <p className="text-sm text-ink/70">
+                Premium bundles, instant delivery, and a storefront that keeps you moving.
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                {[
+                  { label: "Instant delivery", value: "5-15 mins" },
+                  { label: "Verified networks", value: "MTN • Telecel • AT" },
+                  { label: "Support", value: "24/7 WhatsApp" }
+                ].map((item) => (
+                  <div key={item.label} className="storefront-stat rounded-2xl px-4 py-3 text-xs">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-ink/50">{item.label}</p>
+                    <p className="mt-2 text-sm font-semibold text-ink">{item.value}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="w-full rounded-2xl border border-ink/10 bg-white/80 px-5 py-4 text-left sm:w-auto sm:text-right">
-              <p className="text-xs uppercase tracking-[0.2em] text-ink/60">Your cart</p>
-              <p className="mt-2 text-2xl font-semibold text-ink">GHS 0.00</p>
-              <p className="text-xs text-ink/60">0 items</p>
+            <div className="storefront-stat w-full rounded-3xl px-6 py-5 text-left sm:w-auto sm:text-right">
+              <p className="text-xs uppercase tracking-[0.2em] text-ink/60">Quick checkout</p>
+              <p className="mt-2 text-3xl font-semibold text-ink">GHS 0.00</p>
+              <p className="text-xs text-ink/60">0 items selected</p>
               <Link
                 href={`/checkout?slug=${slug}`}
-                className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-ink px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white sm:w-auto"
+                className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-ink px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white sm:w-auto"
               >
                 Checkout
               </Link>
             </div>
           </div>
-          <div className="mt-6 flex flex-col gap-3 lg:flex-row">
+          <div className="relative z-10 mt-6 flex flex-col gap-3 lg:flex-row">
             <input
-              className="w-full rounded-full border border-ink/10 bg-white/80 px-4 py-3 text-sm text-ink focus:outline-none"
-              placeholder="Search bundles..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              className="w-full rounded-full border border-ink/10 bg-white/90 px-4 py-3 text-sm text-ink shadow-sm focus:outline-none"
+              placeholder="Search bundles, sizes, or networks..."
             />
-            <button className="w-full rounded-full bg-aurora px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white sm:w-auto">
-              Search
+            <button
+              onClick={microFeedback}
+              className="w-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-md sm:w-auto"
+            >
+              Explore
             </button>
           </div>
 
-          <details className="group mt-4 rounded-xl border border-amber-200/50 bg-amber-50/40 px-3 py-2 text-[11px] text-amber-800">
+          <details className="group relative z-10 mt-5 rounded-xl border border-amber-200/60 bg-amber-50/50 px-4 py-3 text-[11px] text-amber-800">
             <summary className="flex cursor-pointer list-none items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-600">
               Important notice
               <span className="text-sm font-bold text-amber-500 transition-transform group-open:rotate-45">+</span>
@@ -204,15 +284,13 @@ export default function StorefrontClient({ store, slug }) {
           </details>
         </div>
 
-        <div className="mt-8 flex items-center gap-3 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible">
+        <div className="mt-10 flex items-center gap-3 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible">
           {filterOptions.map((filter) => (
             <button
               key={filter.key}
-              onClick={() => setActiveFilter(filter.key)}
-              className={`flex-shrink-0 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] ${
-                activeFilter === filter.key
-                  ? "bg-ink text-white"
-                  : "border border-ink/10 bg-white/70 text-ink"
+              onClick={() => handleFilterChange(filter.key)}
+              className={`filter-pill flex-shrink-0 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] ${
+                activeFilter === filter.key ? "filter-pill-active" : "text-ink"
               }`}
             >
               {filter.label}
@@ -220,14 +298,17 @@ export default function StorefrontClient({ store, slug }) {
           ))}
         </div>
 
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          className={`mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 ${isFiltering ? "filtering-grid" : ""}`}
+        >
           {filteredBundles.length === 0 ? (
             <div className="col-span-full rounded-3xl border border-dashed border-ink/20 bg-white/70 p-10 text-center text-sm text-ink/60">
               No bundles are available yet for this storefront. Ask the agent to activate products in their portal.
             </div>
           ) : (
             filteredBundles.map((bundle) => (
-              <div key={bundle.id} className="card-outline rounded-3xl bg-white/90 p-5 sm:p-6">
+              <div key={bundle.id} className="bundle-card card-outline fade-up rounded-3xl bg-white/90 p-5 sm:p-6">
+                <div className="bundle-shine" />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-sand sm:h-10 sm:w-10">
@@ -235,7 +316,7 @@ export default function StorefrontClient({ store, slug }) {
                     </div>
                     <span className="text-xs uppercase tracking-[0.2em] text-ink/60">{bundle.network}</span>
                   </div>
-                  <span className="rounded-full bg-aurora/10 px-3 py-1 text-xs font-semibold text-ink">
+                  <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700">
                     Fast delivery
                   </span>
                 </div>
@@ -245,7 +326,7 @@ export default function StorefrontClient({ store, slug }) {
                 <p className="text-2xl font-semibold text-ink">GHS {bundle.price.toFixed(2)}</p>
                 <button
                   onClick={() => openModal(bundle)}
-                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-ink px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-ink px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
                   Purchase bundle
                 </button>
@@ -260,7 +341,7 @@ export default function StorefrontClient({ store, slug }) {
           href={whatsappLink}
           target="_blank"
           rel="noreferrer"
-          className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl"
+          className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl animate-bounce"
           aria-label="Chat on WhatsApp"
         >
           <svg
@@ -276,7 +357,7 @@ export default function StorefrontClient({ store, slug }) {
 
       {selectedBundle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-8 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-xl sm:p-7 max-h-[85vh] overflow-y-auto">
+          <div className="modal-surface w-full max-w-lg rounded-3xl bg-white p-6 sm:p-7 max-h-[85vh] overflow-y-auto">
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-ink">Enter Recipient Phone Number</h3>
