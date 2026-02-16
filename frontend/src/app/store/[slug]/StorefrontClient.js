@@ -356,63 +356,57 @@ export default function StorefrontClient({ store, slug }) {
       ) : null}
 
       {selectedBundle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-8 backdrop-blur-sm">
-          <div className="modal-surface w-full max-w-lg rounded-3xl bg-white p-6 sm:p-7 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-start justify-between">
+        <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center px-4 py-8">
+          <div className="modal-surface w-full max-w-lg rounded-3xl p-6 sm:p-7 max-h-[85vh] overflow-y-auto">
+            <div className="modal-header">
               <div>
-                <h3 className="text-lg font-semibold text-ink">Enter Recipient Phone Number</h3>
-                <p className="mt-1 text-sm text-ink/60">
-                  Please enter the phone number that will receive the data bundle.
-                </p>
+                <h3 className="modal-title">Enter Recipient Phone Number</h3>
+                <p className="modal-subtitle">Please enter the phone number that will receive the data bundle.</p>
               </div>
-              <button onClick={closeModal} className="text-lg text-ink/40">✕</button>
+              <button onClick={closeModal} className="modal-close" aria-label="Close">
+                ✕
+              </button>
             </div>
 
             <div className="mt-5 space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-ink/60">Phone Number</label>
+              <label className="modal-label">Phone Number</label>
               <input
                 value={recipientPhone}
                 onChange={(event) => {
                   setRecipientPhone(event.target.value);
                   setPhoneError("");
                 }}
-                className="w-full rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm"
+                className="modal-input"
                 placeholder="0240000000"
               />
-              <p className="text-xs text-ink/50">{PHONE_HINT}</p>
-              {phoneError && <p className="text-xs text-red-600">{phoneError}</p>}
+              <p className="modal-hint">{PHONE_HINT}</p>
+              {phoneError && <p className="modal-error">{phoneError}</p>}
             </div>
 
-            <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+            <div className="modal-alert mt-5">
               Please ensure the phone number is correct. Data will be sent to this number and cannot be reversed.
             </div>
 
-            <div className="mt-5 rounded-2xl border border-ink/10 bg-white/70 px-4 py-4 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-xs uppercase tracking-[0.2em] text-ink/50">Network</span>
+            <div className="modal-summary mt-5">
+              <div className="modal-row">
+                <span className="modal-label">Network</span>
                 <span className="font-semibold text-ink">{selectedBundle.network}</span>
               </div>
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-xs uppercase tracking-[0.2em] text-ink/50">Package</span>
+              <div className="modal-row">
+                <span className="modal-label">Package</span>
                 <span className="font-semibold text-ink">{selectedBundle.name}</span>
               </div>
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-xs uppercase tracking-[0.2em] text-ink/50">Price</span>
+              <div className="modal-row">
+                <span className="modal-label">Price</span>
                 <span className="font-semibold text-ink">GHS {selectedBundle.price.toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
-              <button
-                onClick={closeModal}
-                className="rounded-full border border-ink/15 bg-white px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em]"
-              >
+            <div className="modal-actions">
+              <button onClick={closeModal} className="modal-button modal-button-ghost">
                 Cancel
               </button>
-              <button
-                onClick={confirmPurchase}
-                className="rounded-full bg-ink px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
-              >
+              <button onClick={confirmPurchase} className="modal-button modal-button-primary">
                 Confirm
               </button>
             </div>

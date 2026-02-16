@@ -161,37 +161,55 @@ export default function CheckoutPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fef7ed,transparent_60%),radial-gradient(circle_at_bottom,#f3f4ff,transparent_55%)]">
+    <main className="min-h-screen checkout-shell">
+      <div className="page-glow" />
+      <div className="page-noise" />
+      <div className="page-orb orb-1" />
+      <div className="page-orb orb-2" />
+      <div className="page-orb orb-3" />
       <div className="mx-auto max-w-6xl px-6 pb-20 pt-12">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="badge">Checkout</p>
-            <h1 className="mt-3 font-display text-3xl text-ink">Secure checkout</h1>
-            <p className="text-sm text-ink/70">Complete your order and receive data instantly.</p>
+        <div className="checkout-hero card-outline fade-up rounded-[32px] p-6 sm:p-7">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="badge">Checkout</p>
+              <h1 className="mt-3 font-display text-3xl text-ink">Secure checkout</h1>
+              <p className="text-sm text-ink/70">Complete your order and receive data instantly.</p>
+            </div>
+            <Link href={`/store/${slug}`} className="secondary-cta">
+              Back to storefront
+            </Link>
           </div>
-          <Link
-            href={`/store/${slug}`}
-            className="rounded-full border border-ink/15 bg-white/70 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em]"
-          >
-            Back to storefront
-          </Link>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {[
+              { label: "Instant delivery", value: "5-15 mins" },
+              { label: "Paystack secured", value: "Verified checkout" },
+              { label: "Support", value: "24/7 WhatsApp" }
+            ].map((item) => (
+              <div key={item.label} className="storefront-stat rounded-2xl px-4 py-3 text-xs">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-ink/50">{item.label}</p>
+                <p className="mt-2 text-sm font-semibold text-ink">{item.value}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="mt-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <section className="glass rounded-3xl p-6">
+          <section className="glass checkout-panel rounded-3xl p-6 sm:p-7">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h2 className="font-display text-2xl text-ink">Delivery details</h2>
                 <p className="text-sm text-ink/60">Recipient phone is required. Other details are optional.</p>
               </div>
-              <span className="rounded-full bg-aurora/15 px-3 py-1 text-xs font-semibold text-ink">Paystack secure</span>
+              <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700">
+                Paystack secure
+              </span>
             </div>
 
             <div className="mt-6 grid gap-5">
               <div className="rounded-2xl border border-ink/10 bg-white/80 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink/60">Recipient phone</p>
                 <input
-                  className="mt-3 w-full rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm"
+                  className="checkout-input mt-3"
                   placeholder="0240000000"
                   value={recipientPhone}
                   onChange={(event) => setRecipientPhone(event.target.value)}
@@ -206,19 +224,19 @@ export default function CheckoutPage() {
                 </div>
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <input
-                    className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm"
+                    className="checkout-input"
                     placeholder="Full name"
                     value={customerName}
                     onChange={(event) => setCustomerName(event.target.value)}
                   />
                   <input
-                    className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm"
+                    className="checkout-input"
                     placeholder="Phone number"
                     value={customerPhone}
                     onChange={(event) => setCustomerPhone(event.target.value)}
                   />
                   <input
-                    className="md:col-span-2 rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm"
+                    className="checkout-input md:col-span-2"
                     placeholder="Email address (for receipt)"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
@@ -228,7 +246,7 @@ export default function CheckoutPage() {
             </div>
 
             <button
-              className="mt-6 w-full rounded-full bg-ink px-4 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+              className="primary-cta mt-6 w-full disabled:cursor-not-allowed disabled:opacity-60"
               onClick={handlePay}
               disabled={status.type === "loading" || loadingItems}
             >
@@ -250,7 +268,7 @@ export default function CheckoutPage() {
             </p>
           </section>
 
-          <section className="card-outline rounded-3xl bg-white/90 p-6">
+          <section className="card-outline checkout-summary rounded-3xl bg-white/90 p-6 sm:p-7">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-2xl text-ink">Order summary</h2>
               <span className="rounded-full bg-aurora/20 px-3 py-1 text-xs font-semibold text-ink">
