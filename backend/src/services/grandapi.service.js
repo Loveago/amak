@@ -34,14 +34,42 @@ const resolveGrandapiNetwork = (encartaNetworkKey) => {
   return GRANDAPI_NETWORK_MAP[encartaNetworkKey] || null;
 };
 
+const resolveStatusValue = (value) => {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "boolean") return "";
+  if (typeof value === "number") return String(value);
+  if (typeof value === "string") return value;
+  return "";
+};
+
 const extractStatusFromPayload = (payload) => {
   if (!payload) return "";
-  if (payload.status) return payload.status;
-  const packages =
-    payload.packages || payload.savedPackages || payload.orders || payload.data || payload.items || [];
-  if (Array.isArray(packages) && packages.length > 0) {
-    return packages[0]?.status || "";
+
+  if (Array.isArray(payload) && payload.length > 0) {
+    return extractStatusFromPayload(payload[0]);
   }
+
+  const directStatus = resolveStatusValue(payload.status);
+  if (directStatus) return directStatus;
+
+  const nestedCandidates = [payload.data, payload.payload, payload.order, payload.result];
+  for (const candidate of nestedCandidates) {
+    if (candidate && candidate !== payload) {
+      const nestedStatus = extractStatusFromPayload(candidate);
+      if (nestedStatus) return nestedStatus;
+    }
+  }
+
+  const packages =
+    payload.packages || payload.savedPackages || payload.orders || payload.items || payload.data?.packages ||
+    payload.data?.orders || payload.payload?.packages || payload.payload?.orders || [];
+  if (Array.isArray(packages) && packages.length > 0) {
+    const first = packages[0];
+    const packageStatus = resolveStatusValue(first?.status) || resolveStatusValue(first?.package?.status);
+    if (packageStatus) return packageStatus;
+    return extractStatusFromPayload(first);
+  }
+
   return "";
 };
 
