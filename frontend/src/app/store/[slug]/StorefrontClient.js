@@ -263,11 +263,11 @@ export default function StorefrontClient({ store, slug }) {
             </button>
           </div>
 
-          <details className="group relative z-10 mt-5 rounded-xl border border-amber-200/60 bg-amber-50/50 px-4 py-3 text-[11px] text-amber-800">
-            <summary className="flex cursor-pointer list-none items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-600">
+          <div className="group relative z-10 mt-5 rounded-xl border border-amber-200/60 bg-amber-50/50 px-4 py-3 text-[11px] text-amber-800">
+            <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-600">
               Important notice
-              <span className="text-sm font-bold text-amber-500 transition-transform group-open:rotate-45">+</span>
-            </summary>
+              <span className="text-sm font-bold text-amber-500">!</span>
+            </div>
             <div className="mt-2 space-y-1.5 text-[11px] text-amber-700/90">
               <p>Make sure the phone number is correct before proceeding.</p>
               <p>
@@ -281,7 +281,7 @@ export default function StorefrontClient({ store, slug }) {
                 these conditions.
               </p>
             </div>
-          </details>
+          </div>
         </div>
 
         <div className="mt-10 flex items-center gap-3 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible">
