@@ -48,6 +48,23 @@ async function revokeKey() {
   }
 }
 
+async function rotateKey() {
+  "use server";
+  try {
+    const data = await serverApi("/agent/api-keys/rotate", { method: "POST" });
+    const rawKey = data?.apiKey || "";
+    revalidatePath("/agent/api");
+    if (rawKey) {
+      redirect(`/agent/api?newKey=${encodeURIComponent(rawKey)}`);
+    }
+    redirect("/agent/api?error=Unable%20to%20generate%20new%20key");
+  } catch (e) {
+    revalidatePath("/agent/api");
+    const message = e?.message || "Unable to generate new key";
+    redirect(`/agent/api?error=${encodeURIComponent(message)}`);
+  }
+}
+
 export default async function AgentApiPage({ searchParams = {} }) {
   requireAgent("/agent/api");
   const newKey = searchParams.newKey || null;
@@ -169,14 +186,21 @@ export default async function AgentApiPage({ searchParams = {} }) {
                     <p className="text-xs text-ink/60">Created {keyCreated}</p>
                   )}
                 </div>
-                <form action={revokeKey}>
-                  <button className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-red-600">
-                    Delete &amp; Revoke key
-                  </button>
-                </form>
+                <div className="flex flex-wrap gap-2">
+                  <form action={rotateKey}>
+                    <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                      Generate new key
+                    </button>
+                  </form>
+                  <form action={revokeKey}>
+                    <button className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-red-600">
+                      Delete &amp; Revoke key
+                    </button>
+                  </form>
+                </div>
               </div>
               <p className="mt-3 text-xs text-ink/50">
-                You can only have one active API key. Delete the current key to generate a new one.
+                You can only have one active API key. Generating a new one will replace the current key.
               </p>
             </div>
           ) : (

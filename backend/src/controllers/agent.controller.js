@@ -456,6 +456,32 @@ async function revokeApiKey(req, res, next) {
   }
 }
 
+async function rotateApiKey(req, res, next) {
+  try {
+    const agentId = req.user.sub;
+
+    const access = await prisma.apiAccessRequest.findUnique({ where: { agentId } });
+    if (!access || access.status !== "APPROVED") {
+      return res.status(403).json({ success: false, error: "API access not approved" });
+    }
+
+    const rawKey = `amba_${crypto.randomBytes(32).toString("hex")}`;
+    const keyHash = hashKey(rawKey);
+    const lastFour = rawKey.slice(-4);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.agentApiKey.deleteMany({ where: { agentId } });
+      await tx.agentApiKey.create({
+        data: { agentId, keyHash, lastFour }
+      });
+    });
+
+    return res.status(201).json({ success: true, data: { apiKey: rawKey, lastFour } });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function requestApiAccess(req, res, next) {
   try {
     const agentId = req.user.sub;
@@ -581,6 +607,7 @@ module.exports = {
   generateApiKey,
   getApiKey,
   revokeApiKey,
+  rotateApiKey,
   requestApiAccess,
   getApiAccessStatus,
   createDirectOrder
