@@ -20,49 +20,52 @@ async function generateKey() {
   try {
     const data = await serverApi("/agent/api-keys", { method: "POST" });
     rawKey = data?.apiKey || "";
-    revalidatePath("/agent/api");
-    if (rawKey) {
-      return redirect(`/agent/api?newKey=${encodeURIComponent(rawKey)}`);
-    }
-    return redirect("/agent/api?error=Unable%20to%20generate%20key");
   } catch (e) {
     revalidatePath("/agent/api");
     const message = e?.message || "Unable to generate key";
     return redirect(`/agent/api?error=${encodeURIComponent(message)}`);
   }
+  revalidatePath("/agent/api");
+  if (rawKey) {
+    return redirect(`/agent/api?newKey=${encodeURIComponent(rawKey)}`);
+  }
+  return redirect("/agent/api?error=Unable%20to%20generate%20key");
 }
 
 async function revokeKey() {
   "use server";
+  let revoked = false;
   try {
     const data = await serverApi("/agent/api-keys/revoke", { method: "POST" });
-    revalidatePath("/agent/api");
-    if (data?.revoked) {
-      return redirect("/agent/api?revoked=1");
-    }
-    return redirect("/agent/api?error=Unable%20to%20revoke%20key");
+    revoked = Boolean(data?.revoked);
   } catch (e) {
     revalidatePath("/agent/api");
     const message = e?.message || "Unable to revoke key";
     return redirect(`/agent/api?error=${encodeURIComponent(message)}`);
   }
+  revalidatePath("/agent/api");
+  if (revoked) {
+    return redirect("/agent/api?revoked=1");
+  }
+  return redirect("/agent/api?error=Unable%20to%20revoke%20key");
 }
 
 async function rotateKey() {
   "use server";
+  let rawKey = "";
   try {
     const data = await serverApi("/agent/api-keys/rotate", { method: "POST" });
-    const rawKey = data?.apiKey || "";
-    revalidatePath("/agent/api");
-    if (rawKey) {
-      return redirect(`/agent/api?newKey=${encodeURIComponent(rawKey)}`);
-    }
-    return redirect("/agent/api?error=Unable%20to%20generate%20new%20key");
+    rawKey = data?.apiKey || "";
   } catch (e) {
     revalidatePath("/agent/api");
     const message = e?.message || "Unable to generate new key";
     return redirect(`/agent/api?error=${encodeURIComponent(message)}`);
   }
+  revalidatePath("/agent/api");
+  if (rawKey) {
+    return redirect(`/agent/api?newKey=${encodeURIComponent(rawKey)}`);
+  }
+  return redirect("/agent/api?error=Unable%20to%20generate%20new%20key");
 }
 
 export default async function AgentApiPage({ searchParams = {} }) {
