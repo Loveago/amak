@@ -22,13 +22,13 @@ async function generateKey() {
     rawKey = data?.apiKey || "";
     revalidatePath("/agent/api");
     if (rawKey) {
-      redirect(`/agent/api?newKey=${encodeURIComponent(rawKey)}`);
+      return redirect(`/agent/api?newKey=${encodeURIComponent(rawKey)}`);
     }
-    redirect("/agent/api?error=Unable%20to%20generate%20key");
+    return redirect("/agent/api?error=Unable%20to%20generate%20key");
   } catch (e) {
     revalidatePath("/agent/api");
     const message = e?.message || "Unable to generate key";
-    redirect(`/agent/api?error=${encodeURIComponent(message)}`);
+    return redirect(`/agent/api?error=${encodeURIComponent(message)}`);
   }
 }
 
@@ -38,13 +38,13 @@ async function revokeKey() {
     const data = await serverApi("/agent/api-keys/revoke", { method: "POST" });
     revalidatePath("/agent/api");
     if (data?.revoked) {
-      redirect("/agent/api?revoked=1");
+      return redirect("/agent/api?revoked=1");
     }
-    redirect("/agent/api?error=Unable%20to%20revoke%20key");
+    return redirect("/agent/api?error=Unable%20to%20revoke%20key");
   } catch (e) {
     revalidatePath("/agent/api");
     const message = e?.message || "Unable to revoke key";
-    redirect(`/agent/api?error=${encodeURIComponent(message)}`);
+    return redirect(`/agent/api?error=${encodeURIComponent(message)}`);
   }
 }
 
@@ -55,13 +55,13 @@ async function rotateKey() {
     const rawKey = data?.apiKey || "";
     revalidatePath("/agent/api");
     if (rawKey) {
-      redirect(`/agent/api?newKey=${encodeURIComponent(rawKey)}`);
+      return redirect(`/agent/api?newKey=${encodeURIComponent(rawKey)}`);
     }
-    redirect("/agent/api?error=Unable%20to%20generate%20new%20key");
+    return redirect("/agent/api?error=Unable%20to%20generate%20new%20key");
   } catch (e) {
     revalidatePath("/agent/api");
     const message = e?.message || "Unable to generate new key";
-    redirect(`/agent/api?error=${encodeURIComponent(message)}`);
+    return redirect(`/agent/api?error=${encodeURIComponent(message)}`);
   }
 }
 
