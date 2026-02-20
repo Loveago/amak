@@ -33,6 +33,7 @@ async function updateProduct(formData) {
   const size = String(formData.get("size") || "").trim();
   const categoryId = String(formData.get("categoryId") || "").trim();
   const basePriceRaw = String(formData.get("basePriceGhs") || "").trim();
+  const apiPriceRaw = String(formData.get("apiPriceGhs") || "").trim();
   const status = String(formData.get("status") || "").trim();
 
   if (!productId || !name || !size || !categoryId) {
@@ -40,6 +41,7 @@ async function updateProduct(formData) {
   }
 
   const basePriceGhs = basePriceRaw ? Number(basePriceRaw) : undefined;
+  const apiPriceGhs = apiPriceRaw ? Number(apiPriceRaw) : undefined;
   await serverApi(`/admin/products/${productId}`, {
     method: "PATCH",
     body: {
@@ -47,6 +49,7 @@ async function updateProduct(formData) {
       size,
       categoryId,
       ...(Number.isFinite(basePriceGhs) ? { basePriceGhs } : {}),
+      ...(Number.isFinite(apiPriceGhs) ? { apiPriceGhs } : {}),
       ...(status ? { status } : {})
     }
   });
@@ -59,6 +62,7 @@ async function createProduct(formData) {
   const size = String(formData.get("size") || "").trim();
   const categoryId = String(formData.get("categoryId") || "").trim();
   const basePriceRaw = String(formData.get("basePriceGhs") || "").trim();
+  const apiPriceRaw = String(formData.get("apiPriceGhs") || "").trim();
   const status = String(formData.get("status") || "").trim();
 
   if (!name || !size || !categoryId) {
@@ -66,6 +70,7 @@ async function createProduct(formData) {
   }
 
   const basePriceGhs = basePriceRaw ? Number(basePriceRaw) : undefined;
+  const apiPriceGhs = apiPriceRaw ? Number(apiPriceRaw) : undefined;
   await serverApi("/admin/products", {
     method: "POST",
     body: {
@@ -73,6 +78,7 @@ async function createProduct(formData) {
       size,
       categoryId,
       ...(Number.isFinite(basePriceGhs) ? { basePriceGhs } : {}),
+      ...(Number.isFinite(apiPriceGhs) ? { apiPriceGhs } : {}),
       ...(status ? { status } : {})
     }
   });
@@ -174,6 +180,14 @@ export default async function AdminProductsPage() {
               className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
               placeholder="Base price (GHS)"
             />
+            <input
+              name="apiPriceGhs"
+              type="number"
+              min="0"
+              step="0.01"
+              className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+              placeholder="API price (GHS)"
+            />
             <select
               name="status"
               className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
@@ -227,8 +241,12 @@ export default async function AdminProductsPage() {
                           <p className="text-xs text-ink/60">{product.size}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-ink">GHS {Number(product.basePriceGhs || 0).toFixed(2)}</p>
-                          <p className="text-xs text-ink/60">{product.status}</p>
+                          <p className="font-semibold text-ink">
+                            Base: GHS {Number(product.basePriceGhs || 0).toFixed(2)}
+                          </p>
+                          <p className="text-xs text-ink/60">
+                            API: GHS {Number(product.apiPriceGhs ?? 0).toFixed(2)} · {product.status}
+                          </p>
                         </div>
                       </div>
                       <form action={updateProduct} className="mt-4 grid gap-3 md:grid-cols-2">
@@ -264,6 +282,15 @@ export default async function AdminProductsPage() {
                           defaultValue={product.basePriceGhs ?? ""}
                           className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
                           placeholder="Base price (GHS)"
+                        />
+                        <input
+                          name="apiPriceGhs"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          defaultValue={product.apiPriceGhs ?? ""}
+                          className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                          placeholder="API price (GHS)"
                         />
                         <select
                           name="status"

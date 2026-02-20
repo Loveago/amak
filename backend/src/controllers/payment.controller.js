@@ -2,7 +2,8 @@ const prisma = require("../config/prisma");
 const {
   initializeOrderPaymentSchema,
   initializeSubscriptionSchema,
-  initializeAfaRegistrationSchema
+  initializeAfaRegistrationSchema,
+  initializeWalletTopupSchema
 } = require("../validators/payment.validation");
 const { validate } = require("../utils/validation");
 const { initializeTransaction, verifyTransaction } = require("../services/paystack.service");
@@ -168,9 +169,43 @@ async function verifyPayment(req, res, next) {
   }
 }
 
+async function initializeWalletTopup(req, res, next) {
+  try {
+    const payload = validate(initializeWalletTopupSchema, req.body);
+    if (!req.user?.sub) {
+      return res.status(401).json({ success: false, error: "Authentication required" });
+    }
+
+    const reference = `topup_${req.user.sub}_${Date.now()}`;
+    const { fee: paystackFeeGhs, gross: paystackGrossGhs } = computePaystackGross(payload.amountGhs);
+    const baseUrl = process.env.BASE_URL || "";
+    const callbackUrl = `${baseUrl}/agent/wallet?status=verified&reference=${reference}`;
+    const paystackData = await initializeTransaction({
+      email: payload.email,
+      amountGhs: paystackGrossGhs,
+      reference,
+      callbackUrl,
+      metadata: { type: "wallet_topup", agentId: req.user.sub, subtotalGhs: payload.amountGhs, feeGhs: paystackFeeGhs }
+    });
+
+    await recordPaymentInit({
+      reference,
+      type: "WALLET_TOPUP",
+      amountGhs: paystackGrossGhs,
+      agentId: req.user.sub,
+      metadata: { email: payload.email, subtotalGhs: payload.amountGhs, feeGhs: paystackFeeGhs }
+    });
+
+    return res.json({ success: true, data: paystackData });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   initializeOrderPayment,
   initializeSubscription,
   initializeAfaRegistration,
+  initializeWalletTopup,
   verifyPayment
 };

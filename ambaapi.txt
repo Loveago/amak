@@ -1,0 +1,343 @@
+# AmaBaKinaata API Documentation
+
+Base URL:
+{YOUR_SITE_URL}/api/v1/external
+
+All endpoints require API Key authentication.
+
+---
+
+## Authentication
+
+Include your API key in request headers:
+
+Authorization: Api-Key YOUR_API_KEY
+
+### How to Get an API Key
+1. Sign up as an agent on AmaBaKinaata.
+2. Go to Agent Dashboard → API tab.
+3. Request API access (admin must approve).
+4. Once approved, generate your API Key.
+5. Copy and store it securely — it is only shown once.
+
+---
+
+## 1. List Packages
+
+Returns all available data packages with API pricing.
+
+### Endpoint
+GET /packages
+
+### Full URL
+{YOUR_SITE_URL}/api/v1/external/packages
+
+### Headers
+Authorization: Api-Key YOUR_API_KEY
+
+### Parameters
+None
+
+### Response
+Status: 200 OK
+Content-Type: application/json
+
+### Response Body
+{
+  "success": true,
+  "data": [
+    {
+      "id": "clxyz123...",
+      "network": "MTN",
+      "networkSlug": "mtn",
+      "name": "MTN 1GB Daily",
+      "size": "1GB",
+      "price": 5.00
+    }
+  ]
+}
+
+### Response Fields
+- id (string): Unique product ID — use this when placing orders
+- network (string): Network provider name (e.g. MTN, Telecel, AT)
+- networkSlug (string): URL-friendly network slug
+- name (string): Package display name
+- size (string): Data bundle size
+- price (number): Price in GHS (API pricing)
+
+### Example cURL
+curl -X GET "{YOUR_SITE_URL}/api/v1/external/packages" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+
+---
+
+## 2. Check Balance
+
+Returns your current wallet balance.
+
+### Endpoint
+GET /balance
+
+### Full URL
+{YOUR_SITE_URL}/api/v1/external/balance
+
+### Headers
+Authorization: Api-Key YOUR_API_KEY
+
+### Parameters
+None
+
+### Response
+Status: 200 OK
+Content-Type: application/json
+
+### Response Body
+{
+  "success": true,
+  "balance": 150.00
+}
+
+### Response Fields
+- balance (number): Current wallet balance in GHS
+
+### Example cURL
+curl -X GET "{YOUR_SITE_URL}/api/v1/external/balance" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+
+---
+
+## 3. Place Order
+
+Submit a data order. The cost is debited from your wallet immediately.
+
+### Endpoint
+POST /orders
+
+### Full URL
+{YOUR_SITE_URL}/api/v1/external/orders
+
+### Headers
+Authorization: Api-Key YOUR_API_KEY
+Content-Type: application/json
+
+### Request Body
+{
+  "productId": "clxyz123...",
+  "recipientPhone": "0240000000",
+  "quantity": 1,
+  "reference": "my-order-ref-001"
+}
+
+### Request Fields
+- productId (string, required): Product ID from /packages endpoint
+- recipientPhone (string, required): Recipient phone number
+- quantity (number, optional): Number of units, defaults to 1
+- reference (string, optional): Your own reference for tracking
+
+### Response
+Status: 201 Created
+Content-Type: application/json
+
+### Response Body
+{
+  "success": true,
+  "data": {
+    "orderId": "clxyz456...",
+    "productId": "clxyz123...",
+    "network": "MTN",
+    "size": "1GB",
+    "recipientPhone": "0240000000",
+    "quantity": 1,
+    "totalAmountGhs": 5.00,
+    "status": "PAID",
+    "createdAt": "2025-01-15T10:30:00.000Z"
+  }
+}
+
+### Response Fields
+- orderId (string): Unique order ID — use this to check status
+- productId (string): Product ID
+- network (string): Network provider name
+- size (string): Data bundle size
+- recipientPhone (string): Recipient phone number
+- quantity (number): Number of units ordered
+- totalAmountGhs (number): Total amount debited from wallet
+- status (string): Order status (PAID, FULFILLED, etc.)
+- createdAt (string): ISO timestamp of order creation
+
+### Example cURL
+curl -X POST "{YOUR_SITE_URL}/api/v1/external/orders" \
+  -H "Authorization: Api-Key YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"productId":"clxyz123...","recipientPhone":"0240000000","quantity":1,"reference":"my-ref-001"}'
+
+---
+
+## 4. Check Order Status
+
+Returns the current status of an order.
+
+### Endpoint
+GET /orders/:orderId
+
+### Full URL
+{YOUR_SITE_URL}/api/v1/external/orders/{orderId}
+
+### Headers
+Authorization: Api-Key YOUR_API_KEY
+
+### Parameters
+- orderId (string, path): The order ID returned from the place order endpoint
+
+### Response
+Status: 200 OK
+Content-Type: application/json
+
+### Response Body
+{
+  "success": true,
+  "data": {
+    "orderId": "clxyz456...",
+    "productId": "clxyz123...",
+    "network": "MTN",
+    "size": "1GB",
+    "recipientPhone": "0240000000",
+    "quantity": 1,
+    "totalAmountGhs": 5.00,
+    "status": "FULFILLED",
+    "providerStatus": "DELIVERED",
+    "createdAt": "2025-01-15T10:30:00.000Z"
+  }
+}
+
+### Response Fields
+- orderId (string): Unique order ID
+- productId (string): Product ID
+- network (string): Network provider name
+- size (string): Data bundle size
+- recipientPhone (string): Recipient phone number
+- quantity (number): Number of units
+- totalAmountGhs (number): Total amount charged
+- status (string): Order status — PAID (processing), FULFILLED (delivered)
+- providerStatus (string|null): Raw provider status
+- createdAt (string): ISO timestamp
+
+### Example cURL
+curl -X GET "{YOUR_SITE_URL}/api/v1/external/orders/clxyz456..." \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+
+---
+
+## Error Responses
+
+All error responses follow this format:
+
+{
+  "success": false,
+  "error": "Error message here"
+}
+
+### Common HTTP Status Codes
+- 400 Bad Request: Missing or invalid parameters, insufficient balance
+- 401 Unauthorized: Missing or invalid API key
+- 403 Forbidden: API access not approved
+- 404 Not Found: Resource not found
+- 500 Internal Server Error: Server-side error
+
+---
+
+## Order Status Flow
+
+1. PAID — Order received and wallet debited, being sent to provider
+2. FULFILLED — Order delivered successfully
+3. FAILED — Order could not be processed (rare)
+
+---
+
+## Rate Limits
+
+There are no strict rate limits currently, but please be reasonable with your request frequency.
+Excessive requests may be throttled.
+
+---
+
+## Support
+
+For API support, contact the AmaBaKinaata admin team.
+
+---
+
+## Integration Example (JavaScript/Node.js)
+
+const API_KEY = "amba_your_api_key_here";
+const BASE_URL = "{YOUR_SITE_URL}/api/v1/external";
+
+// List packages
+const packagesRes = await fetch(`${BASE_URL}/packages`, {
+  headers: { "Authorization": `Api-Key ${API_KEY}` }
+});
+const packages = await packagesRes.json();
+console.log(packages.data);
+
+// Check balance
+const balanceRes = await fetch(`${BASE_URL}/balance`, {
+  headers: { "Authorization": `Api-Key ${API_KEY}` }
+});
+const balance = await balanceRes.json();
+console.log("Balance:", balance.balance);
+
+// Place order
+const orderRes = await fetch(`${BASE_URL}/orders`, {
+  method: "POST",
+  headers: {
+    "Authorization": `Api-Key ${API_KEY}`,
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    productId: "PRODUCT_ID_FROM_PACKAGES",
+    recipientPhone: "0240000000",
+    quantity: 1,
+    reference: "my-unique-ref"
+  })
+});
+const order = await orderRes.json();
+console.log("Order:", order.data);
+
+// Check order status
+const statusRes = await fetch(`${BASE_URL}/orders/${order.data.orderId}`, {
+  headers: { "Authorization": `Api-Key ${API_KEY}` }
+});
+const status = await statusRes.json();
+console.log("Status:", status.data.status);
+
+---
+
+## Integration Example (PHP)
+
+<?php
+$apiKey = "amba_your_api_key_here";
+$baseUrl = "{YOUR_SITE_URL}/api/v1/external";
+
+// List packages
+$ch = curl_init("$baseUrl/packages");
+curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Api-Key $apiKey"]);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$packages = json_decode(curl_exec($ch), true);
+curl_close($ch);
+
+// Place order
+$ch = curl_init("$baseUrl/orders");
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Authorization: Api-Key $apiKey",
+    "Content-Type: application/json"
+]);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+    "productId" => "PRODUCT_ID",
+    "recipientPhone" => "0240000000",
+    "quantity" => 1
+]));
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$order = json_decode(curl_exec($ch), true);
+curl_close($ch);
+?>

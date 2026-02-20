@@ -1,6 +1,7 @@
 const prisma = require("../config/prisma");
 const { settleOrderPayment } = require("./order.service");
 const { activateSubscription } = require("./subscription.service");
+const { creditWallet } = require("./wallet.service");
 
 function recordPaymentInit({ reference, type, amountGhs, agentId, orderId, planId, afaRegistrationId, metadata }) {
   return prisma.payment.create({
@@ -43,6 +44,17 @@ async function markPaymentVerified(reference, metadata) {
     await prisma.afaRegistration.update({
       where: { id: updated.afaRegistrationId },
       data: { status: "SUBMITTED" }
+    });
+  }
+
+  if (updated.type === "WALLET_TOPUP" && updated.agentId) {
+    const subtotalGhs = Number(updated.metadata?.subtotalGhs || updated.amountGhs);
+    await creditWallet({
+      agentId: updated.agentId,
+      amountGhs: subtotalGhs,
+      type: "TOP_UP",
+      reference,
+      metadata: { paymentId: updated.id }
     });
   }
 

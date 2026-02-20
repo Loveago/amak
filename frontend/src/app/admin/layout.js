@@ -15,6 +15,7 @@ const navItems = [
   { href: "/admin/affiliates", label: "Affiliates" },
   { href: "/admin/afa-registrations", label: "AFA Registrations" },
   { href: "/admin/payments", label: "Payments" },
+  { href: "/admin/api-access", label: "API Access" },
   { href: "/admin/settings", label: "Settings" },
   { href: "/admin/logs", label: "Logs" }
 ];

@@ -19,8 +19,14 @@ const initializeAfaRegistrationSchema = z.object({
   email: z.string().email()
 });
 
+const initializeWalletTopupSchema = z.object({
+  amountGhs: z.number().positive("Amount must be positive"),
+  email: z.string().email()
+});
+
 module.exports = {
   initializeOrderPaymentSchema,
   initializeSubscriptionSchema,
-  initializeAfaRegistrationSchema
+  initializeAfaRegistrationSchema,
+  initializeWalletTopupSchema
 };

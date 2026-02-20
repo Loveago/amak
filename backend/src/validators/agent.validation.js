@@ -19,9 +19,17 @@ const withdrawalSchema = z.object({
   momoNumber: z.string().min(6)
 });
 
+const directOrderSchema = z.object({
+  productId: z.string().min(1),
+  quantity: z.number().int().positive().optional(),
+  recipientPhone: z.string().min(6),
+  customerName: z.string().min(2).optional()
+});
+
 module.exports = {
   activateProductSchema,
   affiliatePricingSchema,
   agentProfileSchema,
-  withdrawalSchema
+  withdrawalSchema,
+  directOrderSchema
 };

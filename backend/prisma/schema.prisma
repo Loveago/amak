@@ -39,6 +39,8 @@ enum WalletTransactionType {
   WITHDRAWAL
   ADJUSTMENT
   REVERSAL
+  TOP_UP
+  ORDER_DEBIT
 }
 
 enum WithdrawalStatus {
@@ -52,12 +54,19 @@ enum PaymentType {
   ORDER
   SUBSCRIPTION
   AFA_REGISTRATION
+  WALLET_TOPUP
 }
 
 enum PaymentStatus {
   INITIALIZED
   VERIFIED
   FAILED
+}
+
+enum ApiAccessStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum AfaRegistrationStatus {
@@ -93,6 +102,8 @@ model User {
   passwordResets PasswordReset[]
   payments       Payment[]
   afaRegistrations AfaRegistration[]
+  apiKey         AgentApiKey?
+  apiAccessRequest ApiAccessRequest?
 }
 
 model Plan {
@@ -135,6 +146,7 @@ model Product {
   name        String
   size        String
   basePriceGhs Float?
+  apiPriceGhs Float?
   status      Status   @default(ACTIVE)
   createdAt   DateTime @default(now())
 
@@ -279,6 +291,16 @@ model Withdrawal {
   agent User @relation(fields: [agentId], references: [id])
 }
 
+model ApiAccessRequest {
+  id        String   @id @default(cuid())
+  agentId   String   @unique
+  status    ApiAccessStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agent User @relation(fields: [agentId], references: [id])
+}
+
 model Referral {
   id        String   @id @default(cuid())
   parentId  String
@@ -318,4 +340,15 @@ model ProviderConfig {
   forceProvider   String?
   updatedAt       DateTime @updatedAt
   createdAt       DateTime @default(now())
+}
+
+model AgentApiKey {
+  id        String   @id @default(cuid())
+  agentId   String   @unique
+  keyHash   String   @unique
+  lastFour  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agent User @relation(fields: [agentId], references: [id])
 }

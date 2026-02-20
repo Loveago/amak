@@ -10,6 +10,7 @@ const productSchema = z.object({
   size: z.string().min(1),
   categoryId: z.string().min(1),
   basePriceGhs: z.number().nonnegative().optional(),
+  apiPriceGhs: z.number().nonnegative().optional(),
   status: z.enum(["ACTIVE", "INACTIVE"]).optional()
 });
 

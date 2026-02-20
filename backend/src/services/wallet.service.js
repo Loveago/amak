@@ -38,10 +38,22 @@ async function debitWallet({ agentId, amountGhs, type, reference, metadata }) {
     return null;
   }
 
-  return prisma.wallet.update({
+  return prisma.wallet.upsert({
     where: { agentId },
-    data: {
+    update: {
       balanceGhs: { decrement: amountGhs },
+      transactions: {
+        create: {
+          type,
+          amountGhs: -Math.abs(amountGhs),
+          reference,
+          metadata
+        }
+      }
+    },
+    create: {
+      agentId,
+      balanceGhs: -Math.abs(amountGhs),
       transactions: {
         create: {
           type,

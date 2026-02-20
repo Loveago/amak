@@ -35,7 +35,9 @@ const {
   deleteAgent,
   getProviderConfigEndpoint,
   updateProviderConfig,
-  getProviderBalance
+  getProviderBalance,
+  listApiAccessRequests,
+  updateApiAccessRequest
 } = require("../controllers/admin.controller");
 
 const router = express.Router();
@@ -76,5 +78,7 @@ router.get("/logs", listAuditLogs);
 router.get("/provider", getProviderConfigEndpoint);
 router.patch("/provider", updateProviderConfig);
 router.get("/provider/balance", getProviderBalance);
+router.get("/api-access-requests", listApiAccessRequests);
+router.patch("/api-access-requests/:id", updateApiAccessRequest);
 
 module.exports = router;

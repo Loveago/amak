@@ -630,6 +630,8 @@ async function deleteAgent(req, res, next) {
       await tx.order.deleteMany({ where: { agentId: id } });
       await tx.auditLog.deleteMany({ where: { actorId: id } });
       await tx.afaRegistration.deleteMany({ where: { agentId: id } });
+      await tx.agentApiKey.deleteMany({ where: { agentId: id } });
+      await tx.apiAccessRequest.deleteMany({ where: { agentId: id } });
       await tx.user.delete({ where: { id } });
       await tx.auditLog.create({
         data: {
@@ -641,6 +643,43 @@ async function deleteAgent(req, res, next) {
     });
 
     return res.json({ success: true, data: { id } });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function listApiAccessRequests(req, res, next) {
+  try {
+    const requests = await prisma.apiAccessRequest.findMany({
+      include: { agent: { select: { id: true, name: true, email: true, slug: true } } },
+      orderBy: { createdAt: "desc" }
+    });
+    return res.json({ success: true, data: requests });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function updateApiAccessRequest(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    if (!status || !["APPROVED", "REJECTED"].includes(status)) {
+      return res.status(400).json({ success: false, error: "Status must be APPROVED or REJECTED" });
+    }
+    const request = await prisma.apiAccessRequest.findUnique({ where: { id } });
+    if (!request) {
+      return res.status(404).json({ success: false, error: "API access request not found" });
+    }
+    const updated = await prisma.apiAccessRequest.update({ where: { id }, data: { status } });
+    await prisma.auditLog.create({
+      data: {
+        actorId: req.user.sub,
+        action: "ADMIN_UPDATE_API_ACCESS",
+        meta: { requestId: id, agentId: request.agentId, status }
+      }
+    });
+    return res.json({ success: true, data: updated });
   } catch (error) {
     return next(error);
   }
@@ -731,5 +770,7 @@ module.exports = {
   deleteAgent,
   getProviderConfigEndpoint,
   updateProviderConfig,
-  getProviderBalance
+  getProviderBalance,
+  listApiAccessRequests,
+  updateApiAccessRequest
 };

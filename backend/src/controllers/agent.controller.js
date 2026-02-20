@@ -1,14 +1,17 @@
+const crypto = require("crypto");
 const prisma = require("../config/prisma");
 const {
   activateProductSchema,
   affiliatePricingSchema,
   agentProfileSchema,
-  withdrawalSchema
+  withdrawalSchema,
+  directOrderSchema
 } = require("../validators/agent.validation");
 const { validate } = require("../utils/validation");
 const { ensureActiveSubscription, enforceProductLimit, getCurrentSubscription } = require("../services/subscription.service");
-const { refreshOrderProviderStatus } = require("../services/order.service");
+const { refreshOrderProviderStatus, dispatchOrderToProvider } = require("../services/order.service");
 const { getAncestorAffiliateMarkupMap, getEffectiveBasePrice } = require("../services/pricing.service");
+const { hashKey } = require("../middleware/api-key");
 
 async function dashboard(req, res, next) {
   try {
@@ -398,6 +401,166 @@ async function listAfaRegistrations(req, res, next) {
   }
 }
 
+async function generateApiKey(req, res, next) {
+  try {
+    const agentId = req.user.sub;
+
+    const access = await prisma.apiAccessRequest.findUnique({ where: { agentId } });
+    if (!access || access.status !== "APPROVED") {
+      return res.status(403).json({ success: false, error: "API access not approved" });
+    }
+
+    const existing = await prisma.agentApiKey.findUnique({ where: { agentId } });
+    if (existing) {
+      return res.status(400).json({ success: false, error: "You already have an active API key. Revoke it first to generate a new one." });
+    }
+
+    const rawKey = `amba_${crypto.randomBytes(32).toString("hex")}`;
+    const keyHash = hashKey(rawKey);
+    const lastFour = rawKey.slice(-4);
+
+    await prisma.agentApiKey.create({
+      data: { agentId, keyHash, lastFour }
+    });
+
+    return res.status(201).json({ success: true, data: { apiKey: rawKey, lastFour } });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getApiKey(req, res, next) {
+  try {
+    const agentId = req.user.sub;
+    const record = await prisma.agentApiKey.findUnique({ where: { agentId } });
+    if (!record) {
+      return res.json({ success: true, data: null });
+    }
+    return res.json({ success: true, data: { id: record.id, lastFour: record.lastFour, createdAt: record.createdAt } });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function revokeApiKey(req, res, next) {
+  try {
+    const agentId = req.user.sub;
+    const record = await prisma.agentApiKey.findUnique({ where: { agentId } });
+    if (!record) {
+      return res.status(404).json({ success: false, error: "No API key found" });
+    }
+    await prisma.agentApiKey.delete({ where: { id: record.id } });
+    return res.json({ success: true, data: { revoked: true } });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function requestApiAccess(req, res, next) {
+  try {
+    const agentId = req.user.sub;
+    const existing = await prisma.apiAccessRequest.findUnique({ where: { agentId } });
+    if (existing) {
+      return res.json({ success: true, data: existing });
+    }
+    const request = await prisma.apiAccessRequest.create({ data: { agentId } });
+    return res.status(201).json({ success: true, data: request });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getApiAccessStatus(req, res, next) {
+  try {
+    const agentId = req.user.sub;
+    const request = await prisma.apiAccessRequest.findUnique({ where: { agentId } });
+    return res.json({ success: true, data: request || null });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function createDirectOrder(req, res, next) {
+  try {
+    const agentId = req.user.sub;
+    const payload = validate(directOrderSchema, req.body);
+
+    const product = await prisma.product.findUnique({
+      where: { id: payload.productId },
+      include: { category: true }
+    });
+    if (!product || product.status !== "ACTIVE") {
+      return res.status(404).json({ success: false, error: "Product not found or inactive" });
+    }
+
+    const productIds = [product.id];
+    const ancestorMarkupMap = await getAncestorAffiliateMarkupMap(agentId, productIds);
+    const effectiveBase = getEffectiveBasePrice({
+      basePriceGhs: product.basePriceGhs,
+      affiliateMarkupMap: ancestorMarkupMap,
+      productId: product.id
+    });
+    if (effectiveBase === null) {
+      return res.status(400).json({ success: false, error: "Product pricing not available" });
+    }
+
+    const quantity = payload.quantity || 1;
+    const unitPrice = Number(effectiveBase);
+    const totalAmount = unitPrice * quantity;
+
+    const walletData = await prisma.wallet.findUnique({ where: { agentId } });
+    if (!walletData || walletData.balanceGhs < totalAmount) {
+      return res.status(400).json({ success: false, error: "Insufficient wallet balance" });
+    }
+
+    const order = await prisma.$transaction(async (tx) => {
+      const newOrder = await tx.order.create({
+        data: {
+          agentId,
+          customerName: payload.customerName || "Direct Order",
+          customerPhone: payload.recipientPhone,
+          totalAmountGhs: totalAmount,
+          status: "PAID",
+          items: {
+            create: {
+              productId: product.id,
+              basePriceGhs: unitPrice,
+              markupGhs: 0,
+              quantity,
+              unitPriceGhs: unitPrice,
+              totalPriceGhs: totalAmount
+            }
+          }
+        },
+        include: { items: { include: { product: true } } }
+      });
+
+      await tx.wallet.update({
+        where: { agentId },
+        data: {
+          balanceGhs: { decrement: totalAmount },
+          transactions: {
+            create: {
+              type: "ORDER_DEBIT",
+              amountGhs: -Math.abs(totalAmount),
+              reference: newOrder.id,
+              metadata: { orderId: newOrder.id, productId: product.id }
+            }
+          }
+        }
+      });
+
+      return newOrder;
+    });
+
+    dispatchOrderToProvider(order.id).catch(() => {});
+
+    return res.status(201).json({ success: true, data: order });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   dashboard,
   getProfile,
@@ -414,5 +577,11 @@ module.exports = {
   subscription,
   listPlans,
   getAfaConfig,
-  listAfaRegistrations
+  listAfaRegistrations,
+  generateApiKey,
+  getApiKey,
+  revokeApiKey,
+  requestApiAccess,
+  getApiAccessStatus,
+  createDirectOrder
 };

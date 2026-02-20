@@ -15,7 +15,9 @@ const navItems = [
   { href: "/agent/settings", label: "Settings" },
   { href: "/agent/affiliate-pricing", label: "Affiliate Pricing" },
   { href: "/agent/affiliate", label: "Affiliate" },
-  { href: "/agent/afa-registration", label: "AFA Registration" }
+  { href: "/agent/afa-registration", label: "AFA Registration" },
+  { href: "/agent/api", label: "API" },
+  { href: "/agent/direct-order", label: "Direct Order" }
 ];
 
 export default async function AgentLayout({ children }) {

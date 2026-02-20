@@ -17,7 +17,13 @@ const {
   subscription,
   listPlans,
   getAfaConfig,
-  listAfaRegistrations
+  listAfaRegistrations,
+  generateApiKey,
+  getApiKey,
+  revokeApiKey,
+  requestApiAccess,
+  getApiAccessStatus,
+  createDirectOrder
 } = require("../controllers/agent.controller");
 
 const router = express.Router();
@@ -40,5 +46,11 @@ router.get("/subscription", subscription);
 router.get("/plans", listPlans);
 router.get("/afa/config", getAfaConfig);
 router.get("/afa-registrations", listAfaRegistrations);
+router.post("/api-keys", generateApiKey);
+router.get("/api-keys", getApiKey);
+router.delete("/api-keys", revokeApiKey);
+router.post("/api-access", requestApiAccess);
+router.get("/api-access", getApiAccessStatus);
+router.post("/direct-orders", createDirectOrder);
 
 module.exports = router;
