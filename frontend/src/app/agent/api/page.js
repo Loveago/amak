@@ -20,27 +20,39 @@ async function generateKey() {
   try {
     const data = await serverApi("/agent/api-keys", { method: "POST" });
     rawKey = data?.apiKey || "";
-  } catch (e) {}
-  revalidatePath("/agent/api");
-  if (rawKey) {
-    redirect(`/agent/api?newKey=${encodeURIComponent(rawKey)}`);
+    revalidatePath("/agent/api");
+    if (rawKey) {
+      redirect(`/agent/api?newKey=${encodeURIComponent(rawKey)}`);
+    }
+    redirect("/agent/api?error=Unable%20to%20generate%20key");
+  } catch (e) {
+    revalidatePath("/agent/api");
+    const message = e?.message || "Unable to generate key";
+    redirect(`/agent/api?error=${encodeURIComponent(message)}`);
   }
-  redirect("/agent/api");
 }
 
 async function revokeKey() {
   "use server";
   try {
-    await serverApi("/agent/api-keys/revoke", { method: "POST" });
-  } catch (e) {}
-  revalidatePath("/agent/api");
-  redirect("/agent/api?revoked=1");
+    const data = await serverApi("/agent/api-keys/revoke", { method: "POST" });
+    revalidatePath("/agent/api");
+    if (data?.revoked) {
+      redirect("/agent/api?revoked=1");
+    }
+    redirect("/agent/api?error=Unable%20to%20revoke%20key");
+  } catch (e) {
+    revalidatePath("/agent/api");
+    const message = e?.message || "Unable to revoke key";
+    redirect(`/agent/api?error=${encodeURIComponent(message)}`);
+  }
 }
 
 export default async function AgentApiPage({ searchParams = {} }) {
   requireAgent("/agent/api");
   const newKey = searchParams.newKey || null;
   const revoked = searchParams.revoked || null;
+  const errorMessage = searchParams.error || null;
 
   let accessStatus = null;
   let apiKey = null;
@@ -130,6 +142,14 @@ export default async function AgentApiPage({ searchParams = {} }) {
         <div className="card-outline rounded-3xl border border-amber-200 bg-amber-50 p-6">
           <p className="text-sm font-semibold text-amber-700">API key revoked successfully.</p>
           <p className="text-xs text-amber-600">You can now generate a new key below.</p>
+        </div>
+      )}
+
+      {/* Error Banner */}
+      {errorMessage && (
+        <div className="card-outline rounded-3xl border border-red-200 bg-red-50 p-6">
+          <p className="text-sm font-semibold text-red-700">{errorMessage}</p>
+          <p className="text-xs text-red-600">Please try again. If this keeps happening, contact support.</p>
         </div>
       )}
 
