@@ -49,6 +49,7 @@ router.get("/afa-registrations", listAfaRegistrations);
 router.post("/api-keys", generateApiKey);
 router.get("/api-keys", getApiKey);
 router.delete("/api-keys", revokeApiKey);
+router.post("/api-keys/revoke", revokeApiKey);
 router.post("/api-access", requestApiAccess);
 router.get("/api-access", getApiAccessStatus);
 router.post("/direct-orders", createDirectOrder);

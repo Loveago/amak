@@ -1,7 +1,7 @@
 # AmaBaKinaata API Documentation
 
 Base URL:
-{YOUR_SITE_URL}/api/v1/external
+https://amabakent.uk/api/v1/external
 
 All endpoints require API Key authentication.
 
@@ -30,7 +30,7 @@ Returns all available data packages with API pricing.
 GET /packages
 
 ### Full URL
-{YOUR_SITE_URL}/api/v1/external/packages
+https://amabakent.uk/api/v1/external/packages
 
 ### Headers
 Authorization: Api-Key YOUR_API_KEY
@@ -66,7 +66,7 @@ Content-Type: application/json
 - price (number): Price in GHS (API pricing)
 
 ### Example cURL
-curl -X GET "{YOUR_SITE_URL}/api/v1/external/packages" \
+curl -X GET "https://amabakent.uk/api/v1/external/packages" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 
 ---
@@ -79,7 +79,7 @@ Returns your current wallet balance.
 GET /balance
 
 ### Full URL
-{YOUR_SITE_URL}/api/v1/external/balance
+https://amabakent.uk/api/v1/external/balance
 
 ### Headers
 Authorization: Api-Key YOUR_API_KEY
@@ -101,7 +101,7 @@ Content-Type: application/json
 - balance (number): Current wallet balance in GHS
 
 ### Example cURL
-curl -X GET "{YOUR_SITE_URL}/api/v1/external/balance" \
+curl -X GET "https://amabakent.uk/api/v1/external/balance" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 
 ---
@@ -114,7 +114,7 @@ Submit a data order. The cost is debited from your wallet immediately.
 POST /orders
 
 ### Full URL
-{YOUR_SITE_URL}/api/v1/external/orders
+https://amabakent.uk/api/v1/external/orders
 
 ### Headers
 Authorization: Api-Key YOUR_API_KEY
@@ -166,7 +166,7 @@ Content-Type: application/json
 - createdAt (string): ISO timestamp of order creation
 
 ### Example cURL
-curl -X POST "{YOUR_SITE_URL}/api/v1/external/orders" \
+curl -X POST "https://amabakent.uk/api/v1/external/orders" \
   -H "Authorization: Api-Key YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"productId":"clxyz123...","recipientPhone":"0240000000","quantity":1,"reference":"my-ref-001"}'
@@ -181,7 +181,7 @@ Returns the current status of an order.
 GET /orders/:orderId
 
 ### Full URL
-{YOUR_SITE_URL}/api/v1/external/orders/{orderId}
+https://amabakent.uk/api/v1/external/orders/{orderId}
 
 ### Headers
 Authorization: Api-Key YOUR_API_KEY
@@ -223,7 +223,7 @@ Content-Type: application/json
 - createdAt (string): ISO timestamp
 
 ### Example cURL
-curl -X GET "{YOUR_SITE_URL}/api/v1/external/orders/clxyz456..." \
+curl -X GET "https://amabakent.uk/api/v1/external/orders/clxyz456..." \
   -H "Authorization: Api-Key YOUR_API_KEY"
 
 ---
@@ -270,7 +270,7 @@ For API support, contact the AmaBaKinaata admin team.
 ## Integration Example (JavaScript/Node.js)
 
 const API_KEY = "amba_your_api_key_here";
-const BASE_URL = "{YOUR_SITE_URL}/api/v1/external";
+const BASE_URL = "https://amabakent.uk/api/v1/external";
 
 // List packages
 const packagesRes = await fetch(`${BASE_URL}/packages`, {
@@ -316,7 +316,7 @@ console.log("Status:", status.data.status);
 
 <?php
 $apiKey = "amba_your_api_key_here";
-$baseUrl = "{YOUR_SITE_URL}/api/v1/external";
+$baseUrl = "https://amabakent.uk/api/v1/external";
 
 // List packages
 $ch = curl_init("$baseUrl/packages");
