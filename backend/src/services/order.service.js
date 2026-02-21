@@ -137,12 +137,33 @@ async function dispatchOrderToProvider(orderId) {
 
     await prisma.order.update({ where: { id: orderId }, data: updates });
   } catch (error) {
-    await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        providerStatus: "FAILED",
-        providerLastCheckedAt: new Date(),
-        providerPayload: { provider, reason, error: error.message }
+    await prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: orderId },
+        data: {
+          providerStatus: "FAILED",
+          providerLastCheckedAt: new Date(),
+          providerPayload: { provider, reason, error: error.message },
+          status: "FAILED"
+        }
+      });
+
+      // Auto-refund wallet if it was already debited (PAID state)
+      if (order?.status === "PAID" && order?.agentId && order?.totalAmountGhs) {
+        await tx.wallet.update({
+          where: { agentId: order.agentId },
+          data: {
+            balanceGhs: { increment: order.totalAmountGhs },
+            transactions: {
+              create: {
+                type: "REVERSAL",
+                amountGhs: order.totalAmountGhs,
+                reference: orderId,
+                metadata: { reason: "provider_failed" }
+              }
+            }
+          }
+        });
       }
     });
   }
@@ -184,6 +205,29 @@ async function refreshOrderProviderStatus(order) {
     };
     if (DELIVERED_STATUSES.has(status)) {
       updates.status = "FULFILLED";
+    } else if (status === "FAILED" && order.status === "PAID") {
+      // Provider says failed after a placed order: mark failed and refund
+      await prisma.$transaction(async (tx) => {
+        await tx.order.update({
+          where: { id: order.id },
+          data: { ...updates, status: "FAILED" }
+        });
+        await tx.wallet.update({
+          where: { agentId: order.agentId },
+          data: {
+            balanceGhs: { increment: order.totalAmountGhs },
+            transactions: {
+              create: {
+                type: "REVERSAL",
+                amountGhs: order.totalAmountGhs,
+                reference: order.id,
+                metadata: { reason: "provider_failed_refresh" }
+              }
+            }
+          }
+        });
+      });
+      return { ...order, ...updates, status: "FAILED" };
     }
     await prisma.order.update({ where: { id: order.id }, data: updates });
     return { ...order, ...updates };
