@@ -4,7 +4,7 @@ import { requireAgent } from "../../../lib/auth";
 import { serverApi } from "../../../lib/server-api";
 import CopyButton from "../../../components/CopyButton";
 
-const BASE_API = "https://amabakent.uk/api/v1/external";
+const BASE_API = "https://api.amabakent.uk/api/v1/external";
 
 async function requestAccess() {
   "use server";
