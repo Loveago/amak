@@ -49,13 +49,29 @@ async function markPaymentVerified(reference, metadata) {
 
   if (updated.type === "WALLET_TOPUP" && updated.agentId) {
     const subtotalGhs = Number(updated.metadata?.subtotalGhs || updated.amountGhs);
-    await creditWallet({
-      agentId: updated.agentId,
-      amountGhs: subtotalGhs,
-      type: "TOP_UP",
-      reference,
-      metadata: { paymentId: updated.id }
-    });
+    const wallet = await prisma.wallet.findUnique({ where: { agentId: updated.agentId } });
+    if (wallet) {
+      const existingTx = await prisma.walletTransaction.findFirst({
+        where: { walletId: wallet.id, type: "TOP_UP", reference }
+      });
+      if (!existingTx) {
+        await creditWallet({
+          agentId: updated.agentId,
+          amountGhs: subtotalGhs,
+          type: "TOP_UP",
+          reference,
+          metadata: { paymentId: updated.id }
+        });
+      }
+    } else {
+      await creditWallet({
+        agentId: updated.agentId,
+        amountGhs: subtotalGhs,
+        type: "TOP_UP",
+        reference,
+        metadata: { paymentId: updated.id }
+      });
+    }
   }
 
   return updated;

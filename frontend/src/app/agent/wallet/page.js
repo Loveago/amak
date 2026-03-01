@@ -20,6 +20,23 @@ async function loadWallet(formData) {
   }
 }
 
+async function verifyTopup(formData) {
+  "use server";
+  const reference = String(formData.get("reference") || "").trim();
+  if (!reference) {
+    return;
+  }
+  try {
+    await serverApi("/payments/wallet-topup/verify", {
+      method: "POST",
+      body: { reference }
+    });
+  } catch (error) {
+    console.error("Top-up verification failed", error);
+  }
+  redirect("/agent/wallet?status=verified");
+}
+
 export default async function AgentWalletPage({ searchParams = {} }) {
   const user = requireAgent("/agent/wallet");
   const rawReference = searchParams.reference || searchParams.trxref;
@@ -44,6 +61,8 @@ export default async function AgentWalletPage({ searchParams = {} }) {
 
   const balance = Number(wallet?.balanceGhs ?? 0).toFixed(2);
   const transactions = wallet?.transactions ?? [];
+  const topups = wallet?.topups ?? [];
+  const pendingTopups = topups.filter((t) => t.status !== "VERIFIED");
   return (
     <div className="space-y-6">
       <div className="glass rounded-3xl p-6">
@@ -90,6 +109,35 @@ export default async function AgentWalletPage({ searchParams = {} }) {
           </form>
         </details>
       </div>
+
+      {pendingTopups.length > 0 && (
+        <div className="card-outline rounded-3xl bg-white/90 p-6">
+          <h3 className="font-display text-2xl text-ink">Top-up tracker</h3>
+          <p className="mt-2 text-sm text-ink/60">
+            If you paid on Paystack but your wallet wasn&apos;t credited, click Verify to re-check Paystack and credit your wallet.
+          </p>
+          <div className="mt-6 space-y-3">
+            {pendingTopups.map((p) => (
+              <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm">
+                <div>
+                  <p className="font-semibold text-ink">WALLET_TOPUP</p>
+                  <p className="text-xs text-ink/60 break-all">{p.reference}</p>
+                  <p className="text-xs text-ink/60">Status: {p.status}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="font-semibold text-ink">GHS {Number(p.metadata?.subtotalGhs || p.amountGhs || 0).toFixed(2)}</span>
+                  <form action={verifyTopup}>
+                    <input type="hidden" name="reference" value={p.reference} />
+                    <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                      Verify
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="card-outline rounded-3xl bg-white/90 p-6">
         <h3 className="font-display text-2xl text-ink">Latest transactions</h3>

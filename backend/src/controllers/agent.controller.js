@@ -255,7 +255,21 @@ async function wallet(req, res, next) {
       include: { transactions: { orderBy: { createdAt: "desc" }, take: 20 } }
     });
 
-    return res.json({ success: true, data: walletData });
+    const topups = await prisma.payment.findMany({
+      where: { agentId, type: "WALLET_TOPUP" },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: {
+        id: true,
+        reference: true,
+        status: true,
+        amountGhs: true,
+        metadata: true,
+        createdAt: true
+      }
+    });
+
+    return res.json({ success: true, data: { ...(walletData || {}), topups } });
   } catch (error) {
     return next(error);
   }

@@ -169,6 +169,38 @@ async function verifyPayment(req, res, next) {
   }
 }
 
+async function verifyWalletTopup(req, res, next) {
+  try {
+    if (!req.user?.sub) {
+      return res.status(401).json({ success: false, error: "Authentication required" });
+    }
+
+    const reference = String(req.body?.reference || "").trim();
+    if (!reference) {
+      return res.status(400).json({ success: false, error: "Reference is required" });
+    }
+
+    const payment = await prisma.payment.findUnique({ where: { reference } });
+    if (!payment || payment.type !== "WALLET_TOPUP") {
+      return res.status(404).json({ success: false, error: "Top-up not found" });
+    }
+    if (payment.agentId !== req.user.sub) {
+      return res.status(403).json({ success: false, error: "Forbidden" });
+    }
+
+    const data = await verifyTransaction(reference);
+    const status = String(data?.status || "").toLowerCase();
+    const shouldCredit = status === "success";
+    if (shouldCredit) {
+      await markPaymentVerified(reference, data.metadata || {});
+    }
+
+    return res.json({ success: true, data: { reference, paystack: data, credited: shouldCredit } });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function initializeWalletTopup(req, res, next) {
   try {
     const payload = validate(initializeWalletTopupSchema, req.body);
@@ -207,5 +239,6 @@ module.exports = {
   initializeSubscription,
   initializeAfaRegistration,
   initializeWalletTopup,
-  verifyPayment
+  verifyPayment,
+  verifyWalletTopup
 };

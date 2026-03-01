@@ -4,7 +4,8 @@ const {
   initializeSubscription,
   initializeAfaRegistration,
   initializeWalletTopup,
-  verifyPayment
+  verifyPayment,
+  verifyWalletTopup
 } = require("../controllers/payment.controller");
 const authenticate = require("../middleware/auth");
 const requireRole = require("../middleware/rbac");
@@ -16,5 +17,6 @@ router.post("/subscriptions/initialize", authenticate, requireRole("AGENT"), ini
 router.post("/afa-registrations/initialize", authenticate, requireRole("AGENT"), initializeAfaRegistration);
 router.post("/wallet-topup/initialize", authenticate, requireRole("AGENT"), initializeWalletTopup);
 router.post("/verify", verifyPayment);
+router.post("/wallet-topup/verify", authenticate, requireRole("AGENT"), verifyWalletTopup);
 
 module.exports = router;
