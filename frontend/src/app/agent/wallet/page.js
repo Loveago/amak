@@ -20,28 +20,14 @@ async function loadWallet(formData) {
   }
 }
 
-async function verifyTopup(formData) {
-  "use server";
-  const reference = String(formData.get("reference") || "").trim();
-  if (!reference) {
-    return;
-  }
-  try {
-    await serverApi("/payments/wallet-topup/verify", {
-      method: "POST",
-      body: { reference }
-    });
-  } catch (error) {
-    console.error("Top-up verification failed", error);
-  }
-  redirect("/agent/wallet?status=verified");
-}
-
 export default async function AgentWalletPage({ searchParams = {} }) {
   const user = requireAgent("/agent/wallet");
   const rawReference = searchParams.reference || searchParams.trxref;
   const reference = Array.isArray(rawReference) ? rawReference[0] : rawReference;
   const statusFlag = Array.isArray(searchParams.status) ? searchParams.status[0] : searchParams.status;
+  const verifyRefRaw = searchParams.verifyRef;
+  const verifyRef = Array.isArray(verifyRefRaw) ? verifyRefRaw[0] : verifyRefRaw;
+  const errorFlag = Array.isArray(searchParams.error) ? searchParams.error[0] : searchParams.error;
 
   if (reference) {
     try {
@@ -50,6 +36,19 @@ export default async function AgentWalletPage({ searchParams = {} }) {
       console.error("Wallet top-up verification failed", error);
     }
     redirect("/agent/wallet?status=verified");
+  }
+
+  if (verifyRef) {
+    try {
+      await serverApi("/payments/wallet-topup/verify", {
+        method: "POST",
+        body: { reference: verifyRef }
+      });
+      redirect("/agent/wallet?status=verified");
+    } catch (error) {
+      const message = error?.message || "Unable to verify top-up";
+      redirect(`/agent/wallet?error=${encodeURIComponent(message)}`);
+    }
   }
 
   let wallet = null;
@@ -72,6 +71,11 @@ export default async function AgentWalletPage({ searchParams = {} }) {
         {statusFlag === "verified" && (
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600">
             Payment verified. Wallet credited.
+          </p>
+        )}
+        {errorFlag && (
+          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-red-600">
+            {errorFlag}
           </p>
         )}
         <div className="mt-6 flex flex-wrap gap-3">
@@ -126,12 +130,12 @@ export default async function AgentWalletPage({ searchParams = {} }) {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-semibold text-ink">GHS {Number(p.metadata?.subtotalGhs || p.amountGhs || 0).toFixed(2)}</span>
-                  <form action={verifyTopup}>
-                    <input type="hidden" name="reference" value={p.reference} />
-                    <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
-                      Verify
-                    </button>
-                  </form>
+                  <a
+                    href={`/agent/wallet?verifyRef=${encodeURIComponent(p.reference || "")}`}
+                    className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+                  >
+                    Verify
+                  </a>
                 </div>
               </div>
             ))}
