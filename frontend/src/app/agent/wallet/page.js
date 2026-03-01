@@ -39,16 +39,21 @@ export default async function AgentWalletPage({ searchParams = {} }) {
   }
 
   if (verifyRef) {
+    let verifyError = null;
     try {
       await serverApi("/payments/wallet-topup/verify", {
         method: "POST",
         body: { reference: verifyRef }
       });
-      redirect("/agent/wallet?status=verified");
     } catch (error) {
-      const message = error?.message || "Unable to verify top-up";
-      redirect(`/agent/wallet?error=${encodeURIComponent(message)}`);
+      verifyError = error;
     }
+
+    if (verifyError) {
+      const message = verifyError?.message || "Unable to verify top-up";
+      return redirect(`/agent/wallet?error=${encodeURIComponent(message)}`);
+    }
+    return redirect("/agent/wallet?status=verified");
   }
 
   let wallet = null;
