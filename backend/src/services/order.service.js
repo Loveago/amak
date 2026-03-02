@@ -11,6 +11,10 @@ const {
   purchaseDataBundle: purchaseGrandapiBundle,
   fetchOrderStatus: fetchGrandapiOrderStatus
 } = require("./grandapi.service");
+const {
+  purchaseDataBundle: purchaseDatahubnetBundle,
+  fetchOrderStatus: fetchDatahubnetOrderStatus
+} = require("./datahubnet.service");
 const { resolveActiveProvider } = require("./provider.service");
 
 const NETWORK_KEY_BY_CATEGORY = {
@@ -117,11 +121,30 @@ async function dispatchOrderToProvider(orderId) {
     return order;
   }
 
+  if (provider === "DATAHUBNET" && !env.datahubnetApiKey) {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        providerStatus: "NOT_SUBMITTED",
+        providerLastCheckedAt: new Date(),
+        providerPayload: { provider, reason, error: "DataHubNet API key missing" }
+      }
+    });
+    return order;
+  }
+
   try {
     const result =
       provider === "GRANDAPI"
         ? await purchaseGrandapiBundle({ networkKey, recipient, capacity })
-        : await purchaseEncartaBundle({ networkKey, recipient, capacity });
+        : provider === "DATAHUBNET"
+          ? await purchaseDatahubnetBundle({
+              networkKey,
+              recipient,
+              capacity,
+              reference: `order_${orderId}`
+            })
+          : await purchaseEncartaBundle({ networkKey, recipient, capacity });
 
     const status = normalizeStatus(result.status) || "PLACED";
     const updates = {
@@ -186,6 +209,10 @@ async function refreshOrderProviderStatus(order) {
   }
 
   const provider = order?.providerPayload?.provider || "ENCARTA";
+
+  if (provider === "DATAHUBNET") {
+    return order;
+  }
 
   try {
     let result;

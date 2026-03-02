@@ -15,6 +15,8 @@ const env = {
   baseUrl: process.env.BASE_URL || "http://localhost:3000",
   grandapiBaseUrl: process.env.GRANDAPI_BASE_URL || "https://grandapi.duckdns.org",
   grandapiApiKey: process.env.GRANDAPI_API_KEY || "",
+  datahubnetBaseUrl: process.env.DATAHUBNET_BASE_URL || "https://www.datahubnet.online",
+  datahubnetApiKey: process.env.DATAHUBNET_API_KEY || "",
   providerTimezone: process.env.PROVIDER_TIMEZONE || "Africa/Accra",
   orderWorkerIntervalMs: Number(process.env.ORDER_WORKER_INTERVAL_MS || 10000),
   encartaBaseUrl:
