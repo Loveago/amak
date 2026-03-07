@@ -62,7 +62,7 @@ export default async function AgentLayout({ children }) {
         <div className="flex flex-wrap items-center justify-between gap-6">
           <div>
             <p className="badge">Agent portal</p>
-            <h1 className="mt-3 font-display text-3xl text-ink">AMK Agent HQ</h1>
+            <h1 className="mt-3 font-display text-3xl text-ink">ABK Agent HQ</h1>
             <p className="text-sm text-ink/60">Manage storefronts, profits, and commissions.</p>
           </div>
           <div className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-right text-sm">

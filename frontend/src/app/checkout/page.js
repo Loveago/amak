@@ -264,7 +264,7 @@ export default function CheckoutPage() {
               </div>
             )}
             <p className="mt-4 text-xs text-ink/60">
-              By completing this order you agree to AmaBaKinaata&apos;s fulfillment policies.
+              By completing this order you agree to ABK&apos;s fulfillment policies.
             </p>
           </section>
 

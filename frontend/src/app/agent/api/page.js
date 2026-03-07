@@ -102,7 +102,7 @@ export default async function AgentApiPage({ searchParams = {} }) {
         <p className="badge">API Access</p>
         <h2 className="mt-3 font-display text-2xl text-ink">External API</h2>
         <p className="text-sm text-ink/60">
-          Integrate AmaBaKinaata into your own website. Place orders and check balances programmatically.
+          Integrate ABK into your own website. Place orders and check balances programmatically.
         </p>
       </div>
 

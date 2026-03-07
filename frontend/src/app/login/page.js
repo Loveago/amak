@@ -62,7 +62,7 @@ export default function LoginPage() {
         <section className="glass relative overflow-hidden rounded-3xl p-10">
           <div className="pointer-events-none absolute -right-24 top-10 h-48 w-48 rounded-full bg-aurora/20 blur-3xl" />
           <div className="pointer-events-none absolute -left-12 bottom-8 h-32 w-32 rounded-full bg-sunset/30 blur-2xl" />
-          <p className="badge">AmaBaKinaata Enterprise</p>
+          <p className="badge">ABK Enterprise</p>
           <h1 className="mt-4 font-display text-4xl text-ink md:text-5xl">
             Sign in to your bundle command center.
           </h1>

@@ -213,7 +213,7 @@ export default function SignupPage() {
             )}
           </form>
           <p className="mt-6 text-xs text-ink/60">
-            By creating an account you agree to AmaBaKinaata&apos;s service terms and fulfillment policies.
+            By creating an account you agree to ABK&apos;s service terms and fulfillment policies.
           </p>
         </section>
       </div>

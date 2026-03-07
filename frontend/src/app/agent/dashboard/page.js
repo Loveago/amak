@@ -24,7 +24,7 @@ export default async function AgentDashboardPage() {
 
   const activeBundles = products.filter((product) => product.isActive).length;
   const ordersCount = dashboard?.ordersCount ?? orders.length;
-  const shareSubject = encodeURIComponent("AmaBaKinaata Agent Report");
+  const shareSubject = encodeURIComponent("ABK Agent Report");
   const shareBody = encodeURIComponent(
     `Orders: ${ordersCount}\nWallet balance: GHS ${Number(dashboard?.walletBalanceGhs ?? 0).toFixed(2)}\nActive bundles: ${activeBundles}\nAffiliate downlines: ${downlines.length}`
   );

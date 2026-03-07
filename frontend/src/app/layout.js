@@ -14,7 +14,7 @@ const manrope = Manrope({
 });
 
 export const metadata = {
-  title: "AmaBaKinaata Enterprise",
+  title: "ABK Enterprise",
   description: "Ultra-modern mobile data bundle platform for Ghana."
 };
 

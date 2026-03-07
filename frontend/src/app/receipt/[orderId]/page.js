@@ -49,7 +49,7 @@ export default async function ReceiptPage({ params }) {
             <div>
               <p className="badge">Receipt</p>
               <h1 className="mt-3 font-display text-3xl text-ink">Order {order.id || params.orderId}</h1>
-              <p className="text-sm text-ink/60">Fulfilled by AmaBaKinaata Enterprise</p>
+              <p className="text-sm text-ink/60">Fulfilled by ABK Enterprise</p>
             </div>
             <div className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm">
               <p className="text-xs uppercase tracking-[0.2em] text-ink/60">Total</p>
@@ -132,7 +132,7 @@ export default async function ReceiptPage({ params }) {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs uppercase tracking-[0.2em] text-ink/50">Storefront</span>
-                <span className="font-semibold text-ink">{agentSlug || "AmaBaKinaata"}</span>
+                <span className="font-semibold text-ink">{agentSlug || "ABK"}</span>
               </div>
             </div>
             <div className="mt-6 rounded-2xl border border-ink/10 bg-white/70 px-4 py-4 text-sm">

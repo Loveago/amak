@@ -45,7 +45,7 @@ export default function HomePage() {
       <div className="mx-auto max-w-6xl px-6 pb-20 pt-16">
         <header className="flex flex-col gap-10">
           <div className="flex flex-wrap items-center justify-between gap-6">
-            <div className="badge">AmaBaKinaata Enterprise</div>
+            <div className="badge">ABK Enterprise</div>
             <div className="flex items-center gap-4 text-sm font-semibold">
               <span className="rounded-full bg-white/70 px-4 py-2">Ghana-first data commerce</span>
               <span className="text-ink/70">Paystack-ready</span>
@@ -57,7 +57,7 @@ export default function HomePage() {
                 Ultra-modern storefronts for Ghana&apos;s mobile data economy.
               </h1>
               <p className="text-lg text-ink/70">
-                AmaBaKinaata Enterprise gives agents, affiliates, and admins a clean command center to sell
+                ABK Enterprise gives agents, affiliates, and admins a clean command center to sell
                 data bundles, manage subscriptions, and reward growth in real time.
               </p>
               <div className="flex flex-wrap items-center gap-4">

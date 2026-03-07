@@ -37,14 +37,14 @@ export default function SiteHeader({ user, dashboardHref }) {
       <div className="mx-auto w-full max-w-6xl px-6 py-3 text-sm sm:py-4">
         <div className="flex items-center justify-between sm:hidden">
           <Link href="/" className="font-display text-base font-semibold text-ink">
-            AMK ENT
+            ABK ENT
           </Link>
           <MobileDrawer title="Menu" buttonLabel="Menu" items={menuItems} footer={menuFooter} />
         </div>
 
         <div className="hidden sm:flex sm:items-center sm:justify-between">
           <Link href="/" className="font-display text-lg font-semibold text-ink">
-            AmaBaKinaata Enterprise
+            ABK Enterprise
           </Link>
           <div className="flex items-center gap-3">
             <a

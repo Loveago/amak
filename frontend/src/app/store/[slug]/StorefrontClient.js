@@ -277,7 +277,7 @@ export default function StorefrontClient({ store, slug }) {
               <p>Please allow between 15 to 60 minutes for delivery.</p>
               <p>If not received within this timeframe, contact support within 24 hours for assistance.</p>
               <p>
-                Disclaimer: AmabaKinaata Ent will not be responsible for any issues arising from a violation of
+                Disclaimer: ABK Enterprise will not be responsible for any issues arising from a violation of
                 these conditions.
               </p>
             </div>
