@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
-export default function AdminOrdersClient({ orders, onFulfill }) {
+export default function AdminOrdersClient({ orders, pagination, onFulfill }) {
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -112,6 +113,41 @@ export default function AdminOrdersClient({ orders, onFulfill }) {
             })
           )}
         </div>
+        {pagination ? (
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-ink/10 pt-5 text-xs">
+            <p className="text-ink/60">
+              Page <span className="font-semibold text-ink">{pagination.page}</span> of{" "}
+              <span className="font-semibold text-ink">{pagination.totalPages}</span> ·{" "}
+              <span className="font-semibold text-ink">{pagination.total}</span> total
+            </p>
+            <div className="flex items-center gap-2">
+              {pagination.hasPrev ? (
+                <Link
+                  href={`/admin/orders?page=${pagination.page - 1}`}
+                  className="rounded-full border border-ink/10 bg-white/80 px-4 py-2 font-semibold uppercase tracking-[0.2em] text-ink"
+                >
+                  Prev
+                </Link>
+              ) : (
+                <span className="rounded-full border border-ink/10 bg-white/50 px-4 py-2 font-semibold uppercase tracking-[0.2em] text-ink/40">
+                  Prev
+                </span>
+              )}
+              {pagination.hasNext ? (
+                <Link
+                  href={`/admin/orders?page=${pagination.page + 1}`}
+                  className="rounded-full bg-ink px-4 py-2 font-semibold uppercase tracking-[0.2em] text-white"
+                >
+                  Next
+                </Link>
+              ) : (
+                <span className="rounded-full bg-ink/20 px-4 py-2 font-semibold uppercase tracking-[0.2em] text-white/70">
+                  Next
+                </span>
+              )}
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

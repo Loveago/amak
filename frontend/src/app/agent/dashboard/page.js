@@ -11,7 +11,7 @@ export default async function AgentDashboardPage() {
   try {
     [dashboard, orders, products, downlines] = await Promise.all([
       serverApi("/agent/dashboard"),
-      serverApi("/agent/orders"),
+      serverApi("/agent/orders?page=1&limit=10"),
       serverApi("/agent/products"),
       serverApi("/agent/affiliate")
     ]);
@@ -22,8 +22,10 @@ export default async function AgentDashboardPage() {
     downlines = [];
   }
 
+  const recentOrders = Array.isArray(orders?.items) ? orders.items : Array.isArray(orders) ? orders : [];
+
   const activeBundles = products.filter((product) => product.isActive).length;
-  const ordersCount = dashboard?.ordersCount ?? orders.length;
+  const ordersCount = dashboard?.ordersCount ?? recentOrders.length;
   const shareSubject = encodeURIComponent("ABK Agent Report");
   const shareBody = encodeURIComponent(
     `Orders: ${ordersCount}\nWallet balance: GHS ${Number(dashboard?.walletBalanceGhs ?? 0).toFixed(2)}\nActive bundles: ${activeBundles}\nAffiliate downlines: ${downlines.length}`
@@ -74,12 +76,12 @@ export default async function AgentDashboardPage() {
           <span className="text-xs uppercase tracking-[0.2em] text-ink/60">Updated in real-time</span>
         </div>
         <div className="mt-6 space-y-3">
-          {orders.length === 0 ? (
+          {recentOrders.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-ink/20 px-4 py-6 text-center text-sm text-ink/60">
               No orders yet. Share your storefront link to start processing data bundle requests.
             </div>
           ) : (
-            orders.map((order) => (
+            recentOrders.map((order) => (
               <div key={order.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-sm">
                 <div>
                   <p className="font-semibold text-ink">{order.customerName || "Customer"}</p>

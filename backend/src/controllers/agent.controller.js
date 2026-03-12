@@ -339,13 +339,37 @@ async function listWithdrawals(req, res, next) {
 async function listOrders(req, res, next) {
   try {
     const agentId = req.user.sub;
-    const orders = await prisma.order.findMany({
-      where: { agentId },
-      include: { items: { include: { product: true } } },
-      orderBy: { createdAt: "desc" }
-    });
+    const pageRaw = req.query.page;
+    const limitRaw = req.query.limit;
+    const page = Number.isFinite(Number(pageRaw)) ? Math.max(1, parseInt(pageRaw, 10)) : 1;
+    const limit = Number.isFinite(Number(limitRaw)) ? Math.min(50, Math.max(1, parseInt(limitRaw, 10))) : 10;
+    const skip = (page - 1) * limit;
+
+    const [total, orders] = await Promise.all([
+      prisma.order.count({ where: { agentId } }),
+      prisma.order.findMany({
+        where: { agentId },
+        include: { items: { include: { product: true } } },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit
+      })
+    ]);
+
     const refreshed = await Promise.all(orders.map((order) => refreshOrderProviderStatus(order)));
-    return res.json({ success: true, data: refreshed });
+    const totalPages = total === 0 ? 1 : Math.ceil(total / limit);
+    return res.json({
+      success: true,
+      data: {
+        items: refreshed,
+        page,
+        limit,
+        total,
+        totalPages,
+        hasPrev: page > 1,
+        hasNext: page < totalPages
+      }
+    });
   } catch (error) {
     return next(error);
   }
