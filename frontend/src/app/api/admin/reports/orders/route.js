@@ -12,7 +12,8 @@ function toCsvValue(value) {
 
 export async function GET() {
   try {
-    const orders = await serverApi("/admin/orders");
+    const payload = await serverApi("/admin/orders?page=1&limit=50");
+    const orders = payload?.items || [];
     const rows = [
       ["Order ID", "Agent", "Total (GHS)", "Status", "Created At"],
       ...orders.map((order) => [

@@ -356,7 +356,15 @@ async function listOrders(req, res, next) {
       })
     ]);
 
-    const refreshed = await Promise.all(orders.map((order) => refreshOrderProviderStatus(order)));
+    const refreshed = await Promise.all(
+      orders.map(async (order) => {
+        try {
+          return await refreshOrderProviderStatus(order);
+        } catch (error) {
+          return order;
+        }
+      })
+    );
     const totalPages = total === 0 ? 1 : Math.ceil(total / limit);
     return res.json({
       success: true,
