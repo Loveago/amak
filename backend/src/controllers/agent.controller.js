@@ -339,6 +339,8 @@ async function listWithdrawals(req, res, next) {
 async function listOrders(req, res, next) {
   try {
     const agentId = req.user.sub;
+    const refreshRaw = req.query.refresh;
+    const shouldRefresh = refreshRaw === "1" || refreshRaw === "true";
     const pageRaw = req.query.page;
     const limitRaw = req.query.limit;
     const page = Number.isFinite(Number(pageRaw)) ? Math.max(1, parseInt(pageRaw, 10)) : 1;
@@ -356,15 +358,17 @@ async function listOrders(req, res, next) {
       })
     ]);
 
-    const refreshed = await Promise.all(
-      orders.map(async (order) => {
-        try {
-          return await refreshOrderProviderStatus(order);
-        } catch (error) {
-          return order;
-        }
-      })
-    );
+    const refreshed = shouldRefresh
+      ? await Promise.all(
+          orders.map(async (order) => {
+            try {
+              return await refreshOrderProviderStatus(order);
+            } catch (error) {
+              return order;
+            }
+          })
+        )
+      : orders;
     const totalPages = total === 0 ? 1 : Math.ceil(total / limit);
     return res.json({
       success: true,

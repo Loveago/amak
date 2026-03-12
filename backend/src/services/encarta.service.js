@@ -3,6 +3,16 @@ const env = require("../config/env");
 const fetcher = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetcher(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 const STATUS_MAP = {
   success: "SUCCESS",
   placed: "PLACED",
@@ -42,7 +52,7 @@ async function purchaseDataBundle({ networkKey, recipient, capacity }) {
     throw error;
   }
 
-  const response = await fetcher(`${env.encartaBaseUrl}/purchase`, {
+  const response = await fetchWithTimeout(`${env.encartaBaseUrl}/purchase`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -73,7 +83,7 @@ async function fetchOrderStatus(reference) {
     throw error;
   }
 
-  const response = await fetcher(buildStatusUrl(reference), {
+  const response = await fetchWithTimeout(buildStatusUrl(reference), {
     headers: {
       "X-API-Key": env.encartaApiKey
     }

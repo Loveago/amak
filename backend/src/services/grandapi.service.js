@@ -3,6 +3,16 @@ const env = require("../config/env");
 const fetcher = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetcher(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
  const PACKAGE_CACHE_TTL_MS = 5 * 60 * 1000;
 const PACKAGE_TYPES = ["EXPIRING", "NON_EXPIRING"];
 const packageCache = new Map();
@@ -102,7 +112,7 @@ async function fetchPackages({ network, type = "EXPIRING" }) {
     url.searchParams.set("type", type);
   }
 
-  const response = await fetcher(url.toString(), {
+  const response = await fetchWithTimeout(url.toString(), {
     headers: {
       "X-API-Key": env.grandapiApiKey
     }
@@ -190,7 +200,7 @@ async function purchaseDataBundle({ networkKey, recipient, capacity }) {
     ]
   };
 
-  const response = await fetcher(`${env.grandapiBaseUrl}/api/orders`, {
+  const response = await fetchWithTimeout(`${env.grandapiBaseUrl}/api/orders`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -226,7 +236,7 @@ async function fetchOrderStatus(orderId) {
     throw error;
   }
 
-  const response = await fetcher(`${env.grandapiBaseUrl}/api/orders/${encodeURIComponent(orderId)}`, {
+  const response = await fetchWithTimeout(`${env.grandapiBaseUrl}/api/orders/${encodeURIComponent(orderId)}`, {
     headers: {
       "X-API-Key": env.grandapiApiKey
     }
@@ -257,7 +267,7 @@ async function fetchBalance() {
     throw error;
   }
 
-  const response = await fetcher(`${env.grandapiBaseUrl}/api/balance`, {
+  const response = await fetchWithTimeout(`${env.grandapiBaseUrl}/api/balance`, {
     headers: {
       "X-API-Key": env.grandapiApiKey
     }
