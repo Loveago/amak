@@ -28,6 +28,18 @@ const normalizeNetwork = (networkKey) => {
 const normalizeStatus = (value) => {
   if (!value) return "";
   const key = value.toString().trim().toLowerCase();
+
+  if (key.includes("order") && key.includes("placed")) return "PROCESSING";
+  if (key.includes("placed") && (key.includes("success") || key.includes("successful") || key.includes("successfully"))) {
+    return "PROCESSING";
+  }
+  if (key.includes("processing")) return "PROCESSING";
+  if (key.includes("pending")) return "PENDING";
+  if (key.includes("failed") || key.includes("error")) return "FAILED";
+  if (key.includes("delivered")) return "DELIVERED";
+  if (key.includes("complete") || key.includes("completed")) return "COMPLETED";
+  if (key.includes("success")) return "SUCCESS";
+
   if (key === "completed") return "COMPLETED";
   if (key === "delivered") return "DELIVERED";
   if (key === "success") return "SUCCESS";
