@@ -15,6 +15,10 @@ const {
   purchaseDataBundle: purchaseDatahubnetBundle,
   fetchOrderStatus: fetchDatahubnetOrderStatus
 } = require("./datahubnet.service");
+const {
+  purchaseDataBundle: purchaseElitnutBundle,
+  fetchOrderStatus: fetchElitnutOrderStatus
+} = require("./elitnut.service");
 const { resolveActiveProvider } = require("./provider.service");
 
 const NETWORK_KEY_BY_CATEGORY = {
@@ -133,10 +137,29 @@ async function dispatchOrderToProvider(orderId) {
     return order;
   }
 
+  if (provider === "ELITENUT" && !env.elitnutApiKey) {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        providerStatus: "NOT_SUBMITTED",
+        providerLastCheckedAt: new Date(),
+        providerPayload: { provider, reason, error: "EliteNut API key missing" }
+      }
+    });
+    return order;
+  }
+
   try {
     const result =
       provider === "GRANDAPI"
         ? await purchaseGrandapiBundle({ networkKey, recipient, capacity })
+        : provider === "ELITENUT"
+          ? await purchaseElitnutBundle({
+              networkKey,
+              recipient,
+              capacity,
+              reference: `order_${orderId}`
+            })
         : provider === "DATAHUBNET"
           ? await purchaseDatahubnetBundle({
               networkKey,
@@ -150,7 +173,10 @@ async function dispatchOrderToProvider(orderId) {
     const updates = {
       providerReference: result.reference ? String(result.reference) : null,
       providerStatus: status,
-      providerPayload: { provider, reason, raw: result.raw },
+      providerPayload:
+        provider === "ELITENUT"
+          ? { provider, reason, networkKey, raw: result.raw }
+          : { provider, reason, raw: result.raw },
       providerLastCheckedAt: new Date()
     };
 
@@ -218,6 +244,8 @@ async function refreshOrderProviderStatus(order) {
     let result;
     if (provider === "GRANDAPI" && env.grandapiApiKey) {
       result = await fetchGrandapiOrderStatus(order.providerReference);
+    } else if (provider === "ELITENUT" && env.elitnutApiKey) {
+      result = await fetchElitnutOrderStatus(order.providerReference, order?.providerPayload?.networkKey);
     } else if (env.encartaApiKey) {
       result = await fetchEncartaOrderStatus(order.providerReference);
     } else {
@@ -227,7 +255,10 @@ async function refreshOrderProviderStatus(order) {
     const status = normalizeStatus(result.status);
     const updates = {
       providerStatus: status,
-      providerPayload: { provider, raw: result.raw },
+      providerPayload:
+        provider === "ELITENUT"
+          ? { provider, networkKey: order?.providerPayload?.networkKey || null, raw: result.raw }
+          : { provider, raw: result.raw },
       providerLastCheckedAt: new Date()
     };
     if (DELIVERED_STATUSES.has(status)) {
