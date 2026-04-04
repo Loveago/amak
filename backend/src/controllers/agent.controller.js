@@ -351,7 +351,7 @@ async function listOrders(req, res, next) {
       prisma.order.count({ where: { agentId } }),
       prisma.order.findMany({
         where: { agentId },
-        include: { items: { include: { product: true } } },
+        include: { items: { include: { product: { include: { category: true } } } } },
         orderBy: { createdAt: "desc" },
         skip,
         take: limit

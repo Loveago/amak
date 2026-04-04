@@ -20,6 +20,23 @@ const PAYMENT_STATUS_META = {
   CANCELED: { label: "Canceled", tone: "slate" }
 };
 
+const PAID_STATUSES = new Set(["PAID", "FULFILLED"]);
+
+function inferOrderNetwork(order) {
+  const items = order?.items || [];
+  const text = items
+    .map((item) => [item?.product?.name, item?.product?.slug, item?.product?.category?.name, item?.product?.category?.slug])
+    .flat()
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (/\b(mtn|yello)\b/.test(text)) return "MTN";
+  if (/\b(telecel|vodafone)\b/.test(text)) return "TELECEL";
+  if (/\b(airtel|tigo|at|at-ishare|at-bigtime|airteltigo)\b/.test(text)) return "AIRTELTIGO";
+  return "Unknown";
+}
+
 const PROVIDER_STATUS_META = {
   PLACED: { label: "Placed", tone: "sky" },
   SUBMITTED: { label: "Placed", tone: "sky" },
@@ -125,6 +142,8 @@ export default function OrdersClient({ orders, pagination }) {
               const items = order.items || [];
               const createdAt = order.createdAt ? new Date(order.createdAt) : null;
               const paymentStatus = normalizeStatus(order.status);
+              const isPaid = PAID_STATUSES.has(paymentStatus);
+              const network = inferOrderNetwork(order);
               const paymentMeta = resolveStatusMeta(PAYMENT_STATUS_META, paymentStatus, "Pending");
               const providerStatusKey = getProviderStatusKey(order, paymentStatus);
               const providerMeta = resolveStatusMeta(PROVIDER_STATUS_META, providerStatusKey, "Not sent");
@@ -137,6 +156,18 @@ export default function OrdersClient({ orders, pagination }) {
                       <p className="mt-1 text-xs text-ink/60">
                         {createdAt ? createdAt.toLocaleString() : ""}
                       </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] ${
+                            isPaid ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700"
+                          }`}
+                        >
+                          {isPaid ? "Paid" : "Unpaid"}
+                        </span>
+                        <span className="rounded-full bg-ink/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-ink/70">
+                          {network}
+                        </span>
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Total</p>
@@ -153,6 +184,7 @@ export default function OrdersClient({ orders, pagination }) {
                       <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Recipient</p>
                       <p className="mt-1 font-semibold text-ink">{order.customerPhone || "Not provided"}</p>
                       <p className="text-xs text-ink/60">{order.customerName || "Guest customer"}</p>
+                      <p className="mt-1 text-xs text-ink/60">Network: {network}</p>
                     </div>
                     <div className="rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-sm">
                       <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Bundles</p>
