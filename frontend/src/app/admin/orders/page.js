@@ -6,10 +6,17 @@ import { serverApi } from "../../../lib/server-api";
 async function fulfillOrder(formData) {
   "use server";
   const orderId = String(formData.get("orderId") || "").trim();
+  const status = String(formData.get("status") || "").trim().toUpperCase();
   if (!orderId) {
     return;
   }
-  await serverApi(`/admin/orders/${orderId}/fulfill`, { method: "PATCH" });
+  if (!status) {
+    return;
+  }
+  await serverApi(`/admin/orders/${orderId}/fulfill`, {
+    method: "PATCH",
+    body: { status }
+  });
   revalidatePath("/admin/orders");
 }
 

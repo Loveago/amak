@@ -496,7 +496,7 @@ async function listOrders(req, res, next) {
     const [total, orders] = await Promise.all([
       prisma.order.count(),
       prisma.order.findMany({
-        include: { items: { include: { product: true } }, agent: true },
+        include: { items: { include: { product: { include: { category: true } } } }, agent: true },
         orderBy: { createdAt: "desc" },
         skip,
         take: limit
@@ -535,9 +535,18 @@ async function listOrders(req, res, next) {
 async function fulfillOrder(req, res, next) {
   try {
     const { id } = req.params;
+    const status = String(req.body?.status || "").trim().toUpperCase();
+    const allowedStatuses = new Set(["PAID", "CREATED", "FULFILLED"]);
+
+    if (!allowedStatuses.has(status)) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Status must be one of: PAID, CREATED, FULFILLED" });
+    }
+
     const order = await prisma.order.update({
       where: { id },
-      data: { status: "FULFILLED" }
+      data: { status }
     });
     return res.json({ success: true, data: order });
   } catch (error) {
