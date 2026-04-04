@@ -18,7 +18,7 @@ const slugify = require("../utils/slug");
 const { COMMISSION_RATES } = require("../config/affiliate");
 const env = require("../config/env");
 const { enforceProductLimit } = require("../services/subscription.service");
-const { refreshOrderProviderStatus } = require("../services/order.service");
+const { refreshOrderProviderStatus, settleOrderPayment } = require("../services/order.service");
 const { resolveActiveProvider, getProviderConfig, setForceProvider } = require("../services/provider.service");
 const { fetchBalance: fetchGrandapiBalance } = require("../services/grandapi.service");
 
@@ -542,6 +542,12 @@ async function fulfillOrder(req, res, next) {
       return res
         .status(400)
         .json({ success: false, error: "Status must be one of: PAID, CREATED, FULFILLED" });
+    }
+
+    if (status === "PAID") {
+      await settleOrderPayment(id, `ADMIN_MANUAL_${Date.now()}`);
+      const order = await prisma.order.findUnique({ where: { id } });
+      return res.json({ success: true, data: order });
     }
 
     const order = await prisma.order.update({

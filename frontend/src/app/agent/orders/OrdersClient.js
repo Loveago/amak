@@ -172,10 +172,6 @@ export default function OrdersClient({ orders, pagination }) {
                     <div className="text-right">
                       <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Total</p>
                       <p className="mt-1 text-lg font-semibold text-ink">GHS {total.toFixed(2)}</p>
-                      <div className="mt-2 flex flex-wrap justify-end gap-2">
-                        <span className={buildBadgeClass(paymentMeta.tone)}>{paymentMeta.label}</span>
-                        <span className={buildBadgeClass(providerMeta.tone)}>{providerMeta.label}</span>
-                      </div>
                     </div>
                   </div>
 
