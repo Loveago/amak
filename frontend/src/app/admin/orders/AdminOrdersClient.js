@@ -5,6 +5,35 @@ import { useMemo, useState } from "react";
 
 const PAID_STATUSES = new Set(["PAID", "FULFILLED"]);
 
+function normalizeProvider(value) {
+  if (!value) return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+  const upper = raw.toUpperCase();
+  if (upper === "ELINUT") return "ELITENUT";
+  if (upper === "ELITE_NUT") return "ELITENUT";
+  return upper;
+}
+
+function getOrderProvider(order) {
+  return normalizeProvider(order?.providerPayload?.provider || order?.provider || order?.activeProvider);
+}
+
+function getProviderBadgeStyle(provider) {
+  switch (provider) {
+    case "ENCARTA":
+      return { label: "Encarta", className: "bg-sky-100 text-sky-700" };
+    case "GRANDAPI":
+      return { label: "GrandAPI", className: "bg-violet-100 text-violet-700" };
+    case "DATAHUBNET":
+      return { label: "DataHubNet", className: "bg-amber-100 text-amber-800" };
+    case "ELITENUT":
+      return { label: "EliteNut", className: "bg-emerald-100 text-emerald-800" };
+    default:
+      return null;
+  }
+}
+
 function inferOrderNetwork(order) {
   const items = order?.items || [];
   const text = items
@@ -76,6 +105,8 @@ export default function AdminOrdersClient({ orders, pagination, onFulfill }) {
               const createdAt = order.createdAt ? new Date(order.createdAt) : null;
               const isPaid = PAID_STATUSES.has(order.status);
               const network = inferOrderNetwork(order);
+              const provider = getOrderProvider(order);
+              const providerBadge = provider ? getProviderBadgeStyle(provider) : null;
               const selectedStatus =
                 order.status === "FULFILLED" ? "FULFILLED" : order.status === "PAID" ? "PAID" : "CREATED";
               return (
@@ -96,6 +127,14 @@ export default function AdminOrdersClient({ orders, pagination, onFulfill }) {
                         >
                           {isPaid ? "Paid" : "Unpaid"}
                         </span>
+                        {providerBadge ? (
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] ${providerBadge.className}`}
+                            title={`Provider: ${provider}`}
+                          >
+                            {providerBadge.label}
+                          </span>
+                        ) : null}
                         <span className="rounded-full bg-ink/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-ink/70">
                           {network}
                         </span>
