@@ -5,17 +5,18 @@ import { serverApi } from "../../../lib/server-api";
 async function createWithdrawal(formData) {
   "use server";
   const amountRaw = String(formData.get("amountGhs") || "").trim();
+  const momoName = String(formData.get("momoName") || "").trim();
   const momoNumber = String(formData.get("momoNumber") || "").trim();
   const momoNetwork = String(formData.get("momoNetwork") || "").trim();
   const amountGhs = Number(amountRaw);
-  if (!Number.isFinite(amountGhs) || amountGhs <= 0 || !momoNumber || !momoNetwork) {
+  if (!Number.isFinite(amountGhs) || amountGhs <= 0 || !momoName || !momoNumber || !momoNetwork) {
     return { error: "Missing or invalid fields" };
   }
 
   try {
     await serverApi("/agent/withdrawals", {
       method: "POST",
-      body: { amountGhs, momoNetwork, momoNumber }
+      body: { amountGhs, momoNetwork, momoNumber, momoName }
     });
     revalidatePath("/agent/withdrawals");
     return { success: true };
@@ -44,6 +45,12 @@ export default async function AgentWithdrawalsPage() {
             step="0.01"
             className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
             placeholder="Min GHS 50"
+            required
+          />
+          <input
+            name="momoName"
+            className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+            placeholder="MoMo account name"
             required
           />
           <input

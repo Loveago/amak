@@ -15,6 +15,7 @@ const agentProfileSchema = z.object({
 
 const withdrawalSchema = z.object({
   amountGhs: z.number().min(50, "Minimum withdrawal is GHS 50"),
+  momoName: z.string().min(2),
   momoNetwork: z.string().min(2),
   momoNumber: z.string().min(6)
 });

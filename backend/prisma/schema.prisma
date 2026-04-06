@@ -284,6 +284,7 @@ model Withdrawal {
   amountGhs   Float
   feeGhs      Float            @default(0)
   status      WithdrawalStatus @default(PENDING)
+  momoName    String
   momoNetwork String
   momoNumber  String
   createdAt   DateTime @default(now())

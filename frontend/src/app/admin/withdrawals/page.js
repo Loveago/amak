@@ -43,6 +43,7 @@ export default async function AdminWithdrawalsPage() {
                 <div>
                   <p className="font-semibold text-ink">{item.agent?.name || "Agent"}</p>
                   <p className="text-xs text-ink/60">Request ID: {item.id}</p>
+                  <p className="text-xs text-ink/60">MoMo name: {item.momoName || "-"}</p>
                   <p className="text-xs text-ink/60">MoMo: {item.momoNetwork} · {item.momoNumber}</p>
                 </div>
                 <div className="text-right">

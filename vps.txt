@@ -244,7 +244,10 @@ In Cloudflare ➜ SSL/TLS:
 ```bash
 cd /var/www/amak
 git pull origin main
-cd backend && npm install && pm2 restart amak-backend --update-env
+cd backend && npm install
+npx prisma migrate deploy
+npx prisma generate
+pm2 restart amak-backend --update-env
 cd ../frontend && npm install && npm run build && pm2 restart amak-frontend
 ```
 

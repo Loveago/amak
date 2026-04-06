@@ -294,6 +294,7 @@ async function createWithdrawal(req, res, next) {
           agentId,
           amountGhs: payload.amountGhs,
           feeGhs: fee,
+          momoName: payload.momoName,
           momoNetwork: payload.momoNetwork,
           momoNumber: payload.momoNumber
         }
@@ -309,7 +310,10 @@ async function createWithdrawal(req, res, next) {
               reference: "WITHDRAWAL_REQUEST",
               metadata: {
                 withdrawalAmountGhs: payload.amountGhs,
-                feeGhs: fee
+                feeGhs: fee,
+                momoName: payload.momoName,
+                momoNetwork: payload.momoNetwork,
+                momoNumber: payload.momoNumber
               }
             }
           }
