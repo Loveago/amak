@@ -1,5 +1,6 @@
 const prisma = require("../config/prisma");
 const env = require("../config/env");
+const logger = require("../config/logger");
 const { creditWallet } = require("./wallet.service");
 const { creditAffiliateCommissions } = require("./affiliate.service");
 const {
@@ -290,6 +291,9 @@ async function refreshOrderProviderStatus(order) {
     await prisma.order.update({ where: { id: order.id }, data: updates });
     return { ...order, ...updates };
   } catch (error) {
+    logger.warn(
+      `Provider status refresh failed for order ${order.id} (${provider}, ref=${order.providerReference}): ${error.message}`
+    );
     return order;
   }
 }

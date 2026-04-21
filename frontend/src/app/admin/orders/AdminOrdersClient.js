@@ -34,6 +34,21 @@ function getProviderBadgeStyle(provider) {
   }
 }
 
+function getPaymentSource(order) {
+  if (!order) return null;
+  const status = String(order.status || "").toUpperCase();
+  const isPaid = status === "PAID" || status === "FULFILLED";
+  if (!isPaid) return null;
+  const ref = String(order.paymentRef || "").trim();
+  if (!ref) {
+    return { label: "Wallet", className: "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100" };
+  }
+  if (ref.startsWith("ADMIN_MANUAL_")) {
+    return { label: "Manual", className: "bg-slate-100 text-slate-600 ring-1 ring-slate-200" };
+  }
+  return { label: "Paystack", className: "bg-teal-50 text-teal-700 ring-1 ring-teal-100" };
+}
+
 function inferOrderNetwork(order) {
   const items = order?.items || [];
   const text = items
@@ -107,6 +122,7 @@ export default function AdminOrdersClient({ orders, pagination, onFulfill }) {
               const network = inferOrderNetwork(order);
               const provider = getOrderProvider(order);
               const providerBadge = provider ? getProviderBadgeStyle(provider) : null;
+              const paymentSource = getPaymentSource(order);
               const selectedStatus =
                 order.status === "FULFILLED" ? "FULFILLED" : order.status === "PAID" ? "PAID" : "CREATED";
               return (
@@ -133,6 +149,14 @@ export default function AdminOrdersClient({ orders, pagination, onFulfill }) {
                             title={`Provider: ${provider}`}
                           >
                             {providerBadge.label}
+                          </span>
+                        ) : null}
+                        {paymentSource ? (
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[0.65rem] font-medium uppercase tracking-[0.15em] ${paymentSource.className}`}
+                            title={`Payment: ${paymentSource.label}`}
+                          >
+                            {paymentSource.label}
                           </span>
                         ) : null}
                         <span className="rounded-full bg-ink/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-ink/70">
