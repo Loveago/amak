@@ -317,6 +317,12 @@ async function settleOrderPayment(orderId, reference) {
     return order;
   }
 
+  if (order.status !== "CREATED") {
+    const error = new Error("Order cannot be settled from current state");
+    error.statusCode = 400;
+    throw error;
+  }
+
   const profit = order.items.reduce(
     (sum, item) => sum + Number(item.markupGhs) * item.quantity,
     0
@@ -327,13 +333,23 @@ async function settleOrderPayment(orderId, reference) {
     data: { status: "PAID", paymentRef: reference }
   });
 
-  await creditWallet({
-    agentId: order.agentId,
-    amountGhs: profit,
-    type: "PROFIT",
-    reference: orderId,
-    metadata: { orderTotalGhs: order.totalAmountGhs }
+  const existingProfit = await prisma.walletTransaction.findFirst({
+    where: {
+      wallet: { agentId: order.agentId },
+      type: "PROFIT",
+      reference: orderId
+    }
   });
+
+  if (!existingProfit) {
+    await creditWallet({
+      agentId: order.agentId,
+      amountGhs: profit,
+      type: "PROFIT",
+      reference: orderId,
+      metadata: { orderTotalGhs: order.totalAmountGhs }
+    });
+  }
 
   await creditAffiliateCommissions({
     agentId: order.agentId,

@@ -159,9 +159,18 @@ async function initializeSubscription(req, res, next) {
 
 async function verifyPayment(req, res, next) {
   try {
-    const { reference } = req.body;
+    const reference = String(req.body?.reference || "").trim();
+    if (!reference) {
+      return res.status(400).json({ success: false, error: "Reference is required" });
+    }
+
+    const payment = await prisma.payment.findUnique({ where: { reference } });
+    if (!payment) {
+      return res.status(404).json({ success: false, error: "Payment not found" });
+    }
+
     const data = await verifyTransaction(reference);
-    await markPaymentVerified(reference, data.metadata || {});
+    await markPaymentVerified(reference, data.metadata || {}, data);
 
     return res.json({ success: true, data });
   } catch (error) {
@@ -192,7 +201,7 @@ async function verifyWalletTopup(req, res, next) {
     const status = String(data?.status || "").toLowerCase();
     const shouldCredit = status === "success";
     if (shouldCredit) {
-      await markPaymentVerified(reference, data.metadata || {});
+      await markPaymentVerified(reference, data.metadata || {}, data);
     }
 
     return res.json({ success: true, data: { reference, paystack: data, credited: shouldCredit } });

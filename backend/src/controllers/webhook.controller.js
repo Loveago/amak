@@ -1,5 +1,4 @@
 const crypto = require("crypto");
-const prisma = require("../config/prisma");
 const env = require("../config/env");
 const { recordPaymentEvent, markPaymentVerified } = require("../services/payment.service");
 
@@ -28,8 +27,8 @@ async function paystackWebhook(req, res, next) {
       return res.json({ success: true, data: { received: true, duplicate: true } });
     }
 
-    if (event.event === "charge.success") {
-      await markPaymentVerified(reference, event.data?.metadata || {});
+    if (event.event === "charge.success" && reference) {
+      await markPaymentVerified(reference, event.data?.metadata || {}, event.data || {});
     }
 
     return res.json({ success: true, data: { received: true } });
