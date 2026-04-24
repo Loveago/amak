@@ -6,10 +6,13 @@ export default async function AgentOrdersPage({ searchParams }) {
   requireAgent("/agent/orders");
   let orders = [];
   let pagination = null;
+  let scope = "all";
   try {
     const pageRaw = searchParams?.page;
     const page = Number.isFinite(Number(pageRaw)) ? Math.max(1, parseInt(pageRaw, 10)) : 1;
-    const payload = await serverApi(`/agent/orders?page=${page}&limit=10`);
+    const scopeRaw = String(searchParams?.scope || "all").trim().toLowerCase();
+    scope = ["all", "direct", "downline"].includes(scopeRaw) ? scopeRaw : "all";
+    const payload = await serverApi(`/agent/orders?page=${page}&limit=10&scope=${scope}`);
     orders = payload?.items || [];
     pagination = payload
       ? {
@@ -25,5 +28,5 @@ export default async function AgentOrdersPage({ searchParams }) {
     orders = [];
     pagination = null;
   }
-  return <OrdersClient orders={orders} pagination={pagination} />;
+  return <OrdersClient orders={orders} pagination={pagination} activeScope={scope} />;
 }

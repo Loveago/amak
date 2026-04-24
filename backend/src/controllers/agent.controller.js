@@ -16,8 +16,17 @@ const { hashKey } = require("../middleware/api-key");
 async function dashboard(req, res, next) {
   try {
     const agentId = req.user.sub;
+    const levelOneReferrals = await prisma.referral.findMany({
+      where: { parentId: agentId, level: 1 },
+      select: { childId: true }
+    });
+    const levelOneChildIds = levelOneReferrals.map((entry) => entry.childId);
+    const orderWhere = levelOneChildIds.length
+      ? { OR: [{ agentId }, { agentId: { in: levelOneChildIds } }] }
+      : { agentId };
+
     const [ordersCount, wallet] = await Promise.all([
-      prisma.order.count({ where: { agentId } }),
+      prisma.order.count({ where: orderWhere }),
       prisma.wallet.findUnique({ where: { agentId } })
     ]);
 
@@ -345,17 +354,37 @@ async function listOrders(req, res, next) {
     const agentId = req.user.sub;
     const refreshRaw = req.query.refresh;
     const shouldRefresh = refreshRaw === "1" || refreshRaw === "true";
+    const scopeRaw = String(req.query.scope || "all").trim().toLowerCase();
     const pageRaw = req.query.page;
     const limitRaw = req.query.limit;
     const page = Number.isFinite(Number(pageRaw)) ? Math.max(1, parseInt(pageRaw, 10)) : 1;
     const limit = Number.isFinite(Number(limitRaw)) ? Math.min(50, Math.max(1, parseInt(limitRaw, 10))) : 10;
     const skip = (page - 1) * limit;
 
+    const levelOneReferrals = await prisma.referral.findMany({
+      where: { parentId: agentId, level: 1 },
+      select: { childId: true }
+    });
+    const levelOneChildIds = levelOneReferrals.map((entry) => entry.childId);
+    let orderWhere;
+    if (scopeRaw === "direct") {
+      orderWhere = { agentId };
+    } else if (scopeRaw === "downline") {
+      orderWhere = levelOneChildIds.length ? { agentId: { in: levelOneChildIds } } : { agentId: "__no_match__" };
+    } else {
+      orderWhere = levelOneChildIds.length
+        ? { OR: [{ agentId }, { agentId: { in: levelOneChildIds } }] }
+        : { agentId };
+    }
+
     const [total, orders] = await Promise.all([
-      prisma.order.count({ where: { agentId } }),
+      prisma.order.count({ where: orderWhere }),
       prisma.order.findMany({
-        where: { agentId },
-        include: { items: { include: { product: { include: { category: true } } } } },
+        where: orderWhere,
+        include: {
+          items: { include: { product: { include: { category: true } } } },
+          agent: { select: { id: true, name: true, slug: true } }
+        },
         orderBy: { createdAt: "desc" },
         skip,
         take: limit
@@ -365,6 +394,9 @@ async function listOrders(req, res, next) {
     const refreshed = shouldRefresh
       ? await Promise.all(
           orders.map(async (order) => {
+            if (order.agentId !== agentId) {
+              return order;
+            }
             try {
               return await refreshOrderProviderStatus(order);
             } catch (error) {
@@ -373,11 +405,28 @@ async function listOrders(req, res, next) {
           })
         )
       : orders;
+
+    const taggedOrders = refreshed.map((order) => {
+      const isIndirect = order.agentId !== agentId;
+      return {
+        ...order,
+        visibilityScope: isIndirect ? "DOWNLINE_LEVEL_1" : "DIRECT",
+        isIndirect,
+        sourceAgent: isIndirect
+          ? {
+              id: order.agent?.id || order.agentId,
+              name: order.agent?.name || null,
+              slug: order.agent?.slug || null
+            }
+          : null
+      };
+    });
+
     const totalPages = total === 0 ? 1 : Math.ceil(total / limit);
     return res.json({
       success: true,
       data: {
-        items: refreshed,
+        items: taggedOrders,
         page,
         limit,
         total,

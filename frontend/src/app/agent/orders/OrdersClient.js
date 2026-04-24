@@ -82,7 +82,13 @@ const getProviderStatusKey = (order, paymentStatus) => {
   return "NOT_SUBMITTED";
 };
 
-export default function OrdersClient({ orders, pagination }) {
+const ORDER_SCOPE_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "direct", label: "Direct" },
+  { value: "downline", label: "Downline" }
+];
+
+export default function OrdersClient({ orders, pagination, activeScope = "all" }) {
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -95,6 +101,9 @@ export default function OrdersClient({ orders, pagination }) {
         order.customerName,
         order.customerPhone,
         order.status,
+        order.visibilityScope,
+        order.sourceAgent?.name,
+        order.sourceAgent?.slug,
         order.providerStatus,
         order.processingStatus,
         order.fulfillmentStatus,
@@ -117,6 +126,24 @@ export default function OrdersClient({ orders, pagination }) {
           <div>
             <h2 className="font-display text-2xl text-ink">Orders pipeline</h2>
             <p className="text-sm text-ink/60">Track payment status, processing updates, and fulfillment details.</p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {ORDER_SCOPE_OPTIONS.map((option) => {
+                const isActive = activeScope === option.value;
+                return (
+                  <Link
+                    key={option.value}
+                    href={`/agent/orders?scope=${option.value}`}
+                    className={`rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                      isActive
+                        ? "bg-ink text-white"
+                        : "border border-ink/15 bg-white/80 text-ink/70 hover:bg-white"
+                    }`}
+                  >
+                    {option.label}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
           <div className="w-full max-w-sm">
             <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Search orders</label>
@@ -164,6 +191,15 @@ export default function OrdersClient({ orders, pagination }) {
                         >
                           {isPaid ? "Paid" : "Unpaid"}
                         </span>
+                        {order.isIndirect ? (
+                          <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-violet-700">
+                            Level 1 downline
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-sky-700">
+                            Direct order
+                          </span>
+                        )}
                         <span className="rounded-full bg-ink/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-ink/70">
                           {network}
                         </span>
@@ -180,6 +216,11 @@ export default function OrdersClient({ orders, pagination }) {
                       <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Recipient</p>
                       <p className="mt-1 font-semibold text-ink">{order.customerPhone || "Not provided"}</p>
                       <p className="text-xs text-ink/60">{order.customerName || "Guest customer"}</p>
+                      {order.isIndirect ? (
+                        <p className="mt-1 text-xs text-ink/60">
+                          Source agent: {order.sourceAgent?.name || order.sourceAgent?.slug || "Level 1 downline"}
+                        </p>
+                      ) : null}
                       <p className="mt-1 text-xs text-ink/60">Network: {network}</p>
                     </div>
                     <div className="rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-sm">
@@ -225,7 +266,7 @@ export default function OrdersClient({ orders, pagination }) {
             <div className="flex items-center gap-2">
               {pagination.hasPrev ? (
                 <Link
-                  href={`/agent/orders?page=${pagination.page - 1}`}
+                  href={`/agent/orders?page=${pagination.page - 1}&scope=${activeScope}`}
                   className="rounded-full border border-ink/10 bg-white/80 px-4 py-2 font-semibold uppercase tracking-[0.2em] text-ink"
                 >
                   Prev
@@ -237,7 +278,7 @@ export default function OrdersClient({ orders, pagination }) {
               )}
               {pagination.hasNext ? (
                 <Link
-                  href={`/agent/orders?page=${pagination.page + 1}`}
+                  href={`/agent/orders?page=${pagination.page + 1}&scope=${activeScope}`}
                   className="rounded-full bg-ink px-4 py-2 font-semibold uppercase tracking-[0.2em] text-white"
                 >
                   Next

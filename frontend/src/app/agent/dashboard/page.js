@@ -86,6 +86,13 @@ export default async function AgentDashboardPage() {
                 <div>
                   <p className="font-semibold text-ink">{order.customerName || "Customer"}</p>
                   <p className="text-xs text-ink/60">{order.id}</p>
+                  {order.isIndirect ? (
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-violet-700">
+                      Level 1 downline · {order.sourceAgent?.name || order.sourceAgent?.slug || "Indirect"}
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-sky-700">Direct order</p>
+                  )}
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-ink">GHS {Number(order.totalAmountGhs || 0).toFixed(2)}</p>
