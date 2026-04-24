@@ -60,6 +60,125 @@ const shouldRefreshStatus = (lastCheckedAt) => {
   return Date.now() - last > env.encartaStatusThrottleMs;
 };
 
+async function reverseOrderWalletEffects(tx, order, reason) {
+  const orderDebitTx = await tx.walletTransaction.findFirst({
+    where: {
+      type: "ORDER_DEBIT",
+      reference: order.id,
+      amountGhs: { lt: 0 }
+    },
+    orderBy: { createdAt: "asc" }
+  });
+
+  if (orderDebitTx) {
+    const existingRefund = await tx.walletTransaction.findFirst({
+      where: {
+        walletId: orderDebitTx.walletId,
+        type: "REVERSAL",
+        reference: order.id,
+        amountGhs: { gt: 0 }
+      }
+    });
+
+    if (!existingRefund) {
+      const refundAmount = Math.abs(Number(orderDebitTx.amountGhs));
+      await tx.wallet.update({
+        where: { id: orderDebitTx.walletId },
+        data: {
+          balanceGhs: { increment: refundAmount },
+          transactions: {
+            create: {
+              type: "REVERSAL",
+              amountGhs: refundAmount,
+              reference: order.id,
+              metadata: { reason, sourceType: "ORDER_DEBIT" }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  const profitTx = await tx.walletTransaction.findFirst({
+    where: {
+      wallet: { agentId: order.agentId },
+      type: "PROFIT",
+      reference: order.id,
+      amountGhs: { gt: 0 }
+    },
+    orderBy: { createdAt: "asc" }
+  });
+
+  if (profitTx) {
+    const existingProfitReversal = await tx.walletTransaction.findFirst({
+      where: {
+        walletId: profitTx.walletId,
+        type: "PROFIT",
+        reference: order.id,
+        amountGhs: { lt: 0 }
+      }
+    });
+
+    if (!existingProfitReversal) {
+      const reversalAmount = Math.abs(Number(profitTx.amountGhs));
+      await tx.wallet.update({
+        where: { id: profitTx.walletId },
+        data: {
+          balanceGhs: { decrement: reversalAmount },
+          transactions: {
+            create: {
+              type: "PROFIT",
+              amountGhs: -reversalAmount,
+              reference: order.id,
+              metadata: { reason, sourceType: "PROFIT" }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  const commissionTxs = await tx.walletTransaction.findMany({
+    where: {
+      type: "COMMISSION",
+      reference: order.id,
+      amountGhs: { gt: 0 }
+    },
+    orderBy: { createdAt: "asc" }
+  });
+
+  for (const commissionTx of commissionTxs) {
+    const existingCommissionReversal = await tx.walletTransaction.findFirst({
+      where: {
+        walletId: commissionTx.walletId,
+        type: "COMMISSION",
+        reference: order.id,
+        amountGhs: { lt: 0 }
+      }
+    });
+
+    if (existingCommissionReversal) {
+      continue;
+    }
+
+    const reversalAmount = Math.abs(Number(commissionTx.amountGhs));
+    await tx.wallet.update({
+      where: { id: commissionTx.walletId },
+      data: {
+        balanceGhs: { decrement: reversalAmount },
+        transactions: {
+          create: {
+            type: "COMMISSION",
+            amountGhs: -reversalAmount,
+            reference: order.id,
+            metadata: { reason, sourceType: "COMMISSION" }
+          }
+        }
+      }
+    });
+  }
+}
+
 async function dispatchOrderToProvider(orderId) {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
@@ -198,22 +317,8 @@ async function dispatchOrderToProvider(orderId) {
         }
       });
 
-      // Auto-refund wallet if it was already debited (PAID state)
-      if (order?.status === "PAID" && order?.agentId && order?.totalAmountGhs) {
-        await tx.wallet.update({
-          where: { agentId: order.agentId },
-          data: {
-            balanceGhs: { increment: order.totalAmountGhs },
-            transactions: {
-              create: {
-                type: "REVERSAL",
-                amountGhs: order.totalAmountGhs,
-                reference: orderId,
-                metadata: { reason: "provider_failed" }
-              }
-            }
-          }
-        });
+      if (order?.status === "PAID" && order?.agentId) {
+        await reverseOrderWalletEffects(tx, order, "provider_failed");
       }
     });
   }
@@ -265,26 +370,14 @@ async function refreshOrderProviderStatus(order) {
     if (DELIVERED_STATUSES.has(status)) {
       updates.status = "FULFILLED";
     } else if (status === "FAILED" && order.status === "PAID") {
-      // Provider says failed after a placed order: mark failed and refund
+      // Provider says failed after a placed order: mark failed and reverse wallet effects
       await prisma.$transaction(async (tx) => {
         await tx.order.update({
           where: { id: order.id },
           data: { ...updates, status: "FAILED" }
         });
-        await tx.wallet.update({
-          where: { agentId: order.agentId },
-          data: {
-            balanceGhs: { increment: order.totalAmountGhs },
-            transactions: {
-              create: {
-                type: "REVERSAL",
-                amountGhs: order.totalAmountGhs,
-                reference: order.id,
-                metadata: { reason: "provider_failed_refresh" }
-              }
-            }
-          }
-        });
+
+        await reverseOrderWalletEffects(tx, order, "provider_failed_refresh");
       });
       return { ...order, ...updates, status: "FAILED" };
     }
