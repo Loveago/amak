@@ -545,7 +545,27 @@ async function fulfillOrder(req, res, next) {
     }
 
     if (status === "PAID") {
-      await settleOrderPayment(id, `ADMIN_MANUAL_${Date.now()}`);
+      const manualReference = `ADMIN_MANUAL_${Date.now()}`;
+      try {
+        await settleOrderPayment(id, manualReference);
+      } catch (error) {
+        const cannotSettleFromState =
+          error?.statusCode === 400 &&
+          String(error?.message || "").toLowerCase().includes("cannot be settled from current state");
+
+        if (!cannotSettleFromState) {
+          throw error;
+        }
+
+        await prisma.order.update({
+          where: { id },
+          data: {
+            status: "PAID",
+            paymentRef: manualReference
+          }
+        });
+      }
+
       const order = await prisma.order.findUnique({ where: { id } });
       return res.json({ success: true, data: order });
     }

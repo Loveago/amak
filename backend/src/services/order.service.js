@@ -60,6 +60,8 @@ const shouldRefreshStatus = (lastCheckedAt) => {
   return Date.now() - last > env.encartaStatusThrottleMs;
 };
 
+const isAdminManualPaymentRef = (paymentRef) => String(paymentRef || "").startsWith("ADMIN_MANUAL_");
+
 async function reverseOrderWalletEffects(tx, order, reason) {
   const orderDebitTx = await tx.walletTransaction.findFirst({
     where: {
@@ -306,6 +308,8 @@ async function dispatchOrderToProvider(orderId) {
 
     await prisma.order.update({ where: { id: orderId }, data: updates });
   } catch (error) {
+    const isManualPaidOrder = isAdminManualPaymentRef(order?.paymentRef);
+
     await prisma.$transaction(async (tx) => {
       await tx.order.update({
         where: { id: orderId },
@@ -313,11 +317,11 @@ async function dispatchOrderToProvider(orderId) {
           providerStatus: "FAILED",
           providerLastCheckedAt: new Date(),
           providerPayload: { provider, reason, error: error.message },
-          status: "FAILED"
+          ...(isManualPaidOrder ? {} : { status: "FAILED" })
         }
       });
 
-      if (order?.status === "PAID" && order?.agentId) {
+      if (order?.status === "PAID" && order?.agentId && !isManualPaidOrder) {
         await reverseOrderWalletEffects(tx, order, "provider_failed");
       }
     });
@@ -369,7 +373,11 @@ async function refreshOrderProviderStatus(order) {
     };
     if (DELIVERED_STATUSES.has(status)) {
       updates.status = "FULFILLED";
-    } else if (status === "FAILED" && order.status === "PAID") {
+    } else if (
+      status === "FAILED" &&
+      order.status === "PAID" &&
+      !isAdminManualPaymentRef(order.paymentRef)
+    ) {
       // Provider says failed after a placed order: mark failed and reverse wallet effects
       await prisma.$transaction(async (tx) => {
         await tx.order.update({
