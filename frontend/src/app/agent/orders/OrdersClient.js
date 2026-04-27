@@ -174,6 +174,8 @@ export default function OrdersClient({ orders, pagination, activeScope = "all" }
               const paymentMeta = resolveStatusMeta(PAYMENT_STATUS_META, paymentStatus, "Pending");
               const providerStatusKey = getProviderStatusKey(order, paymentStatus);
               const providerMeta = resolveStatusMeta(PROVIDER_STATUS_META, providerStatusKey, "Not sent");
+              const downlineLabel =
+                order.visibilityScope === "DOWNLINE_LEVEL_2" ? "Level 2 downline" : "Level 1 downline";
               return (
                 <div key={order.id} className="rounded-2xl border border-ink/10 bg-white/80 px-5 py-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -193,7 +195,7 @@ export default function OrdersClient({ orders, pagination, activeScope = "all" }
                         </span>
                         {order.isIndirect ? (
                           <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-violet-700">
-                            Level 1 downline
+                            {downlineLabel}
                           </span>
                         ) : (
                           <span className="rounded-full bg-sky-100 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-sky-700">
@@ -218,7 +220,7 @@ export default function OrdersClient({ orders, pagination, activeScope = "all" }
                       <p className="text-xs text-ink/60">{order.customerName || "Guest customer"}</p>
                       {order.isIndirect ? (
                         <p className="mt-1 text-xs text-ink/60">
-                          Source agent: {order.sourceAgent?.name || order.sourceAgent?.slug || "Level 1 downline"}
+                          Source agent: {order.sourceAgent?.name || order.sourceAgent?.slug || downlineLabel}
                         </p>
                       ) : null}
                       <p className="mt-1 text-xs text-ink/60">Network: {network}</p>

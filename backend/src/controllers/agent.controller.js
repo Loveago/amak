@@ -366,14 +366,21 @@ async function listOrders(req, res, next) {
       select: { childId: true }
     });
     const levelOneChildIds = levelOneReferrals.map((entry) => entry.childId);
+    const levelTwoReferrals = await prisma.referral.findMany({
+      where: { parentId: agentId, level: 2 },
+      select: { childId: true }
+    });
+    const levelTwoChildIds = levelTwoReferrals.map((entry) => entry.childId);
+
+    const downlineChildIds = Array.from(new Set([...levelOneChildIds, ...levelTwoChildIds]));
     let orderWhere;
     if (scopeRaw === "direct") {
       orderWhere = { agentId };
     } else if (scopeRaw === "downline") {
-      orderWhere = levelOneChildIds.length ? { agentId: { in: levelOneChildIds } } : { agentId: "__no_match__" };
+      orderWhere = downlineChildIds.length ? { agentId: { in: downlineChildIds } } : { agentId: "__no_match__" };
     } else {
-      orderWhere = levelOneChildIds.length
-        ? { OR: [{ agentId }, { agentId: { in: levelOneChildIds } }] }
+      orderWhere = downlineChildIds.length
+        ? { OR: [{ agentId }, { agentId: { in: downlineChildIds } }] }
         : { agentId };
     }
 
@@ -408,9 +415,16 @@ async function listOrders(req, res, next) {
 
     const taggedOrders = refreshed.map((order) => {
       const isIndirect = order.agentId !== agentId;
+      const downlineLevel = isIndirect
+        ? levelOneChildIds.includes(order.agentId)
+          ? 1
+          : levelTwoChildIds.includes(order.agentId)
+            ? 2
+            : null
+        : null;
       return {
         ...order,
-        visibilityScope: isIndirect ? "DOWNLINE_LEVEL_1" : "DIRECT",
+        visibilityScope: isIndirect ? (downlineLevel === 2 ? "DOWNLINE_LEVEL_2" : "DOWNLINE_LEVEL_1") : "DIRECT",
         isIndirect,
         sourceAgent: isIndirect
           ? {

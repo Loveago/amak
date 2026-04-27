@@ -88,7 +88,8 @@ export default async function AgentDashboardPage() {
                   <p className="text-xs text-ink/60">{order.id}</p>
                   {order.isIndirect ? (
                     <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-violet-700">
-                      Level 1 downline · {order.sourceAgent?.name || order.sourceAgent?.slug || "Indirect"}
+                      {order.visibilityScope === "DOWNLINE_LEVEL_2" ? "Level 2 downline" : "Level 1 downline"} ·{" "}
+                      {order.sourceAgent?.name || order.sourceAgent?.slug || "Indirect"}
                     </p>
                   ) : (
                     <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-sky-700">Direct order</p>
