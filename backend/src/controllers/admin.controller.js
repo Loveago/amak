@@ -597,18 +597,22 @@ async function fulfillOrdersByHour(req, res, next) {
       return res.status(400).json({ success: false, error: "hour must be between 0 and 23" });
     }
 
-    const [yearStr, monthStr, dayStr] = dateRaw.split("-");
-    const year = parseInt(yearStr, 10);
-    const monthIndex = parseInt(monthStr, 10) - 1;
-    const day = parseInt(dayStr, 10);
-    if (!Number.isFinite(year) || !Number.isFinite(monthIndex) || !Number.isFinite(day)) {
-      return res.status(400).json({ success: false, error: "invalid date" });
-    }
-
-    const startUtcMs = Date.UTC(year, monthIndex, day, hour, 0, 0) + tzOffsetMinutes * 60 * 1000;
-    const endUtcMs = Date.UTC(year, monthIndex, day, hour + 1, 0, 0) + tzOffsetMinutes * 60 * 1000;
+    // Correctly calculate UTC window based on local date, local hour and local timezone offset.
+    // tzOffsetMinutes is (UTC - Local) in minutes. 
+    // Example: GMT+0 offset is 0. GMT+1 offset is -60. GMT-1 offset is 60.
+    const startUtcMs = Date.UTC(
+      parseInt(dateRaw.substring(0, 4), 10),
+      parseInt(dateRaw.substring(5, 7), 10) - 1,
+      parseInt(dateRaw.substring(8, 10), 10),
+      hour, 0, 0
+    ) + (tzOffsetMinutes * 60 * 1000);
+    
+    const endUtcMs = startUtcMs + (60 * 60 * 1000);
     const start = new Date(startUtcMs);
     const end = new Date(endUtcMs);
+
+    logger.info(`Bulk fulfill: date=${dateRaw}, hour=${hour}, offset=${tzOffsetMinutes} => UTC window: ${start.toISOString()} to ${end.toISOString()}`);
+
     if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) {
       return res.status(400).json({ success: false, error: "invalid time window" });
     }
