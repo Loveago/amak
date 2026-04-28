@@ -580,6 +580,82 @@ async function fulfillOrder(req, res, next) {
   }
 }
 
+async function fulfillOrdersByHour(req, res, next) {
+  try {
+    const dateRaw = String(req.body?.date || "").trim();
+    const hourRaw = req.body?.hour;
+    const tzOffsetRaw = req.body?.tzOffsetMinutes;
+
+    const hour = Number.isFinite(Number(hourRaw)) ? parseInt(hourRaw, 10) : NaN;
+    const tzOffsetMinutes = Number.isFinite(Number(tzOffsetRaw)) ? parseInt(tzOffsetRaw, 10) : 0;
+
+    const match = /^\d{4}-\d{2}-\d{2}$/.test(dateRaw);
+    if (!match) {
+      return res.status(400).json({ success: false, error: "date must be in YYYY-MM-DD format" });
+    }
+    if (!Number.isFinite(hour) || hour < 0 || hour > 23) {
+      return res.status(400).json({ success: false, error: "hour must be between 0 and 23" });
+    }
+
+    const [yearStr, monthStr, dayStr] = dateRaw.split("-");
+    const year = parseInt(yearStr, 10);
+    const monthIndex = parseInt(monthStr, 10) - 1;
+    const day = parseInt(dayStr, 10);
+    if (!Number.isFinite(year) || !Number.isFinite(monthIndex) || !Number.isFinite(day)) {
+      return res.status(400).json({ success: false, error: "invalid date" });
+    }
+
+    const startUtcMs = Date.UTC(year, monthIndex, day, hour, 0, 0) + tzOffsetMinutes * 60 * 1000;
+    const endUtcMs = Date.UTC(year, monthIndex, day, hour + 1, 0, 0) + tzOffsetMinutes * 60 * 1000;
+    const start = new Date(startUtcMs);
+    const end = new Date(endUtcMs);
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) {
+      return res.status(400).json({ success: false, error: "invalid time window" });
+    }
+
+    const result = await prisma.order.updateMany({
+      where: {
+        status: "PAID",
+        createdAt: {
+          gte: start,
+          lt: end
+        }
+      },
+      data: {
+        status: "FULFILLED",
+        providerStatus: "DELIVERED",
+        providerLastCheckedAt: new Date()
+      }
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        actorId: req.user.sub,
+        action: "ORDER_BULK_FULFILL_HOUR",
+        meta: {
+          date: dateRaw,
+          hour,
+          tzOffsetMinutes,
+          start: start.toISOString(),
+          end: end.toISOString(),
+          updatedCount: result.count
+        }
+      }
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        updatedCount: result.count,
+        start: start.toISOString(),
+        end: end.toISOString()
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function listSubscriptions(req, res, next) {
   try {
     const subscriptions = await prisma.subscription.findMany({ include: { agent: true, plan: true } });
@@ -830,6 +906,7 @@ module.exports = {
   updateAgentSubscription,
   listOrders,
   fulfillOrder,
+  fulfillOrdersByHour,
   listSubscriptions,
   listWithdrawals,
   updateWithdrawal,

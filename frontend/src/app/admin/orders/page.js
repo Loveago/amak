@@ -20,6 +20,27 @@ async function fulfillOrder(formData) {
   revalidatePath("/admin/orders");
 }
 
+async function fulfillOrdersByHour(formData) {
+  "use server";
+  const date = String(formData.get("date") || "").trim();
+  const hourRaw = formData.get("hour");
+  const tzOffsetMinutesRaw = formData.get("tzOffsetMinutes");
+  const hour = Number.isFinite(Number(hourRaw)) ? parseInt(String(hourRaw), 10) : null;
+  const tzOffsetMinutes = Number.isFinite(Number(tzOffsetMinutesRaw))
+    ? parseInt(String(tzOffsetMinutesRaw), 10)
+    : 0;
+
+  if (!date || hour === null) {
+    return;
+  }
+
+  await serverApi("/admin/orders/fulfill-hour", {
+    method: "PATCH",
+    body: { date, hour, tzOffsetMinutes }
+  });
+  revalidatePath("/admin/orders");
+}
+
 export default async function AdminOrdersPage({ searchParams }) {
   requireAdmin("/admin/orders");
   let orders = [];
@@ -43,5 +64,12 @@ export default async function AdminOrdersPage({ searchParams }) {
     orders = [];
     pagination = null;
   }
-  return <AdminOrdersClient orders={orders} pagination={pagination} onFulfill={fulfillOrder} />;
+  return (
+    <AdminOrdersClient
+      orders={orders}
+      pagination={pagination}
+      onFulfill={fulfillOrder}
+      onBulkFulfillHour={fulfillOrdersByHour}
+    />
+  );
 }

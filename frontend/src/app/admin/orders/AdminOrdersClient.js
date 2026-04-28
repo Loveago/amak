@@ -64,9 +64,16 @@ function inferOrderNetwork(order) {
   return "Unknown";
 }
 
-export default function AdminOrdersClient({ orders, pagination, onFulfill }) {
+export default function AdminOrdersClient({ orders, pagination, onFulfill, onBulkFulfillHour }) {
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
+  const [bulkDate, setBulkDate] = useState(() => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  });
 
   const filteredOrders = useMemo(() => {
     if (!normalizedQuery) return orders;
@@ -107,6 +114,50 @@ export default function AdminOrdersClient({ orders, pagination, onFulfill }) {
           </div>
         </div>
       </div>
+
+      {typeof onBulkFulfillHour === "function" ? (
+        <div className="card-outline rounded-3xl bg-white/90 p-6">
+          <div className="flex flex-col gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Bulk action</p>
+              <p className="mt-1 text-sm text-ink/70">
+                Mark all paid orders within a selected hour as delivered.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Date</label>
+                <input
+                  type="date"
+                  value={bulkDate}
+                  onChange={(event) => setBulkDate(event.target.value)}
+                  className="mt-2 rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+                />
+              </div>
+
+              <form action={onBulkFulfillHour} className="w-full">
+                <input type="hidden" name="date" value={bulkDate} />
+                <input type="hidden" name="tzOffsetMinutes" value={new Date().getTimezoneOffset()} />
+                <div className="grid gap-2 sm:grid-cols-4 lg:grid-cols-8">
+                  {Array.from({ length: 24 }).map((_, hour) => (
+                    <button
+                      key={hour}
+                      type="submit"
+                      name="hour"
+                      value={hour}
+                      className="rounded-2xl border border-ink/10 bg-white/80 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-ink/70 hover:bg-white"
+                      title={`Mark ${hour}:00 to ${hour}:59 as delivered`}
+                    >
+                      {String(hour).padStart(2, "0")}:00
+                    </button>
+                  ))}
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="card-outline rounded-3xl bg-white/90 p-6">
         <div className="space-y-4">
