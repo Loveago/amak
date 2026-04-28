@@ -125,28 +125,28 @@ export default function AdminOrdersClient({ orders, pagination, onFulfill, onBul
               </p>
             </div>
 
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div className="w-full sm:w-auto">
                 <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Date</label>
                 <input
                   type="date"
                   value={bulkDate}
                   onChange={(event) => setBulkDate(event.target.value)}
-                  className="mt-2 rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+                  className="mt-2 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm sm:w-auto"
                 />
               </div>
 
               <form action={onBulkFulfillHour} className="w-full">
                 <input type="hidden" name="date" value={bulkDate} />
                 <input type="hidden" name="tzOffsetMinutes" value={new Date().getTimezoneOffset()} />
-                <div className="grid gap-2 sm:grid-cols-4 lg:grid-cols-8">
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-8">
                   {Array.from({ length: 24 }).map((_, hour) => (
                     <button
                       key={hour}
                       type="submit"
                       name="hour"
                       value={hour}
-                      className="rounded-2xl border border-ink/10 bg-white/80 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-ink/70 hover:bg-white"
+                      className="flex h-10 items-center justify-center rounded-2xl border border-ink/10 bg-white/80 px-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/70 transition-all hover:bg-white active:scale-95 sm:h-auto sm:py-2 sm:text-xs sm:tracking-[0.18em]"
                       title={`Mark ${hour}:00 to ${hour}:59 as delivered`}
                     >
                       {String(hour).padStart(2, "0")}:00
