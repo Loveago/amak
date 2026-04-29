@@ -17,6 +17,7 @@ const { validate } = require("../utils/validation");
 const slugify = require("../utils/slug");
 const { COMMISSION_RATES } = require("../config/affiliate");
 const env = require("../config/env");
+const logger = require("../config/logger");
 const { enforceProductLimit } = require("../services/subscription.service");
 const { refreshOrderProviderStatus, settleOrderPayment } = require("../services/order.service");
 const { resolveActiveProvider, getProviderConfig, setForceProvider } = require("../services/provider.service");
