@@ -128,11 +128,6 @@ export default function StorefrontClient({ store, slug }) {
   const agentName = store?.agent?.name || slug.replace(/-/g, " ");
   const whatsappLink = store?.agent?.whatsappLink || "";
   const bundleCount = bundles.length;
-  const minBundlePrice = useMemo(() => {
-    if (!bundles.length) return 0;
-    return bundles.reduce((min, bundle) => Math.min(min, Number(bundle.price || 0)), Number.POSITIVE_INFINITY);
-  }, [bundles]);
-
   const triggerHaptics = () => {
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       navigator.vibrate(10);
@@ -185,7 +180,7 @@ export default function StorefrontClient({ store, slug }) {
       <div className="storefront-orb orb-3" />
       <div className="mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6 sm:pt-12">
         <div className="storefront-hero card-outline fade-up rounded-[32px] p-6 sm:p-7">
-          <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative z-10 flex flex-col gap-6">
             <div className="space-y-3">
               <div className="badge">Agent storefront</div>
               <h1 className="font-display text-3xl text-ink sm:text-4xl md:text-5xl">
@@ -199,7 +194,7 @@ export default function StorefrontClient({ store, slug }) {
                 {[
                   { label: "Instant delivery", value: "5-15 mins" },
                   { label: "Verified networks", value: "MTN • Telecel • AT" },
-                  { label: "Support", value: "24/7 WhatsApp" }
+                  { label: "Bundles available", value: `${bundleCount} packages` }
                 ].map((item) => (
                   <div key={item.label} className="storefront-stat rounded-2xl px-4 py-3 text-xs">
                     <p className="text-[10px] uppercase tracking-[0.2em] text-ink/50">{item.label}</p>
@@ -207,17 +202,15 @@ export default function StorefrontClient({ store, slug }) {
                   </div>
                 ))}
               </div>
-            </div>
-            <div className="storefront-stat w-full rounded-3xl px-6 py-5 text-left sm:w-auto sm:text-right">
-              <p className="text-xs uppercase tracking-[0.2em] text-ink/60">Quick checkout</p>
-              <p className="mt-2 text-3xl font-semibold text-ink">GHS {Number(minBundlePrice || 0).toFixed(2)}</p>
-              <p className="text-xs text-ink/60">{bundleCount} bundles available</p>
-              <div className="mt-4 flex flex-col gap-2 sm:items-end">
+              <div className="mt-2 flex flex-wrap gap-3 pt-1">
                 <Link
                   href={`/store/${slug}/track`}
-                  className="inline-flex w-full items-center justify-center rounded-full bg-ink px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white sm:w-auto"
+                  className="inline-flex items-center gap-2 rounded-full border border-ink/20 bg-white/80 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-ink shadow-sm transition hover:-translate-y-0.5 hover:border-ink/40 hover:shadow-md"
                 >
-                  Track order status
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.25a.75.75 0 00-1.5 0v4.59L7.3 9.24a.75.75 0 00-1.1 1.02l3 3.25a.75.75 0 001.1 0l3-3.25a.75.75 0 10-1.1-1.02l-1.95 2.1V6.75z" clipRule="evenodd" />
+                  </svg>
+                  Track my order
                 </Link>
               </div>
             </div>
@@ -310,6 +303,7 @@ export default function StorefrontClient({ store, slug }) {
         </div>
       </div>
 
+
       {whatsappLink ? (
         <a
           href={whatsappLink}
@@ -318,12 +312,7 @@ export default function StorefrontClient({ store, slug }) {
           className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl animate-bounce"
           aria-label="Chat on WhatsApp"
         >
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            className="h-7 w-7"
-            fill="currentColor"
-          >
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-7 w-7" fill="currentColor">
             <path d="M20.52 3.5A11.87 11.87 0 0012.05 0C5.45 0 .1 5.35.1 11.95c0 2.1.55 4.15 1.6 5.95L0 24l6.3-1.65A11.87 11.87 0 0012.05 24h.05c6.6 0 11.95-5.35 11.95-11.95 0-3.2-1.25-6.2-3.53-8.55zm-8.47 18.4a9.9 9.9 0 01-5.05-1.4l-.35-.2-3.75 1 1-3.65-.25-.4a9.85 9.85 0 01-1.5-5.2c0-5.4 4.4-9.8 9.8-9.8 2.6 0 5.05 1 6.9 2.85a9.72 9.72 0 012.9 6.95c0 5.4-4.4 9.85-9.7 9.85zm5.35-7.35c-.3-.15-1.75-.85-2.05-.95-.3-.1-.5-.15-.7.15-.2.3-.8.95-.95 1.15-.2.2-.35.25-.65.1-.3-.15-1.25-.45-2.4-1.45-.9-.8-1.5-1.75-1.65-2.05-.15-.3 0-.45.1-.6.1-.1.3-.35.45-.55.15-.2.2-.35.3-.55.1-.2.05-.4-.05-.55-.15-.15-.7-1.65-.95-2.25-.25-.6-.5-.5-.7-.5-.2 0-.4 0-.6 0-.2 0-.55.1-.85.4-.3.3-1.1 1.05-1.1 2.55 0 1.5 1.1 2.95 1.25 3.15.15.2 2.15 3.25 5.2 4.55.75.3 1.35.5 1.8.65.75.25 1.45.2 2 .1.6-.1 1.75-.7 2-1.35.25-.65.25-1.2.2-1.35-.05-.15-.25-.25-.55-.4z" />
           </svg>
         </a>

@@ -258,10 +258,12 @@ async function lookupOrdersByPhone(req, res, next) {
     }
 
     const inputCandidates = buildPhoneCandidates(phoneRaw);
+    const phonesArray = Array.from(inputCandidates).filter(Boolean);
 
     const orders = await prisma.order.findMany({
       where: {
-        agentId: agent.id
+        agentId: agent.id,
+        customerPhone: { in: phonesArray }
       },
       include: {
         items: {
@@ -271,21 +273,12 @@ async function lookupOrdersByPhone(req, res, next) {
         }
       },
       orderBy: { createdAt: "desc" },
-      take: 250
+      take: 15
     });
 
-    const matched = orders.filter((order) => {
-      const orderCandidates = buildPhoneCandidates(order.customerPhone || "");
-      for (const candidate of inputCandidates) {
-        if (candidate && orderCandidates.has(candidate)) {
-          return true;
-        }
-      }
-      return false;
-    });
-
-    const data = matched.slice(0, 10).map((order) => ({
+    const data = orders.map((order) => ({
       id: order.id,
+      customerName: order.customerName || null,
       customerPhone: order.customerPhone,
       totalAmountGhs: order.totalAmountGhs,
       status: order.status,
