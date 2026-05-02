@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const PHONE_HINT = "Valid prefixes: 024, 054, 055, 059";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 const NETWORK_ASSETS = {
   mtn: { label: "MTN", icon: "/icons/mtn.svg" },
   telecel: { label: "Telecel", icon: "/icons/telecel.svg" },
@@ -68,6 +69,27 @@ const getNetworkSortValue = (networkKey = "") => {
   return priority !== undefined ? priority : PREFERRED_NETWORK_ORDER.length;
 };
 
+const STATUS_META = {
+  CREATED: { label: "Pending payment", className: "bg-amber-100 text-amber-800" },
+  PAID: { label: "Paid", className: "bg-sky-100 text-sky-700" },
+  FULFILLED: { label: "Delivered", className: "bg-emerald-100 text-emerald-700" },
+  FAILED: { label: "Failed", className: "bg-rose-100 text-rose-700" },
+  CANCELED: { label: "Canceled", className: "bg-slate-200 text-slate-700" }
+};
+
+const PROVIDER_META = {
+  DELIVERED: { label: "Provider delivered", className: "bg-emerald-50 text-emerald-700" },
+  SUCCESS: { label: "Provider success", className: "bg-emerald-50 text-emerald-700" },
+  COMPLETED: { label: "Provider completed", className: "bg-emerald-50 text-emerald-700" },
+  PENDING: { label: "Provider pending", className: "bg-sky-50 text-sky-700" },
+  PROCESSING: { label: "Provider processing", className: "bg-sky-50 text-sky-700" },
+  NOT_SUBMITTED: { label: "Not submitted", className: "bg-slate-100 text-slate-700" },
+  FAILED: { label: "Provider failed", className: "bg-rose-50 text-rose-700" }
+};
+
+const resolveStatusMeta = (value) => STATUS_META[String(value || "").toUpperCase()] || STATUS_META.CREATED;
+const resolveProviderMeta = (value) => PROVIDER_META[String(value || "").toUpperCase()] || null;
+
 export default function StorefrontClient({ store, slug }) {
   const router = useRouter();
   const audioContextRef = useRef(null);
@@ -130,10 +152,19 @@ export default function StorefrontClient({ store, slug }) {
   }, [bundles, activeFilter, searchTerm]);
   const agentName = store?.agent?.name || slug.replace(/-/g, " ");
   const whatsappLink = store?.agent?.whatsappLink || "";
+  const bundleCount = bundles.length;
+  const minBundlePrice = useMemo(() => {
+    if (!bundles.length) return 0;
+    return bundles.reduce((min, bundle) => Math.min(min, Number(bundle.price || 0)), Number.POSITIVE_INFINITY);
+  }, [bundles]);
 
   const [selectedBundle, setSelectedBundle] = useState(null);
   const [recipientPhone, setRecipientPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [lookupPhone, setLookupPhone] = useState("");
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState("");
+  const [lookupResults, setLookupResults] = useState([]);
 
   const triggerHaptics = () => {
     if (typeof navigator !== "undefined" && navigator.vibrate) {
@@ -206,6 +237,31 @@ export default function StorefrontClient({ store, slug }) {
     setActiveFilter(filterKey);
   };
 
+  const lookupOrderStatus = async () => {
+    const phone = lookupPhone.trim();
+    if (!phone) {
+      setLookupError("Enter the same phone number used at checkout.");
+      setLookupResults([]);
+      return;
+    }
+
+    setLookupLoading(true);
+    setLookupError("");
+    try {
+      const response = await fetch(`${API_BASE}/store/${slug}/orders/status?phone=${encodeURIComponent(phone)}`);
+      const payload = await response.json();
+      if (!response.ok || !payload?.success) {
+        throw new Error(payload?.error || "Could not fetch order status.");
+      }
+      setLookupResults(Array.isArray(payload.data) ? payload.data : []);
+    } catch (error) {
+      setLookupError(error.message || "Could not fetch order status.");
+      setLookupResults([]);
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen storefront-shell">
       <div className="storefront-orb orb-1" />
@@ -238,8 +294,8 @@ export default function StorefrontClient({ store, slug }) {
             </div>
             <div className="storefront-stat w-full rounded-3xl px-6 py-5 text-left sm:w-auto sm:text-right">
               <p className="text-xs uppercase tracking-[0.2em] text-ink/60">Quick checkout</p>
-              <p className="mt-2 text-3xl font-semibold text-ink">GHS 0.00</p>
-              <p className="text-xs text-ink/60">0 items selected</p>
+              <p className="mt-2 text-3xl font-semibold text-ink">GHS {Number(minBundlePrice || 0).toFixed(2)}</p>
+              <p className="text-xs text-ink/60">{bundleCount} bundles available</p>
               <Link
                 href={`/checkout?slug=${slug}`}
                 className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-ink px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white sm:w-auto"
@@ -282,6 +338,75 @@ export default function StorefrontClient({ store, slug }) {
               </p>
             </div>
           </div>
+        </div>
+
+        <div className="order-tracker-panel mt-6 glass rounded-3xl p-5 sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="badge">Track your order</p>
+              <h2 className="mt-3 font-display text-2xl text-ink">Check delivery status by phone number</h2>
+              <p className="mt-1 text-sm text-ink/60">Enter the number used during checkout to see your latest orders.</p>
+            </div>
+            <div className="w-full lg:max-w-xl">
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <input
+                  value={lookupPhone}
+                  onChange={(event) => {
+                    setLookupPhone(event.target.value);
+                    setLookupError("");
+                  }}
+                  className="w-full rounded-full border border-ink/10 bg-white/90 px-4 py-3 text-sm text-ink shadow-sm focus:outline-none"
+                  placeholder="Enter phone number e.g. 0240000000"
+                />
+                <button
+                  onClick={lookupOrderStatus}
+                  disabled={lookupLoading}
+                  className="rounded-full bg-ink px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white disabled:opacity-60"
+                >
+                  {lookupLoading ? "Checking..." : "Check status"}
+                </button>
+              </div>
+              {lookupError ? <p className="mt-2 text-xs text-rose-600">{lookupError}</p> : null}
+            </div>
+          </div>
+
+          {lookupResults.length ? (
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {lookupResults.map((order) => {
+                const statusMeta = resolveStatusMeta(order.status);
+                const providerMeta = resolveProviderMeta(order.providerStatus);
+                const createdAt = order.createdAt ? new Date(order.createdAt) : null;
+                return (
+                  <div key={order.id} className="order-tracker-card rounded-2xl border border-ink/10 bg-white/80 p-4 text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-semibold text-ink">{order.id}</p>
+                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusMeta.className}`}>
+                        {statusMeta.label}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-ink/60">{createdAt ? createdAt.toLocaleString() : ""}</p>
+                    <p className="mt-1 text-xs text-ink/60">GHS {Number(order.totalAmountGhs || 0).toFixed(2)}</p>
+                    {providerMeta ? (
+                      <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${providerMeta.className}`}>
+                        {providerMeta.label}
+                      </span>
+                    ) : null}
+                    <ul className="mt-2 space-y-1 text-xs text-ink/70">
+                      {(order.items || []).slice(0, 2).map((item) => (
+                        <li key={item.id}>
+                          {item.productName} {item.size ? `(${item.size})` : ""} · {item.quantity}x
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          ) : lookupPhone && !lookupLoading && !lookupError ? (
+            <div className="order-tracker-empty mt-5 rounded-2xl border border-dashed border-ink/20 px-4 py-5 text-sm text-ink/60">
+              No orders found for this phone number yet.
+            </div>
+          ) : null}
         </div>
 
         <div className="mt-10 flex items-center gap-3 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible">

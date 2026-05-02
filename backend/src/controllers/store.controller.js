@@ -208,4 +208,70 @@ async function getReceiptByOrderId(req, res, next) {
   }
 }
 
-module.exports = { getStorefront, createOrder, getReceipt, getReceiptByOrderId };
+async function lookupOrdersByPhone(req, res, next) {
+  try {
+    const { slug } = req.params;
+    const phoneRaw = String(req.query.phone || "").trim();
+    if (!phoneRaw) {
+      return res.status(400).json({ success: false, error: "phone query parameter is required" });
+    }
+
+    const digits = phoneRaw.replace(/\D/g, "");
+    if (digits.length < 9) {
+      return res.status(400).json({ success: false, error: "Enter a valid phone number" });
+    }
+
+    const agent = await prisma.user.findFirst({
+      where: { slug, role: "AGENT", status: "ACTIVE" },
+      select: { id: true, slug: true }
+    });
+    if (!agent) {
+      return res.status(404).json({ success: false, error: "Storefront not found" });
+    }
+
+    const candidates = new Set([phoneRaw, digits]);
+    if (digits.length === 10 && digits.startsWith("0")) {
+      candidates.add(`233${digits.slice(1)}`);
+    }
+    if (digits.length === 12 && digits.startsWith("233")) {
+      candidates.add(`0${digits.slice(3)}`);
+    }
+
+    const orders = await prisma.order.findMany({
+      where: {
+        agentId: agent.id,
+        customerPhone: { in: Array.from(candidates) }
+      },
+      include: {
+        items: {
+          include: {
+            product: { select: { id: true, name: true, size: true } }
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" },
+      take: 10
+    });
+
+    const data = orders.map((order) => ({
+      id: order.id,
+      customerPhone: order.customerPhone,
+      totalAmountGhs: order.totalAmountGhs,
+      status: order.status,
+      providerStatus: order.providerStatus || null,
+      createdAt: order.createdAt,
+      items: order.items.map((item) => ({
+        id: item.id,
+        productName: item.product?.name || "Bundle",
+        size: item.product?.size || null,
+        quantity: item.quantity
+      }))
+    }));
+
+    return res.json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = { getStorefront, createOrder, getReceipt, getReceiptByOrderId, lookupOrdersByPhone };
