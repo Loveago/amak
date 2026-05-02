@@ -4,6 +4,34 @@ const { validate } = require("../utils/validation");
 const { enforceProductLimit } = require("../services/subscription.service");
 const { getAncestorAffiliateMarkupMap, getEffectiveBasePrice } = require("../services/pricing.service");
 
+function buildPhoneCandidates(rawValue) {
+  const raw = String(rawValue || "").trim();
+  const digits = raw.replace(/\D/g, "");
+  const candidates = new Set([raw, digits]);
+
+  if (digits.length === 10 && digits.startsWith("0")) {
+    candidates.add(`233${digits.slice(1)}`);
+    candidates.add(`+233${digits.slice(1)}`);
+    candidates.add(digits.slice(1));
+  }
+  if (digits.length === 9) {
+    candidates.add(`0${digits}`);
+    candidates.add(`233${digits}`);
+    candidates.add(`+233${digits}`);
+  }
+  if (digits.length === 12 && digits.startsWith("233")) {
+    candidates.add(`0${digits.slice(3)}`);
+    candidates.add(`+${digits}`);
+    candidates.add(digits.slice(3));
+  }
+  if (digits.length === 13 && digits.startsWith("233")) {
+    candidates.add(`0${digits.slice(4)}`);
+    candidates.add(digits.slice(4));
+  }
+
+  return candidates;
+}
+
 function mapAgentProducts(agentProducts, affiliateMarkupMap) {
   const categories = new Map();
 
@@ -229,18 +257,11 @@ async function lookupOrdersByPhone(req, res, next) {
       return res.status(404).json({ success: false, error: "Storefront not found" });
     }
 
-    const candidates = new Set([phoneRaw, digits]);
-    if (digits.length === 10 && digits.startsWith("0")) {
-      candidates.add(`233${digits.slice(1)}`);
-    }
-    if (digits.length === 12 && digits.startsWith("233")) {
-      candidates.add(`0${digits.slice(3)}`);
-    }
+    const inputCandidates = buildPhoneCandidates(phoneRaw);
 
     const orders = await prisma.order.findMany({
       where: {
-        agentId: agent.id,
-        customerPhone: { in: Array.from(candidates) }
+        agentId: agent.id
       },
       include: {
         items: {
@@ -250,10 +271,20 @@ async function lookupOrdersByPhone(req, res, next) {
         }
       },
       orderBy: { createdAt: "desc" },
-      take: 10
+      take: 250
     });
 
-    const data = orders.map((order) => ({
+    const matched = orders.filter((order) => {
+      const orderCandidates = buildPhoneCandidates(order.customerPhone || "");
+      for (const candidate of inputCandidates) {
+        if (candidate && orderCandidates.has(candidate)) {
+          return true;
+        }
+      }
+      return false;
+    });
+
+    const data = matched.slice(0, 10).map((order) => ({
       id: order.id,
       customerPhone: order.customerPhone,
       totalAmountGhs: order.totalAmountGhs,
