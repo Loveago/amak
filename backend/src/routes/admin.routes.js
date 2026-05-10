@@ -29,6 +29,7 @@ const {
   updateWithdrawal,
   adjustWallet,
   listPayments,
+  listWalletDeposits,
   listAuditLogs,
   updateAfaConfig,
   listAfaRegistrations,
@@ -74,6 +75,7 @@ router.get("/withdrawals", listWithdrawals);
 router.patch("/withdrawals/:id", updateWithdrawal);
 router.post("/wallets/adjustments", adjustWallet);
 router.get("/payments", listPayments);
+router.get("/wallet-deposits", listWalletDeposits);
 router.get("/afa-registrations", listAfaRegistrations);
 router.patch("/afa-registrations/:id", updateAfaRegistrationStatus);
 router.get("/logs", listAuditLogs);

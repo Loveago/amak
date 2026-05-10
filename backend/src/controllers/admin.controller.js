@@ -114,6 +114,27 @@ async function listPayments(req, res, next) {
   }
 }
 
+async function listWalletDeposits(req, res, next) {
+  try {
+    const deposits = await prisma.walletTransaction.findMany({
+      where: { type: "TOP_UP", amountGhs: { gt: 0 } },
+      orderBy: { createdAt: "desc" },
+      include: {
+        wallet: {
+          include: {
+            agent: {
+              select: { id: true, name: true, email: true, slug: true }
+            }
+          }
+        }
+      }
+    });
+    return res.json({ success: true, data: deposits });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function listAfaRegistrations(req, res, next) {
   try {
     const registrations = await prisma.afaRegistration.findMany({
@@ -917,6 +938,7 @@ module.exports = {
   updateWithdrawal,
   adjustWallet,
   listPayments,
+  listWalletDeposits,
   listAuditLogs,
   listAfaRegistrations,
   updateAfaRegistrationStatus,

@@ -12,6 +12,7 @@ const navItems = [
   { href: "/admin/subscriptions", label: "Subscriptions" },
   { href: "/admin/wallets", label: "Wallets" },
   { href: "/admin/withdrawals", label: "Withdrawals" },
+  { href: "/admin/wallet-deposits", label: "Wallet Deposits" },
   { href: "/admin/affiliates", label: "Affiliates" },
   { href: "/admin/afa-registrations", label: "AFA Registrations" },
   { href: "/admin/payments", label: "Payments" },
