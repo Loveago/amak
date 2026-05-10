@@ -119,6 +119,7 @@ async function listWalletDeposits(req, res, next) {
     const deposits = await prisma.walletTransaction.findMany({
       where: { type: "TOP_UP", amountGhs: { gt: 0 } },
       orderBy: { createdAt: "desc" },
+      take: 10,
       include: {
         wallet: {
           include: {
