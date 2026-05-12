@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 const PAID_STATUSES = new Set(["PAID", "FULFILLED"]);
+const FAILED_PROVIDER_OPTIONS = ["ENCARTA", "GRANDAPI", "DATAHUBNET", "ELITENUT"];
 
 function normalizeProvider(value) {
   if (!value) return null;
@@ -13,6 +14,14 @@ function normalizeProvider(value) {
   if (upper === "ELINUT") return "ELITENUT";
   if (upper === "ELITE_NUT") return "ELITENUT";
   return upper;
+}
+
+function getRetryProviderDefault(currentProvider) {
+  if (!currentProvider) {
+    return FAILED_PROVIDER_OPTIONS[0];
+  }
+  const alternative = FAILED_PROVIDER_OPTIONS.find((option) => option !== currentProvider);
+  return alternative || FAILED_PROVIDER_OPTIONS[0];
 }
 
 function getOrderProvider(order) {
@@ -64,7 +73,14 @@ function inferOrderNetwork(order) {
   return "Unknown";
 }
 
-export default function AdminOrdersClient({ orders, pagination, onFulfill, onBulkFulfillHour }) {
+export default function AdminOrdersClient({
+  orders,
+  pagination,
+  onFulfill,
+  onBulkFulfillHour,
+  onUpdateFailedOrderProvider,
+  onResendFailedOrder
+}) {
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
   const [bulkDate, setBulkDate] = useState(() => {
@@ -174,6 +190,7 @@ export default function AdminOrdersClient({ orders, pagination, onFulfill, onBul
               const provider = getOrderProvider(order);
               const providerBadge = provider ? getProviderBadgeStyle(provider) : null;
               const paymentSource = getPaymentSource(order);
+              const isFailedOrder = order.status === "FAILED";
               const selectedStatus =
                 order.status === "FULFILLED" ? "FULFILLED" : order.status === "PAID" ? "PAID" : "CREATED";
               return (
@@ -280,6 +297,43 @@ export default function AdminOrdersClient({ orders, pagination, onFulfill, onBul
                       </button>
                     </form>
                   </div>
+                  {isFailedOrder && typeof onUpdateFailedOrderProvider === "function" && typeof onResendFailedOrder === "function" ? (
+                    <div className="mt-3">
+                      <form className="rounded-2xl border border-rose-200 bg-rose-50/50 px-4 py-3">
+                        <input type="hidden" name="orderId" value={order.id} />
+                        <p className="text-xs uppercase tracking-[0.2em] text-rose-700">Failed order actions</p>
+                        <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
+                          <select
+                            name="provider"
+                            defaultValue={getRetryProviderDefault(provider)}
+                            className="w-full rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-rose-800 sm:w-auto"
+                          >
+                            {FAILED_PROVIDER_OPTIONS.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="submit"
+                              formAction={onUpdateFailedOrderProvider}
+                              className="rounded-full border border-rose-300 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-rose-700"
+                            >
+                              Change provider
+                            </button>
+                            <button
+                              type="submit"
+                              formAction={onResendFailedOrder}
+                              className="rounded-full bg-rose-600 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white"
+                            >
+                              Resend order
+                            </button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  ) : null}
                 </div>
               );
             })

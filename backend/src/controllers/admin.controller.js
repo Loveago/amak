@@ -19,9 +19,19 @@ const { COMMISSION_RATES } = require("../config/affiliate");
 const env = require("../config/env");
 const logger = require("../config/logger");
 const { enforceProductLimit } = require("../services/subscription.service");
-const { refreshOrderProviderStatus, settleOrderPayment } = require("../services/order.service");
-const { resolveActiveProvider, getProviderConfig, setForceProvider } = require("../services/provider.service");
+const { refreshOrderProviderStatus, settleOrderPayment, dispatchOrderToProvider } = require("../services/order.service");
+const { getProviderConfig, setForceProvider, resolveActiveProvider } = require("../services/provider.service");
 const { fetchBalance: fetchGrandapiBalance } = require("../services/grandapi.service");
+
+function normalizeProviderInput(value) {
+  if (!value) return null;
+  const raw = String(value).trim().toUpperCase();
+  if (raw === "ELITE_NUT" || raw === "ELINUT") return "ELITENUT";
+  if (raw === "ENCARTA" || raw === "GRANDAPI" || raw === "DATAHUBNET" || raw === "ELITENUT") {
+    return raw;
+  }
+  return null;
+}
 
 async function dashboard(req, res, next) {
   try {
@@ -48,6 +58,103 @@ async function dashboard(req, res, next) {
       success: true,
       data: { orders, agents, subscriptions, revenueTotal, walletPayouts, afaRegistrations }
     });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function updateFailedOrderProvider(req, res, next) {
+  try {
+    const { id } = req.params;
+    const provider = normalizeProviderInput(req.body?.provider);
+
+    if (!provider) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Provider must be one of: ENCARTA, GRANDAPI, DATAHUBNET, ELITENUT" });
+    }
+
+    const order = await prisma.order.findUnique({ where: { id } });
+    if (!order) {
+      return res.status(404).json({ success: false, error: "Order not found" });
+    }
+
+    if (order.status !== "FAILED") {
+      return res.status(400).json({ success: false, error: "Provider can only be changed for failed orders" });
+    }
+
+    const updated = await prisma.order.update({
+      where: { id },
+      data: {
+        providerPayload: {
+          ...(order.providerPayload || {}),
+          provider,
+          reason: "admin_failed_retry_override"
+        },
+        providerLastCheckedAt: new Date()
+      }
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        actorId: req.user.sub,
+        action: "ADMIN_UPDATE_FAILED_ORDER_PROVIDER",
+        meta: { orderId: id, provider }
+      }
+    });
+
+    return res.json({ success: true, data: updated });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function resendFailedOrder(req, res, next) {
+  try {
+    const { id } = req.params;
+    const requestedProvider = normalizeProviderInput(req.body?.provider);
+    const order = await prisma.order.findUnique({ where: { id } });
+
+    if (!order) {
+      return res.status(404).json({ success: false, error: "Order not found" });
+    }
+
+    if (order.status !== "FAILED") {
+      return res.status(400).json({ success: false, error: "Resend is only available for failed orders" });
+    }
+
+    if (!requestedProvider) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Please select a provider before resending failed order" });
+    }
+
+    const previousProvider = normalizeProviderInput(order?.providerPayload?.provider);
+    if (previousProvider && requestedProvider === previousProvider) {
+      return res.status(400).json({
+        success: false,
+        error: "Please choose a different provider from the one that failed"
+      });
+    }
+
+    const provider = requestedProvider;
+
+    await dispatchOrderToProvider(id, {
+      providerOverride: provider,
+      allowFailedRetry: true,
+      forceResubmit: true
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        actorId: req.user.sub,
+        action: "ADMIN_RESEND_FAILED_ORDER",
+        meta: { orderId: id, provider }
+      }
+    });
+
+    const refreshed = await prisma.order.findUnique({ where: { id } });
+    return res.json({ success: true, data: refreshed });
   } catch (error) {
     return next(error);
   }
@@ -569,6 +676,11 @@ async function fulfillOrder(req, res, next) {
 
     if (status === "PAID") {
       const manualReference = `ADMIN_MANUAL_${Date.now()}`;
+      const existingOrder = await prisma.order.findUnique({ where: { id } });
+      if (!existingOrder) {
+        return res.status(404).json({ success: false, error: "Order not found" });
+      }
+
       try {
         await settleOrderPayment(id, manualReference);
       } catch (error) {
@@ -587,6 +699,10 @@ async function fulfillOrder(req, res, next) {
             paymentRef: manualReference
           }
         });
+
+        if (existingOrder.status !== "FAILED") {
+          await dispatchOrderToProvider(id, { forceResubmit: true });
+        }
       }
 
       const order = await prisma.order.findUnique({ where: { id } });
@@ -933,6 +1049,8 @@ module.exports = {
   updateAgentSubscription,
   listOrders,
   fulfillOrder,
+  updateFailedOrderProvider,
+  resendFailedOrder,
   fulfillOrdersByHour,
   listSubscriptions,
   listWithdrawals,

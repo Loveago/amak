@@ -181,7 +181,21 @@ async function reverseOrderWalletEffects(tx, order, reason) {
   }
 }
 
-async function dispatchOrderToProvider(orderId) {
+function normalizeProviderOverride(value) {
+  if (!value) return null;
+  const raw = String(value).trim().toUpperCase();
+  if (raw === "ELITE_NUT") return "ELITENUT";
+  if (raw === "ELINUT") return "ELITENUT";
+  if (raw === "ENCARTA" || raw === "GRANDAPI" || raw === "DATAHUBNET" || raw === "ELITENUT") {
+    return raw;
+  }
+  return null;
+}
+
+async function dispatchOrderToProvider(orderId, options = {}) {
+  const providerOverride = normalizeProviderOverride(options.providerOverride);
+  const allowFailedRetry = Boolean(options.allowFailedRetry);
+  const forceResubmit = Boolean(options.forceResubmit);
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: { items: { include: { product: { include: { category: true } } } } }
@@ -191,11 +205,14 @@ async function dispatchOrderToProvider(orderId) {
     return order;
   }
 
-  if (order.status !== "PAID" && order.status !== "FULFILLED") {
+  const canDispatch =
+    order.status === "PAID" || order.status === "FULFILLED" || (allowFailedRetry && order.status === "FAILED");
+
+  if (!canDispatch) {
     return order;
   }
 
-  if (order.providerReference) {
+  if (order.providerReference && !forceResubmit) {
     return order;
   }
 
@@ -221,7 +238,9 @@ async function dispatchOrderToProvider(orderId) {
     return order;
   }
 
-  const { provider, reason } = await resolveActiveProvider();
+  const activeProvider = await resolveActiveProvider();
+  const provider = providerOverride || activeProvider.provider;
+  const reason = providerOverride ? "admin_failed_retry_override" : activeProvider.reason;
 
   if (provider === "ENCARTA" && !env.encartaApiKey) {
     await prisma.order.update({

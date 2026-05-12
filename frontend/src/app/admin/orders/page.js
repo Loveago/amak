@@ -20,6 +20,34 @@ async function fulfillOrder(formData) {
   revalidatePath("/admin/orders");
 }
 
+async function updateFailedOrderProvider(formData) {
+  "use server";
+  const orderId = String(formData.get("orderId") || "").trim();
+  const provider = String(formData.get("provider") || "").trim().toUpperCase();
+  if (!orderId || !provider) {
+    return;
+  }
+  await serverApi(`/admin/orders/${orderId}/provider`, {
+    method: "PATCH",
+    body: { provider }
+  });
+  revalidatePath("/admin/orders");
+}
+
+async function resendFailedOrder(formData) {
+  "use server";
+  const orderId = String(formData.get("orderId") || "").trim();
+  const provider = String(formData.get("provider") || "").trim().toUpperCase();
+  if (!orderId) {
+    return;
+  }
+  await serverApi(`/admin/orders/${orderId}/resend`, {
+    method: "POST",
+    body: provider ? { provider } : {}
+  });
+  revalidatePath("/admin/orders");
+}
+
 async function fulfillOrdersByHour(formData) {
   "use server";
   const date = String(formData.get("date") || "").trim();
@@ -70,6 +98,8 @@ export default async function AdminOrdersPage({ searchParams }) {
       pagination={pagination}
       onFulfill={fulfillOrder}
       onBulkFulfillHour={fulfillOrdersByHour}
+      onUpdateFailedOrderProvider={updateFailedOrderProvider}
+      onResendFailedOrder={resendFailedOrder}
     />
   );
 }
