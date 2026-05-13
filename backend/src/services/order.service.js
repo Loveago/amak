@@ -313,8 +313,35 @@ async function dispatchOrderToProvider(orderId, options = {}) {
   }
 
   const activeProvider = await resolveActiveProvider();
+  if (!providerOverride && activeProvider.dispatcherEnabled === false) {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        providerStatus: "NOT_SUBMITTED",
+        providerLastCheckedAt: new Date(),
+        providerPayload: {
+          reason: "dispatcher_disabled",
+          error: "Dispatcher is disabled by admin"
+        }
+      }
+    });
+    return order;
+  }
+
   const provider = providerOverride || activeProvider.provider;
   const reason = providerOverride ? "admin_failed_retry_override" : activeProvider.reason;
+
+  if (!provider) {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        providerStatus: "NOT_SUBMITTED",
+        providerLastCheckedAt: new Date(),
+        providerPayload: { reason, error: "No active provider resolved" }
+      }
+    });
+    return order;
+  }
 
   if (provider === "ENCARTA" && !env.encartaApiKey) {
     await prisma.order.update({

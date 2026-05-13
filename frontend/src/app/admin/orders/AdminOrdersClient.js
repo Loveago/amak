@@ -82,6 +82,7 @@ export default function AdminOrdersClient({
   onResendFailedOrder
 }) {
   const [query, setQuery] = useState("");
+  const [copiedOrderId, setCopiedOrderId] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
   const [bulkDate, setBulkDate] = useState(() => {
     const now = new Date();
@@ -110,6 +111,23 @@ export default function AdminOrdersClient({
       return haystack.includes(normalizedQuery);
     });
   }, [orders, normalizedQuery]);
+
+  const copyRecipientNumber = async (orderId, phone) => {
+    const normalizedPhone = String(phone || "").trim();
+    if (!normalizedPhone) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(normalizedPhone);
+      setCopiedOrderId(orderId);
+      setTimeout(() => {
+        setCopiedOrderId((current) => (current === orderId ? "" : current));
+      }, 1500);
+    } catch (error) {
+      setCopiedOrderId("");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -243,7 +261,31 @@ export default function AdminOrdersClient({
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
                     <div className="rounded-2xl border border-ink/10 bg-white/70 px-4 py-3">
                       <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Recipient</p>
-                      <p className="mt-1 font-semibold text-ink">{order.customerPhone || "Not provided"}</p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <p className="font-semibold text-ink">{order.customerPhone || "Not provided"}</p>
+                        <button
+                          type="button"
+                          onClick={() => copyRecipientNumber(order.id, order.customerPhone)}
+                          disabled={!order.customerPhone}
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-ink/15 text-ink/70 transition hover:bg-ink/5 disabled:cursor-not-allowed disabled:opacity-40"
+                          title="Copy recipient number"
+                          aria-label="Copy recipient number"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden="true">
+                            <path
+                              d="M9 9.75A2.25 2.25 0 0 1 11.25 7.5h7.5A2.25 2.25 0 0 1 21 9.75v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5A2.25 2.25 0 0 1 9 17.25v-7.5Z"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                            />
+                            <path
+                              d="M15 7.5V6.75A2.25 2.25 0 0 0 12.75 4.5h-7.5A2.25 2.25 0 0 0 3 6.75v7.5a2.25 2.25 0 0 0 2.25 2.25H6"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                            />
+                          </svg>
+                        </button>
+                        {copiedOrderId === order.id ? <span className="text-[10px] text-emerald-700">Copied</span> : null}
+                      </div>
                       <p className="text-xs text-ink/60">{order.customerName || "Guest customer"}</p>
                       <p className="mt-1 text-xs text-ink/60">Network: {network}</p>
                     </div>

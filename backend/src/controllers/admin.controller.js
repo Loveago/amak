@@ -33,6 +33,23 @@ function normalizeProviderInput(value) {
   return null;
 }
 
+function parseOptionalBoolean(value) {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  if (typeof value === "boolean") {
+    return value;
+  }
+  const raw = String(value).trim().toLowerCase();
+  if (raw === "true" || raw === "1" || raw === "on") {
+    return true;
+  }
+  if (raw === "false" || raw === "0" || raw === "off") {
+    return false;
+  }
+  return null;
+}
+
 async function dashboard(req, res, next) {
   try {
     const [orders, agents, subscriptions, revenueAgg, payoutsAgg, afaRegistrations] = await Promise.all([
@@ -168,7 +185,11 @@ async function getSettings(req, res, next) {
       create: { id: "default", registrationFeeGhs: 20 }
     });
     const providerConfig = await getProviderConfig();
-    const { provider: activeProvider, reason: providerReason } = await resolveActiveProvider();
+    const {
+      provider: activeProvider,
+      reason: providerReason,
+      dispatcherEnabled = true
+    } = await resolveActiveProvider();
     return res.json({
       success: true,
       data: {
@@ -179,7 +200,8 @@ async function getSettings(req, res, next) {
         providerConfig: {
           forceProvider: providerConfig.forceProvider || null,
           activeProvider,
-          reason: providerReason
+          reason: providerReason,
+          dispatcherEnabled
         }
       }
     });
@@ -978,13 +1000,14 @@ async function updateApiAccessRequest(req, res, next) {
 async function getProviderConfigEndpoint(req, res, next) {
   try {
     const config = await getProviderConfig();
-    const { provider: activeProvider, reason } = await resolveActiveProvider();
+    const { provider: activeProvider, reason, dispatcherEnabled = true } = await resolveActiveProvider();
     return res.json({
       success: true,
       data: {
         forceProvider: config.forceProvider || null,
         activeProvider,
-        reason
+        reason,
+        dispatcherEnabled
       }
     });
   } catch (error) {
@@ -994,13 +1017,40 @@ async function getProviderConfigEndpoint(req, res, next) {
 
 async function updateProviderConfig(req, res, next) {
   try {
-    const { forceProvider } = req.body;
-    const config = await setForceProvider(forceProvider || null);
+    const payload = req.body || {};
+    const hasForceProvider = Object.prototype.hasOwnProperty.call(payload, "forceProvider");
+    const hasDispatcherEnabled = Object.prototype.hasOwnProperty.call(payload, "dispatcherEnabled");
+
+    const currentConfig = await getProviderConfig();
+    let nextForceProvider = currentConfig.forceProvider || null;
+
+    if (hasForceProvider) {
+      nextForceProvider = normalizeProviderInput(payload.forceProvider) || null;
+    }
+
+    if (!hasDispatcherEnabled && currentConfig.forceProvider === "DISABLED") {
+      nextForceProvider = "DISABLED";
+    }
+
+    const parsedDispatcherEnabled = hasDispatcherEnabled ? parseOptionalBoolean(payload.dispatcherEnabled) : null;
+    if (hasDispatcherEnabled && parsedDispatcherEnabled === null) {
+      return res.status(400).json({ success: false, error: "dispatcherEnabled must be true or false" });
+    }
+
+    if (parsedDispatcherEnabled === false) {
+      nextForceProvider = "DISABLED";
+    } else if (parsedDispatcherEnabled === true && nextForceProvider === "DISABLED") {
+      nextForceProvider = null;
+    }
+
+    const config = await setForceProvider(nextForceProvider);
+    const dispatcherEnabled = config.forceProvider !== "DISABLED";
+
     await prisma.auditLog.create({
       data: {
         actorId: req.user.sub,
         action: "ADMIN_UPDATE_PROVIDER",
-        meta: { forceProvider: config.forceProvider }
+        meta: { forceProvider: config.forceProvider, dispatcherEnabled }
       }
     });
     const { provider: activeProvider, reason } = await resolveActiveProvider();
@@ -1009,7 +1059,8 @@ async function updateProviderConfig(req, res, next) {
       data: {
         forceProvider: config.forceProvider || null,
         activeProvider,
-        reason
+        reason,
+        dispatcherEnabled
       }
     });
   } catch (error) {

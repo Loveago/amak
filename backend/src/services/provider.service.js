@@ -40,21 +40,26 @@ async function getProviderConfig() {
 async function resolveActiveProvider() {
   const config = await getProviderConfig();
 
+  if (config.forceProvider === "DISABLED") {
+    return { provider: null, reason: "dispatcher_disabled", dispatcherEnabled: false };
+  }
+
   if (
     config.forceProvider === "ENCARTA" ||
     config.forceProvider === "GRANDAPI" ||
     config.forceProvider === "DATAHUBNET" ||
     config.forceProvider === "ELITENUT"
   ) {
-    return { provider: config.forceProvider, reason: "admin_override" };
+    return { provider: config.forceProvider, reason: "admin_override", dispatcherEnabled: true };
   }
 
   const provider = resolveProviderByTime();
-  return { provider, reason: "time_schedule" };
+  return { provider, reason: "time_schedule", dispatcherEnabled: true };
 }
 
 async function setForceProvider(forceProvider) {
   const value =
+    forceProvider === "DISABLED" ||
     forceProvider === "ENCARTA" ||
     forceProvider === "GRANDAPI" ||
     forceProvider === "DATAHUBNET" ||

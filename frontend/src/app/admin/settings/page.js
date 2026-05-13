@@ -21,6 +21,25 @@ async function updateAfaFee(formData) {
   }
 }
 
+async function updateDispatcher(formData) {
+  "use server";
+  const dispatcherEnabledRaw = String(formData.get("dispatcherEnabled") || "").trim().toLowerCase();
+  if (dispatcherEnabledRaw !== "true" && dispatcherEnabledRaw !== "false") {
+    return { error: "Invalid dispatcher state" };
+  }
+
+  try {
+    await serverApi("/admin/provider", {
+      method: "PATCH",
+      body: { dispatcherEnabled: dispatcherEnabledRaw === "true" }
+    });
+    revalidatePath("/admin/settings");
+    return { success: true };
+  } catch (error) {
+    return { error: error.message || "Failed to update dispatcher" };
+  }
+}
+
 async function updateProvider(formData) {
   "use server";
   const forceProvider = String(formData.get("forceProvider") || "").trim() || null;
@@ -58,9 +77,11 @@ export default async function AdminSettingsPage() {
   const commissions = settings?.commissionRates || {};
   const feeGhs = Number(settings?.afaRegistrationFeeGhs ?? 20).toFixed(2);
   const providerConfig = settings?.providerConfig || {};
+  const dispatcherEnabled = providerConfig.dispatcherEnabled !== false;
   const activeProvider = providerConfig.activeProvider || "ENCARTA";
   const providerReason = providerConfig.reason || "time_schedule";
-  const forceProvider = providerConfig.forceProvider || "";
+  const forceProvider =
+    providerConfig.forceProvider && providerConfig.forceProvider !== "DISABLED" ? providerConfig.forceProvider : "";
   let providerBalance = null;
   try {
     providerBalance = await serverApi("/admin/provider/balance");
@@ -111,9 +132,13 @@ export default async function AdminSettingsPage() {
           </div>
           <div className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm">
             <p className="text-xs uppercase tracking-[0.2em] text-ink/60">Data provider</p>
-            <p className="mt-2 font-semibold text-ink">Active: {activeProvider}</p>
+            <p className="mt-2 font-semibold text-ink">Active: {dispatcherEnabled ? activeProvider : "Dispatcher off"}</p>
             <p className="mt-1 text-xs text-ink/60">
-              {providerReason === "admin_override" ? "Forced by admin" : "Auto (8:30am–6pm Encarta, 6pm–8:30am GrandAPI)"}
+              {providerReason === "dispatcher_disabled"
+                ? "Dispatcher is off. New paid orders are not auto-submitted to providers."
+                : providerReason === "admin_override"
+                  ? "Forced by admin"
+                  : "Auto (8:30am–6pm Encarta, 6pm–8:30am GrandAPI)"}
             </p>
             <form action={updateProvider} className="mt-3 flex flex-wrap items-center gap-2">
               <select
@@ -129,6 +154,18 @@ export default async function AdminSettingsPage() {
               </select>
               <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
                 Update provider
+              </button>
+            </form>
+            <form action={updateDispatcher} className="mt-3">
+              <input type="hidden" name="dispatcherEnabled" value={dispatcherEnabled ? "false" : "true"} />
+              <button
+                className={`w-full rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] ${
+                  dispatcherEnabled
+                    ? "border border-rose-300 text-rose-700 hover:bg-rose-50"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                }`}
+              >
+                {dispatcherEnabled ? "Turn dispatcher off" : "Turn dispatcher on"}
               </button>
             </form>
             <div className="mt-4 rounded-2xl bg-white/70 px-4 py-3 text-xs">
