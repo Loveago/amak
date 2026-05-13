@@ -1,7 +1,7 @@
 const prisma = require("../config/prisma");
 const env = require("../config/env");
 const logger = require("../config/logger");
-const { creditWallet } = require("./wallet.service");
+const { creditWallet, debitWallet } = require("./wallet.service");
 const { creditAffiliateCommissions } = require("./affiliate.service");
 const {
   purchaseDataBundle: purchaseEncartaBundle,
@@ -63,44 +63,6 @@ const shouldRefreshStatus = (lastCheckedAt) => {
 const isAdminManualPaymentRef = (paymentRef) => String(paymentRef || "").startsWith("ADMIN_MANUAL_");
 
 async function reverseOrderWalletEffects(tx, order, reason) {
-  const orderDebitTx = await tx.walletTransaction.findFirst({
-    where: {
-      type: "ORDER_DEBIT",
-      reference: order.id,
-      amountGhs: { lt: 0 }
-    },
-    orderBy: { createdAt: "asc" }
-  });
-
-  if (orderDebitTx) {
-    const existingRefund = await tx.walletTransaction.findFirst({
-      where: {
-        walletId: orderDebitTx.walletId,
-        type: "REVERSAL",
-        reference: order.id,
-        amountGhs: { gt: 0 }
-      }
-    });
-
-    if (!existingRefund) {
-      const refundAmount = Math.abs(Number(orderDebitTx.amountGhs));
-      await tx.wallet.update({
-        where: { id: orderDebitTx.walletId },
-        data: {
-          balanceGhs: { increment: refundAmount },
-          transactions: {
-            create: {
-              type: "REVERSAL",
-              amountGhs: refundAmount,
-              reference: order.id,
-              metadata: { reason, sourceType: "ORDER_DEBIT" }
-            }
-          }
-        }
-      });
-    }
-  }
-
   const profitTx = await tx.walletTransaction.findFirst({
     where: {
       wallet: { agentId: order.agentId },
@@ -178,6 +140,118 @@ async function reverseOrderWalletEffects(tx, order, reason) {
         }
       }
     });
+  }
+}
+
+async function ensureOrderWalletCredits(order) {
+  if (!order?.agentId || !order.items?.length) {
+    return;
+  }
+
+  // 1. Re-charge wallet if ORDER_DEBIT was previously reversed
+  const orderDebitTx = await prisma.walletTransaction.findFirst({
+    where: {
+      wallet: { agentId: order.agentId },
+      type: "ORDER_DEBIT",
+      reference: order.id,
+      amountGhs: { lt: 0 }
+    },
+    orderBy: { createdAt: "asc" }
+  });
+
+  if (orderDebitTx) {
+    const reversalTx = await prisma.walletTransaction.findFirst({
+      where: {
+        walletId: orderDebitTx.walletId,
+        type: "REVERSAL",
+        reference: order.id,
+        amountGhs: { gt: 0 }
+      }
+    });
+
+    if (reversalTx) {
+      const existingRecharge = await prisma.walletTransaction.findFirst({
+        where: {
+          walletId: orderDebitTx.walletId,
+          type: "ORDER_DEBIT",
+          reference: order.id,
+          amountGhs: { lt: 0 },
+          id: { not: orderDebitTx.id }
+        }
+      });
+
+      if (!existingRecharge) {
+        await debitWallet({
+          agentId: order.agentId,
+          amountGhs: Math.abs(Number(orderDebitTx.amountGhs)),
+          type: "ORDER_DEBIT",
+          reference: order.id,
+          metadata: { reason: "failed_order_retry_success", sourceType: "ORDER_DEBIT" }
+        });
+      }
+    }
+  }
+
+  const profit = order.items.reduce(
+    (sum, item) => sum + Number(item.markupGhs) * item.quantity,
+    0
+  );
+
+  const profitAgg = await prisma.walletTransaction.aggregate({
+    where: {
+      wallet: { agentId: order.agentId },
+      type: "PROFIT",
+      reference: order.id
+    },
+    _sum: { amountGhs: true }
+  });
+  const netProfit = Number(profitAgg._sum?.amountGhs || 0);
+
+  if (netProfit <= 0 && profit > 0) {
+    await creditWallet({
+      agentId: order.agentId,
+      amountGhs: profit,
+      type: "PROFIT",
+      reference: order.id,
+      metadata: { orderTotalGhs: order.totalAmountGhs, reason: "failed_order_retry_success" }
+    });
+  }
+
+  const referrals = await prisma.referral.findMany({
+    where: { childId: order.agentId },
+    orderBy: { level: "asc" }
+  });
+
+  for (const referral of referrals) {
+    if (!referral?.parentId || referral.parentId === order.agentId) {
+      continue;
+    }
+
+    const rate = require("../config/affiliate").COMMISSION_RATES[referral.level];
+    if (!rate) {
+      continue;
+    }
+
+    const commissionAgg = await prisma.walletTransaction.aggregate({
+      where: {
+        wallet: { agentId: referral.parentId },
+        type: "COMMISSION",
+        reference: order.id
+      },
+      _sum: { amountGhs: true }
+    });
+    const netCommission = Number(commissionAgg._sum?.amountGhs || 0);
+
+    if (netCommission <= 0) {
+      const amount = Number(order.totalAmountGhs) * rate;
+      await creditWallet({
+        agentId: referral.parentId,
+        amountGhs: amount,
+        type: "COMMISSION",
+        reference: order.id,
+        metadata: { level: referral.level, sourceAgentId: order.agentId, reason: "failed_order_retry_success" }
+      });
+    }
   }
 }
 
@@ -326,6 +400,16 @@ async function dispatchOrderToProvider(orderId, options = {}) {
     }
 
     await prisma.order.update({ where: { id: orderId }, data: updates });
+
+    if (DELIVERED_STATUSES.has(status) && order.status === "FAILED") {
+      const refreshedOrder = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: { items: { include: { product: { include: { category: true } } } } }
+      });
+      if (refreshedOrder) {
+        await ensureOrderWalletCredits(refreshedOrder);
+      }
+    }
   } catch (error) {
     const isManualPaidOrder = isAdminManualPaymentRef(order?.paymentRef);
 
@@ -409,6 +493,17 @@ async function refreshOrderProviderStatus(order) {
       return { ...order, ...updates, status: "FAILED" };
     }
     await prisma.order.update({ where: { id: order.id }, data: updates });
+
+    if (DELIVERED_STATUSES.has(status) && order.status === "FAILED") {
+      const refreshedOrder = await prisma.order.findUnique({
+        where: { id: order.id },
+        include: { items: { include: { product: { include: { category: true } } } } }
+      });
+      if (refreshedOrder) {
+        await ensureOrderWalletCredits(refreshedOrder);
+      }
+    }
+
     return { ...order, ...updates };
   } catch (error) {
     logger.warn(
@@ -485,5 +580,6 @@ async function settleOrderPayment(orderId, reference) {
 module.exports = {
   settleOrderPayment,
   dispatchOrderToProvider,
-  refreshOrderProviderStatus
+  refreshOrderProviderStatus,
+  ensureOrderWalletCredits
 };
