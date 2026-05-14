@@ -290,6 +290,16 @@ async function dispatchOrderToProvider(orderId, options = {}) {
     return order;
   }
 
+  const wasHeldByDispatcherToggle =
+    !providerOverride &&
+    !forceResubmit &&
+    order.providerStatus === "NOT_SUBMITTED" &&
+    order?.providerPayload?.reason === "dispatcher_disabled";
+
+  if (wasHeldByDispatcherToggle) {
+    return order;
+  }
+
   const primaryItem = order.items[0];
   const capacity = parseCapacity(primaryItem.product?.size, primaryItem.quantity);
   const networkKey = resolveNetworkKey(primaryItem.product?.category);
