@@ -20,6 +20,8 @@ const env = require("../config/env");
 const logger = require("../config/logger");
 const { enforceProductLimit } = require("../services/subscription.service");
 const { refreshOrderProviderStatus, settleOrderPayment, dispatchOrderToProvider } = require("../services/order.service");
+const { markPaymentVerified } = require("../services/payment.service");
+const { verifyTransaction } = require("../services/paystack.service");
 const { getProviderConfig, setForceProvider, resolveActiveProvider } = require("../services/provider.service");
 const { fetchBalance: fetchGrandapiBalance } = require("../services/grandapi.service");
 
@@ -741,6 +743,92 @@ async function fulfillOrder(req, res, next) {
   }
 }
 
+async function recheckOrderPayment(req, res, next) {
+  try {
+    const { id } = req.params;
+    const order = await prisma.order.findUnique({ where: { id } });
+
+    if (!order) {
+      return res.status(404).json({ success: false, error: "Order not found" });
+    }
+
+    if (order.status !== "CREATED") {
+      return res.status(400).json({
+        success: false,
+        error: "Payment recheck is only available for unpaid created orders"
+      });
+    }
+
+    const paymentByOrderRef = order.paymentRef
+      ? await prisma.payment.findUnique({ where: { reference: order.paymentRef } })
+      : null;
+
+    const latestOrderPayment = await prisma.payment.findFirst({
+      where: { orderId: id, type: "ORDER" },
+      orderBy: { createdAt: "desc" }
+    });
+
+    const payment =
+      paymentByOrderRef && paymentByOrderRef.type === "ORDER" && paymentByOrderRef.orderId === id
+        ? paymentByOrderRef
+        : latestOrderPayment;
+
+    const reference = String(payment?.reference || "").trim();
+    if (!reference) {
+      return res.status(400).json({ success: false, error: "No Paystack payment reference found for this order" });
+    }
+
+    const verification = await verifyTransaction(reference);
+    const paystackStatus = String(verification?.status || "").toLowerCase();
+    const isPaid = paystackStatus === "success";
+
+    if (!isPaid) {
+      await prisma.auditLog.create({
+        data: {
+          actorId: req.user.sub,
+          action: "ADMIN_RECHECK_ORDER_PAYMENT",
+          meta: { orderId: id, reference, paid: false, paystackStatus: paystackStatus || "unknown" }
+        }
+      });
+
+      return res.json({
+        success: true,
+        data: { orderId: id, reference, paid: false, paystackStatus: paystackStatus || "unknown" }
+      });
+    }
+
+    await markPaymentVerified(reference, verification.metadata || {}, verification);
+
+    let refreshedOrder = await prisma.order.findUnique({ where: { id } });
+    if (refreshedOrder?.status === "CREATED") {
+      await settleOrderPayment(id, reference);
+      refreshedOrder = await prisma.order.findUnique({ where: { id } });
+    }
+
+    await prisma.auditLog.create({
+      data: {
+        actorId: req.user.sub,
+        action: "ADMIN_RECHECK_ORDER_PAYMENT",
+        meta: {
+          orderId: id,
+          reference,
+          paid: true,
+          paystackStatus,
+          resultingOrderStatus: refreshedOrder?.status || null,
+          providerStatus: refreshedOrder?.providerStatus || null
+        }
+      }
+    });
+
+    return res.json({
+      success: true,
+      data: { order: refreshedOrder, orderId: id, reference, paid: true, paystackStatus }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function fulfillOrdersByHour(req, res, next) {
   try {
     const dateRaw = String(req.body?.date || "").trim();
@@ -1100,6 +1188,7 @@ module.exports = {
   updateAgentSubscription,
   listOrders,
   fulfillOrder,
+  recheckOrderPayment,
   updateFailedOrderProvider,
   resendFailedOrder,
   fulfillOrdersByHour,

@@ -23,6 +23,7 @@ const {
   updateAgentSubscription,
   listOrders,
   fulfillOrder,
+  recheckOrderPayment,
   updateFailedOrderProvider,
   resendFailedOrder,
   fulfillOrdersByHour,
@@ -71,6 +72,7 @@ router.patch("/agents/:id/subscription", updateAgentSubscription);
 router.delete("/agents/:id", deleteAgent);
 router.get("/orders", listOrders);
 router.patch("/orders/:id/fulfill", fulfillOrder);
+router.post("/orders/:id/recheck-payment", recheckOrderPayment);
 router.patch("/orders/:id/provider", updateFailedOrderProvider);
 router.post("/orders/:id/resend", resendFailedOrder);
 router.patch("/orders/fulfill-hour", fulfillOrdersByHour);

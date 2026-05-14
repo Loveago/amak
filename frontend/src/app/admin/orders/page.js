@@ -20,6 +20,28 @@ async function fulfillOrder(formData) {
   revalidatePath("/admin/orders");
 }
 
+async function recheckOrderPayment(formData) {
+  "use server";
+  const orderId = String(formData.get("orderId") || "").trim();
+  if (!orderId) {
+    return { error: "Order ID is required" };
+  }
+  try {
+    const data = await serverApi(`/admin/orders/${orderId}/recheck-payment`, {
+      method: "POST"
+    });
+    revalidatePath("/admin/orders");
+    return {
+      success: true,
+      paid: Boolean(data?.paid),
+      paystackStatus: String(data?.paystackStatus || "").toLowerCase(),
+      orderStatus: data?.order?.status || null
+    };
+  } catch (error) {
+    return { error: error.message || "Failed to recheck payment" };
+  }
+}
+
 async function updateFailedOrderProvider(formData) {
   "use server";
   const orderId = String(formData.get("orderId") || "").trim();
@@ -97,6 +119,7 @@ export default async function AdminOrdersPage({ searchParams }) {
       orders={orders}
       pagination={pagination}
       onFulfill={fulfillOrder}
+      onRecheckOrderPayment={recheckOrderPayment}
       onBulkFulfillHour={fulfillOrdersByHour}
       onUpdateFailedOrderProvider={updateFailedOrderProvider}
       onResendFailedOrder={resendFailedOrder}

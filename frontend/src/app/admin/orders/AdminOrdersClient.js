@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 
 const PAID_STATUSES = new Set(["PAID", "FULFILLED"]);
 const FAILED_PROVIDER_OPTIONS = ["ENCARTA", "GRANDAPI", "DATAHUBNET", "ELITENUT"];
@@ -77,12 +77,15 @@ export default function AdminOrdersClient({
   orders,
   pagination,
   onFulfill,
+  onRecheckOrderPayment,
   onBulkFulfillHour,
   onUpdateFailedOrderProvider,
   onResendFailedOrder
 }) {
   const [query, setQuery] = useState("");
   const [copiedOrderId, setCopiedOrderId] = useState("");
+  const [actionFeedback, setActionFeedback] = useState({});
+  const [isPending, startTransition] = useTransition();
   const normalizedQuery = query.trim().toLowerCase();
   const [bulkDate, setBulkDate] = useState(() => {
     const now = new Date();
@@ -128,6 +131,83 @@ export default function AdminOrdersClient({
       setCopiedOrderId("");
     }
   };
+
+  function clearFeedbackLater(orderId, delayMs = 4500) {
+    setTimeout(() => {
+      setActionFeedback((prev) => {
+        if (!prev[orderId]) return prev;
+        const next = { ...prev };
+        delete next[orderId];
+        return next;
+      });
+    }, delayMs);
+  }
+
+  function handleRecheckPayment(orderId) {
+    return (formData) => {
+      if (typeof onRecheckOrderPayment !== "function") {
+        return;
+      }
+
+      startTransition(async () => {
+        setActionFeedback((prev) => ({
+          ...prev,
+          [orderId]: { type: "loading", message: "Checking Paystack fallback..." }
+        }));
+
+        const result = await onRecheckOrderPayment(formData);
+        if (result?.error) {
+          setActionFeedback((prev) => ({
+            ...prev,
+            [orderId]: { type: "error", message: result.error }
+          }));
+          return;
+        }
+
+        if (result?.paid) {
+          setActionFeedback((prev) => ({
+            ...prev,
+            [orderId]: {
+              type: "success",
+              message:
+                result?.orderStatus === "PAID" || result?.orderStatus === "FULFILLED"
+                  ? "Payment confirmed. Order settled and queued for dispatch."
+                  : "Payment confirmed. Order was updated."
+            }
+          }));
+          clearFeedbackLater(orderId);
+          return;
+        }
+
+        setActionFeedback((prev) => ({
+          ...prev,
+          [orderId]: { type: "info", message: "No successful Paystack payment found yet." }
+        }));
+        clearFeedbackLater(orderId);
+      });
+    };
+  }
+
+  function renderActionFeedback(orderId) {
+    const feedback = actionFeedback[orderId];
+    if (!feedback) {
+      return null;
+    }
+
+    if (feedback.type === "loading") {
+      return <p className="mt-2 text-[11px] text-ink/60">{feedback.message}</p>;
+    }
+
+    if (feedback.type === "error") {
+      return <p className="mt-2 text-[11px] text-rose-700">{feedback.message}</p>;
+    }
+
+    if (feedback.type === "success") {
+      return <p className="mt-2 text-[11px] text-emerald-700">{feedback.message}</p>;
+    }
+
+    return <p className="mt-2 text-[11px] text-amber-700">{feedback.message}</p>;
+  }
 
   return (
     <div className="space-y-6">
@@ -209,6 +289,7 @@ export default function AdminOrdersClient({
               const providerBadge = provider ? getProviderBadgeStyle(provider) : null;
               const paymentSource = getPaymentSource(order);
               const isFailedOrder = order.status === "FAILED";
+              const canRecheckPayment = order.status === "CREATED" && typeof onRecheckOrderPayment === "function";
               const selectedStatus =
                 order.status === "FULFILLED" ? "FULFILLED" : order.status === "PAID" ? "PAID" : "CREATED";
               return (
@@ -307,7 +388,20 @@ export default function AdminOrdersClient({
                   <div className="mt-4">
                     <form action={onFulfill} className="rounded-2xl border border-ink/10 bg-white/70 px-4 py-3">
                       <input type="hidden" name="orderId" value={order.id} />
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Order status</p>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Order status</p>
+                        {canRecheckPayment ? (
+                          <button
+                            type="submit"
+                            formAction={handleRecheckPayment(order.id)}
+                            disabled={isPending}
+                            className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-amber-800"
+                          >
+                            Check payment fallback
+                          </button>
+                        ) : null}
+                      </div>
+                      {canRecheckPayment ? renderActionFeedback(order.id) : null}
                       <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-ink/80">
                         <label className="inline-flex items-center gap-2">
                           <input type="radio" name="status" value="PAID" defaultChecked={selectedStatus === "PAID"} />
