@@ -1,5 +1,5 @@
 const prisma = require("../config/prisma");
-const { dispatchOrderToProvider, refreshOrderProviderStatus } = require("../services/order.service");
+const { dispatchOrderToProvider, refreshOrderProviderStatus, ensureOrderWalletCredits } = require("../services/order.service");
 
 async function listPackages(req, res, next) {
   try {
@@ -99,6 +99,8 @@ async function placeOrder(req, res, next) {
 
       return newOrder;
     });
+
+    await ensureOrderWalletCredits(order);
 
     dispatchOrderToProvider(order.id).catch(() => {});
 

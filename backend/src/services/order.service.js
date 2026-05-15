@@ -563,6 +563,8 @@ async function settleOrderPayment(orderId, reference) {
   }
 
   if (order.status === "PAID" || order.status === "FULFILLED") {
+    await ensureOrderWalletCredits(order);
+
     if (!order.providerReference) {
       await dispatchOrderToProvider(orderId);
     }

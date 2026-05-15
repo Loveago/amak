@@ -9,7 +9,7 @@ const {
 } = require("../validators/agent.validation");
 const { validate } = require("../utils/validation");
 const { ensureActiveSubscription, enforceProductLimit, getCurrentSubscription } = require("../services/subscription.service");
-const { refreshOrderProviderStatus, dispatchOrderToProvider } = require("../services/order.service");
+const { refreshOrderProviderStatus, dispatchOrderToProvider, ensureOrderWalletCredits } = require("../services/order.service");
 const { getAncestorAffiliateMarkupMap, getEffectiveBasePrice } = require("../services/pricing.service");
 const { hashKey } = require("../middleware/api-key");
 
@@ -695,6 +695,8 @@ async function createDirectOrder(req, res, next) {
 
       return newOrder;
     });
+
+    await ensureOrderWalletCredits(order);
 
     dispatchOrderToProvider(order.id).catch(() => {});
 

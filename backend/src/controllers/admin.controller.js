@@ -19,7 +19,7 @@ const { COMMISSION_RATES } = require("../config/affiliate");
 const env = require("../config/env");
 const logger = require("../config/logger");
 const { enforceProductLimit } = require("../services/subscription.service");
-const { refreshOrderProviderStatus, settleOrderPayment, dispatchOrderToProvider } = require("../services/order.service");
+const { refreshOrderProviderStatus, settleOrderPayment, dispatchOrderToProvider, ensureOrderWalletCredits } = require("../services/order.service");
 const { markPaymentVerified } = require("../services/payment.service");
 const { verifyTransaction } = require("../services/paystack.service");
 const { getProviderConfig, setForceProvider, resolveActiveProvider } = require("../services/provider.service");
@@ -723,6 +723,14 @@ async function fulfillOrder(req, res, next) {
             paymentRef: manualReference
           }
         });
+
+        const paidOrder = await prisma.order.findUnique({
+          where: { id },
+          include: { items: true }
+        });
+        if (paidOrder) {
+          await ensureOrderWalletCredits(paidOrder);
+        }
 
         if (existingOrder.status !== "FAILED") {
           await dispatchOrderToProvider(id, { forceResubmit: true });
