@@ -29,7 +29,14 @@ function normalizeProviderInput(value) {
   if (!value) return null;
   const raw = String(value).trim().toUpperCase();
   if (raw === "ELITE_NUT" || raw === "ELINUT") return "ELITENUT";
-  if (raw === "ENCARTA" || raw === "GRANDAPI" || raw === "DATAHUBNET" || raw === "ELITENUT") {
+  if (raw === "SKANKA" || raw === "SHANKA") return "SHANKA";
+  if (
+    raw === "ENCARTA" ||
+    raw === "GRANDAPI" ||
+    raw === "DATAHUBNET" ||
+    raw === "ELITENUT" ||
+    raw === "SHANKA"
+  ) {
     return raw;
   }
   return null;
@@ -90,7 +97,10 @@ async function updateFailedOrderProvider(req, res, next) {
     if (!provider) {
       return res
         .status(400)
-        .json({ success: false, error: "Provider must be one of: ENCARTA, GRANDAPI, DATAHUBNET, ELITENUT" });
+        .json({
+          success: false,
+          error: "Provider must be one of: ENCARTA, GRANDAPI, DATAHUBNET, ELITENUT, SHANKA"
+        });
     }
 
     const order = await prisma.order.findUnique({ where: { id } });

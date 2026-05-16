@@ -20,6 +20,10 @@ const {
   purchaseDataBundle: purchaseElitnutBundle,
   fetchOrderStatus: fetchElitnutOrderStatus
 } = require("./elitnut.service");
+const {
+  purchaseDataBundle: purchaseShankaBundle,
+  fetchOrderStatus: fetchShankaOrderStatus
+} = require("./shanka.service");
 const { resolveActiveProvider } = require("./provider.service");
 
 const NETWORK_KEY_BY_CATEGORY = {
@@ -260,7 +264,14 @@ function normalizeProviderOverride(value) {
   const raw = String(value).trim().toUpperCase();
   if (raw === "ELITE_NUT") return "ELITENUT";
   if (raw === "ELINUT") return "ELITENUT";
-  if (raw === "ENCARTA" || raw === "GRANDAPI" || raw === "DATAHUBNET" || raw === "ELITENUT") {
+  if (raw === "SKANKA" || raw === "SHANKA") return "SHANKA";
+  if (
+    raw === "ENCARTA" ||
+    raw === "GRANDAPI" ||
+    raw === "DATAHUBNET" ||
+    raw === "ELITENUT" ||
+    raw === "SHANKA"
+  ) {
     return raw;
   }
   return null;
@@ -401,6 +412,18 @@ async function dispatchOrderToProvider(orderId, options = {}) {
     return order;
   }
 
+  if (provider === "SHANKA" && !env.shankaApiKey) {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        providerStatus: "NOT_SUBMITTED",
+        providerLastCheckedAt: new Date(),
+        providerPayload: { provider, reason, error: "Shanka API key missing" }
+      }
+    });
+    return order;
+  }
+
   try {
     const result =
       provider === "GRANDAPI"
@@ -412,14 +435,21 @@ async function dispatchOrderToProvider(orderId, options = {}) {
               capacity,
               reference: `order_${orderId}`
             })
-        : provider === "DATAHUBNET"
-          ? await purchaseDatahubnetBundle({
-              networkKey,
-              recipient,
-              capacity,
-              reference: `order_${orderId}`
-            })
-          : await purchaseEncartaBundle({ networkKey, recipient, capacity });
+          : provider === "SHANKA"
+            ? await purchaseShankaBundle({
+                networkKey,
+                recipient,
+                capacity,
+                reference: `order_${orderId}`
+              })
+          : provider === "DATAHUBNET"
+            ? await purchaseDatahubnetBundle({
+                networkKey,
+                recipient,
+                capacity,
+                reference: `order_${orderId}`
+              })
+            : await purchaseEncartaBundle({ networkKey, recipient, capacity });
 
     const status = normalizeStatus(result.status) || "PLACED";
     const updates = {
@@ -496,6 +526,8 @@ async function refreshOrderProviderStatus(order) {
       result = await fetchGrandapiOrderStatus(order.providerReference);
     } else if (provider === "ELITENUT" && env.elitnutApiKey) {
       result = await fetchElitnutOrderStatus(order.providerReference, order?.providerPayload?.networkKey);
+    } else if (provider === "SHANKA" && env.shankaApiKey) {
+      result = await fetchShankaOrderStatus(order.providerReference);
     } else if (env.encartaApiKey) {
       result = await fetchEncartaOrderStatus(order.providerReference);
     } else {

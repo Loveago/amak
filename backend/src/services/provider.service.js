@@ -48,7 +48,8 @@ async function resolveActiveProvider() {
     config.forceProvider === "ENCARTA" ||
     config.forceProvider === "GRANDAPI" ||
     config.forceProvider === "DATAHUBNET" ||
-    config.forceProvider === "ELITENUT"
+    config.forceProvider === "ELITENUT" ||
+    config.forceProvider === "SHANKA"
   ) {
     return { provider: config.forceProvider, reason: "admin_override", dispatcherEnabled: true };
   }
@@ -63,7 +64,8 @@ async function setForceProvider(forceProvider) {
     forceProvider === "ENCARTA" ||
     forceProvider === "GRANDAPI" ||
     forceProvider === "DATAHUBNET" ||
-    forceProvider === "ELITENUT"
+    forceProvider === "ELITENUT" ||
+    forceProvider === "SHANKA"
       ? forceProvider
       : null;
   const config = await prisma.providerConfig.upsert({

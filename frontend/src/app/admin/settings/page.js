@@ -151,6 +151,7 @@ export default async function AdminSettingsPage() {
                 <option value="GRANDAPI">Force GrandAPI</option>
                 <option value="DATAHUBNET">Force DataHubNet</option>
                 <option value="ELITENUT">Force EliteNut</option>
+                <option value="SHANKA">Force Shanka</option>
               </select>
               <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
                 Update provider

@@ -19,6 +19,8 @@ const env = {
   elitnutApiKey: process.env.ELITENUT_API_KEY || "",
   datahubnetBaseUrl: process.env.DATAHUBNET_BASE_URL || "https://www.datahubnet.online",
   datahubnetApiKey: process.env.DATAHUBNET_API_KEY || "",
+  shankaBaseUrl: (process.env.SHANKA_BASE_URL || "https://agent.skanka5.com/api/v1").replace(/\/+$/, ""),
+  shankaApiKey: process.env.SHANKA_API_KEY || "",
   providerTimezone: process.env.PROVIDER_TIMEZONE || "Africa/Accra",
   orderWorkerIntervalMs: Number(process.env.ORDER_WORKER_INTERVAL_MS || 10000),
   encartaBaseUrl:
