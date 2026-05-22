@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 
 const STATUS_STYLES = {
   emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -88,9 +88,88 @@ const ORDER_SCOPE_OPTIONS = [
   { value: "downline", label: "Downline" }
 ];
 
-export default function OrdersClient({ orders, pagination, activeScope = "all" }) {
+export default function OrdersClient({ orders, pagination, activeScope = "all", onRecheckOrderPayment }) {
   const [query, setQuery] = useState("");
+  const [actionFeedback, setActionFeedback] = useState({});
+  const [isPending, startTransition] = useTransition();
   const normalizedQuery = query.trim().toLowerCase();
+
+  function clearFeedbackLater(orderId, delayMs = 4500) {
+    setTimeout(() => {
+      setActionFeedback((prev) => {
+        if (!prev[orderId]) return prev;
+        const next = { ...prev };
+        delete next[orderId];
+        return next;
+      });
+    }, delayMs);
+  }
+
+  function handleRecheckPayment(orderId, onRecheckOrderPayment) {
+    return (formData) => {
+      if (typeof onRecheckOrderPayment !== "function") {
+        return;
+      }
+
+      startTransition(async () => {
+        setActionFeedback((prev) => ({
+          ...prev,
+          [orderId]: { type: "loading", message: "Checking Paystack fallback..." }
+        }));
+
+        const result = await onRecheckOrderPayment(formData);
+        if (result?.error) {
+          setActionFeedback((prev) => ({
+            ...prev,
+            [orderId]: { type: "error", message: result.error }
+          }));
+          return;
+        }
+
+        if (result?.paid) {
+          setActionFeedback((prev) => ({
+            ...prev,
+            [orderId]: {
+              type: "success",
+              message:
+                result?.orderStatus === "PAID" || result?.orderStatus === "FULFILLED"
+                  ? "Payment confirmed. Order settled and queued for dispatch."
+                  : "Payment confirmed. Order was updated."
+            }
+          }));
+          clearFeedbackLater(orderId);
+          return;
+        }
+
+        setActionFeedback((prev) => ({
+          ...prev,
+          [orderId]: { type: "info", message: "No successful Paystack payment found yet." }
+        }));
+        clearFeedbackLater(orderId);
+      });
+    };
+  }
+
+  function renderActionFeedback(orderId) {
+    const feedback = actionFeedback[orderId];
+    if (!feedback) {
+      return null;
+    }
+
+    if (feedback.type === "loading") {
+      return <p className="mt-2 text-[11px] text-ink/60">{feedback.message}</p>;
+    }
+
+    if (feedback.type === "error") {
+      return <p className="mt-2 text-[11px] text-rose-700">{feedback.message}</p>;
+    }
+
+    if (feedback.type === "success") {
+      return <p className="mt-2 text-[11px] text-emerald-700">{feedback.message}</p>;
+    }
+
+    return <p className="mt-2 text-[11px] text-amber-700">{feedback.message}</p>;
+  }
 
   const filteredOrders = useMemo(() => {
     if (!normalizedQuery) return orders;
@@ -176,6 +255,8 @@ export default function OrdersClient({ orders, pagination, activeScope = "all" }
               const providerMeta = resolveStatusMeta(PROVIDER_STATUS_META, providerStatusKey, "Not sent");
               const downlineLabel =
                 order.visibilityScope === "DOWNLINE_LEVEL_2" ? "Level 2 downline" : "Level 1 downline";
+              const canRecheckPayment =
+                paymentStatus === "CREATED" && !order.isIndirect && typeof onRecheckOrderPayment === "function";
               return (
                 <div key={order.id} className="rounded-2xl border border-ink/10 bg-white/80 px-5 py-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -240,7 +321,23 @@ export default function OrdersClient({ orders, pagination, activeScope = "all" }
                       )}
                     </div>
                     <div className="rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-sm">
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Status</p>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Status</p>
+                        {canRecheckPayment ? (
+                          <form action={onRecheckOrderPayment}>
+                            <input type="hidden" name="orderId" value={order.id} />
+                            <button
+                              type="submit"
+                              formAction={handleRecheckPayment(order.id, onRecheckOrderPayment)}
+                              disabled={isPending}
+                              className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-amber-800"
+                            >
+                              Check payment fallback
+                            </button>
+                          </form>
+                        ) : null}
+                      </div>
+                      {canRecheckPayment ? renderActionFeedback(order.id) : null}
                       <div className="mt-2 space-y-2">
                         <div className="flex items-center justify-between gap-3 text-xs">
                           <span className="text-ink/60">Payment</span>

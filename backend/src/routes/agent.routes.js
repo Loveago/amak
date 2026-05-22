@@ -13,6 +13,7 @@ const {
   createWithdrawal,
   listWithdrawals,
   listOrders,
+  recheckOrderPayment,
   affiliate,
   subscription,
   listPlans,
@@ -42,6 +43,7 @@ router.get("/wallet", wallet);
 router.post("/withdrawals", createWithdrawal);
 router.get("/withdrawals", listWithdrawals);
 router.get("/orders", listOrders);
+router.post("/orders/:id/recheck-payment", recheckOrderPayment);
 router.get("/affiliate", affiliate);
 router.get("/subscription", subscription);
 router.get("/plans", listPlans);

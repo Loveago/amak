@@ -1,6 +1,31 @@
 import { requireAgent } from "../../../lib/auth";
+import { revalidatePath } from "next/cache";
 import { serverApi } from "../../../lib/server-api";
 import OrdersClient from "./OrdersClient";
+
+async function recheckOrderPayment(formData) {
+  "use server";
+  const orderId = String(formData.get("orderId") || "").trim();
+  if (!orderId) {
+    return { error: "Order ID is required" };
+  }
+
+  try {
+    const data = await serverApi(`/agent/orders/${orderId}/recheck-payment`, {
+      method: "POST"
+    });
+    revalidatePath("/agent/orders");
+
+    return {
+      success: true,
+      paid: Boolean(data?.paid),
+      paystackStatus: String(data?.paystackStatus || "").toLowerCase(),
+      orderStatus: data?.order?.status || null
+    };
+  } catch (error) {
+    return { error: error.message || "Failed to recheck payment" };
+  }
+}
 
 export default async function AgentOrdersPage({ searchParams }) {
   requireAgent("/agent/orders");
@@ -28,5 +53,12 @@ export default async function AgentOrdersPage({ searchParams }) {
     orders = [];
     pagination = null;
   }
-  return <OrdersClient orders={orders} pagination={pagination} activeScope={scope} />;
+  return (
+    <OrdersClient
+      orders={orders}
+      pagination={pagination}
+      activeScope={scope}
+      onRecheckOrderPayment={recheckOrderPayment}
+    />
+  );
 }
