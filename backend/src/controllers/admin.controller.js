@@ -30,12 +30,14 @@ function normalizeProviderInput(value) {
   const raw = String(value).trim().toUpperCase();
   if (raw === "ELITE_NUT" || raw === "ELINUT") return "ELITENUT";
   if (raw === "SKANKA" || raw === "SHANKA") return "SHANKA";
+  if (raw === "XPRESS") return "XPRESS";
   if (
     raw === "ENCARTA" ||
     raw === "GRANDAPI" ||
     raw === "DATAHUBNET" ||
     raw === "ELITENUT" ||
-    raw === "SHANKA"
+    raw === "SHANKA" ||
+    raw === "XPRESS"
   ) {
     return raw;
   }
@@ -99,7 +101,7 @@ async function updateFailedOrderProvider(req, res, next) {
         .status(400)
         .json({
           success: false,
-          error: "Provider must be one of: ENCARTA, GRANDAPI, DATAHUBNET, ELITENUT, SHANKA"
+          error: "Provider must be one of: ENCARTA, GRANDAPI, DATAHUBNET, ELITENUT, SHANKA, XPRESS"
         });
     }
 

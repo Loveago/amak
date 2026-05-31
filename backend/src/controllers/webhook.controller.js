@@ -4,6 +4,7 @@ const prisma = require("../config/prisma");
 const { recordPaymentEvent, markPaymentVerified } = require("../services/payment.service");
 const { ensureOrderWalletCredits } = require("../services/order.service");
 const { normalizeStatus: normalizeShankaStatus } = require("../services/shanka.service");
+const { normalizeStatus: normalizeXpressStatus } = require("../services/xpress.service");
 
 const SHANKA_DELIVERED_STATUSES = new Set(["DELIVERED", "COMPLETED", "SUCCESS"]);
 
@@ -147,4 +148,168 @@ async function shankaWebhook(req, res, next) {
   }
 }
 
-module.exports = { paystackWebhook, shankaWebhook };
+const XPRESS_DELIVERED_STATUSES = new Set(["DELIVERED", "COMPLETED", "SUCCESS"]);
+
+async function xpressWebhook(req, res, next) {
+  try {
+    const eventHeader = req.headers["x-xpress-event"];
+    if (!eventHeader) {
+      return res.status(400).json({ success: false, error: "Missing X-Xpress-Event header" });
+    }
+
+    // Optionally verify a shared secret for Xpress webhooks
+    if (env.xpressWebhookSecret) {
+      const signature = req.headers["x-xpress-signature"];
+      if (!signature) {
+        return res.status(400).json({ success: false, error: "Missing Xpress webhook signature" });
+      }
+
+      const computed = crypto
+        .createHmac("sha256", env.xpressWebhookSecret)
+        .update(req.rawBody || "")
+        .digest("hex");
+
+      if (signature !== computed) {
+        return res.status(401).json({ success: false, error: "Invalid Xpress webhook signature" });
+      }
+    }
+
+    const payload = req.body;
+    if (!payload || typeof payload !== "object") {
+      return res.status(400).json({ success: false, error: "Invalid payload" });
+    }
+
+    const orderId = payload.order_id;
+    const items = Array.isArray(payload.items) ? payload.items : [];
+    const results = [];
+
+    if (!orderId) {
+      // If no order_id, try matching by item references
+      for (const item of items) {
+        if (!item?.reference) continue;
+        const order = await prisma.order.findFirst({
+          where: { providerReference: item.reference },
+          include: { items: { include: { product: { include: { category: true } } } } }
+        });
+
+        if (!order) {
+          results.push({ reference: item.reference, matched: false });
+          continue;
+        }
+
+        const normalized = normalizeXpressStatus(item.status) || normalizeXpressStatus(payload.status);
+        const providerStatus = normalized || order.providerStatus || null;
+        const delivered = providerStatus && XPRESS_DELIVERED_STATUSES.has(providerStatus);
+
+        const data = {
+          providerStatus,
+          providerLastCheckedAt: new Date(),
+          providerPayload: {
+            ...(order.providerPayload || {}),
+            provider: "XPRESS",
+            webhook: payload
+          }
+        };
+
+        if (delivered) {
+          data.status = "FULFILLED";
+        }
+
+        await prisma.order.update({ where: { id: order.id }, data });
+
+        if (delivered && order.status === "FAILED") {
+          await ensureOrderWalletCredits({ ...order, status: data.status || order.status });
+        }
+
+        results.push({ reference: item.reference, matched: true, status: providerStatus });
+      }
+
+      return res.json({ success: true, data: { received: true, updates: results } });
+    }
+
+    // Match by Xpress order_id
+    const order = await prisma.order.findFirst({
+      where: { providerReference: orderId },
+      include: { items: { include: { product: { include: { category: true } } } } }
+    });
+
+    if (!order) {
+      // Try matching by the first item's reference
+      const firstItemRef = items[0]?.reference;
+      if (firstItemRef) {
+        const fallbackOrder = await prisma.order.findFirst({
+          where: { providerReference: firstItemRef },
+          include: { items: { include: { product: { include: { category: true } } } } }
+        });
+
+        if (!fallbackOrder) {
+          return res.json({ success: true, data: { received: true, matched: false } });
+        }
+
+        const normalized = normalizeXpressStatus(payload.status);
+        const providerStatus = normalized || fallbackOrder.providerStatus || null;
+        const delivered = providerStatus && XPRESS_DELIVERED_STATUSES.has(providerStatus);
+
+        const data = {
+          providerStatus,
+          providerLastCheckedAt: new Date(),
+          providerPayload: {
+            ...(fallbackOrder.providerPayload || {}),
+            provider: "XPRESS",
+            webhook: payload
+          }
+        };
+
+        if (delivered) {
+          data.status = "FULFILLED";
+        }
+
+        await prisma.order.update({ where: { id: fallbackOrder.id }, data });
+
+        if (delivered && fallbackOrder.status === "FAILED") {
+          await ensureOrderWalletCredits({ ...fallbackOrder, status: data.status || fallbackOrder.status });
+        }
+
+        return res.json({
+          success: true,
+          data: { received: true, matched: true, orderId: fallbackOrder.id, status: providerStatus }
+        });
+      }
+
+      return res.json({ success: true, data: { received: true, matched: false } });
+    }
+
+    const normalized = normalizeXpressStatus(payload.status);
+    const providerStatus = normalized || order.providerStatus || null;
+    const delivered = providerStatus && XPRESS_DELIVERED_STATUSES.has(providerStatus);
+
+    const data = {
+      providerStatus,
+      providerLastCheckedAt: new Date(),
+      providerPayload: {
+        ...(order.providerPayload || {}),
+        provider: "XPRESS",
+        webhook: payload
+      }
+    };
+
+    if (delivered) {
+      data.status = "FULFILLED";
+    }
+
+    await prisma.order.update({ where: { id: order.id }, data });
+
+    if (delivered && order.status === "FAILED") {
+      await ensureOrderWalletCredits({ ...order, status: data.status || order.status });
+    }
+
+    return res.json({
+      success: true,
+      data: { received: true, matched: true, orderId: order.id, status: providerStatus }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = { paystackWebhook, shankaWebhook, xpressWebhook };

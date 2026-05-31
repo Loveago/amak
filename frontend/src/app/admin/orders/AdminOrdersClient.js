@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 
 const PAID_STATUSES = new Set(["PAID", "FULFILLED"]);
-const FAILED_PROVIDER_OPTIONS = ["ENCARTA", "GRANDAPI", "DATAHUBNET", "ELITENUT", "SHANKA"];
+const FAILED_PROVIDER_OPTIONS = ["ENCARTA", "GRANDAPI", "DATAHUBNET", "ELITENUT", "SHANKA", "XPRESS"];
 
 function normalizeProvider(value) {
   if (!value) return null;
@@ -41,6 +41,8 @@ function getProviderBadgeStyle(provider) {
       return { label: "EliteNut", className: "bg-emerald-100 text-emerald-800" };
     case "SHANKA":
       return { label: "Shanka", className: "bg-rose-100 text-rose-700" };
+    case "XPRESS":
+      return { label: "Xpress", className: "bg-cyan-100 text-cyan-700" };
     default:
       return null;
   }

@@ -24,6 +24,10 @@ const {
   purchaseDataBundle: purchaseShankaBundle,
   fetchOrderStatus: fetchShankaOrderStatus
 } = require("./shanka.service");
+const {
+  purchaseDataBundle: purchaseXpressBundle,
+  fetchOrderStatus: fetchXpressOrderStatus
+} = require("./xpress.service");
 const { resolveActiveProvider } = require("./provider.service");
 
 const NETWORK_KEY_BY_CATEGORY = {
@@ -265,12 +269,14 @@ function normalizeProviderOverride(value) {
   if (raw === "ELITE_NUT") return "ELITENUT";
   if (raw === "ELINUT") return "ELITENUT";
   if (raw === "SKANKA" || raw === "SHANKA") return "SHANKA";
+  if (raw === "XPRESS") return "XPRESS";
   if (
     raw === "ENCARTA" ||
     raw === "GRANDAPI" ||
     raw === "DATAHUBNET" ||
     raw === "ELITENUT" ||
-    raw === "SHANKA"
+    raw === "SHANKA" ||
+    raw === "XPRESS"
   ) {
     return raw;
   }
@@ -424,6 +430,18 @@ async function dispatchOrderToProvider(orderId, options = {}) {
     return order;
   }
 
+  if (provider === "XPRESS" && !env.xpressApiKey) {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        providerStatus: "NOT_SUBMITTED",
+        providerLastCheckedAt: new Date(),
+        providerPayload: { provider, reason, error: "Xpress API key missing" }
+      }
+    });
+    return order;
+  }
+
   try {
     const result =
       provider === "GRANDAPI"
@@ -437,6 +455,13 @@ async function dispatchOrderToProvider(orderId, options = {}) {
             })
           : provider === "SHANKA"
             ? await purchaseShankaBundle({
+                networkKey,
+                recipient,
+                capacity,
+                reference: `order_${orderId}`
+              })
+          : provider === "XPRESS"
+            ? await purchaseXpressBundle({
                 networkKey,
                 recipient,
                 capacity,
@@ -528,6 +553,8 @@ async function refreshOrderProviderStatus(order) {
       result = await fetchElitnutOrderStatus(order.providerReference, order?.providerPayload?.networkKey);
     } else if (provider === "SHANKA" && env.shankaApiKey) {
       result = await fetchShankaOrderStatus(order.providerReference);
+    } else if (provider === "XPRESS" && env.xpressApiKey) {
+      result = await fetchXpressOrderStatus(order.providerReference);
     } else if (env.encartaApiKey) {
       result = await fetchEncartaOrderStatus(order.providerReference);
     } else {
