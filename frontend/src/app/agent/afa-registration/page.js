@@ -8,7 +8,6 @@ async function initializeAfaRegistration(formData) {
   const ghanaCardNumber = String(formData.get("ghanaCardNumber") || "").trim();
   const dateOfBirth = String(formData.get("dateOfBirth") || "").trim();
   const occupation = String(formData.get("occupation") || "").trim();
-  const notes = String(formData.get("notes") || "").trim();
   const email = String(formData.get("email") || "").trim();
   if (!fullName || !ghanaCardNumber || !dateOfBirth || !occupation || !email) {
     return;
@@ -21,7 +20,6 @@ async function initializeAfaRegistration(formData) {
       ghanaCardNumber,
       dateOfBirth,
       occupation,
-      notes: notes || undefined,
       email
     }
   });
@@ -108,11 +106,6 @@ export default async function AgentAfaRegistrationPage({ searchParams = {} }) {
             placeholder="Occupation"
             required
           />
-          <textarea
-            name="notes"
-            className="min-h-[120px] rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm md:col-span-2"
-            placeholder="Other notes"
-          />
           <button className="rounded-full bg-ink px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white md:col-span-2">
             Pay GHS {feeGhs} and submit
           </button>
@@ -150,7 +143,6 @@ export default async function AgentAfaRegistrationPage({ searchParams = {} }) {
                       </p>
                     </div>
                   </div>
-                  {item.notes ? <p className="mt-3 text-xs text-ink/70">Notes: {item.notes}</p> : null}
                   {payment ? (
                     <p className="mt-2 text-xs text-ink/60">
                       Payment {payment.status} · GHS {Number(payment.amountGhs || 0).toFixed(2)}
