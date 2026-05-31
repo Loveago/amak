@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { requireAgent } from "../../../lib/auth";
 import { serverApi } from "../../../lib/server-api";
 
-const PREFERRED_CATEGORY_ORDER = ["MTN", "Telecel", "AT Ishare", "AT Bigtime"];
+const PREFERRED_CATEGORY_ORDER = ["MTN", "MTN Express", "Telecel", "AT Ishare", "AT Bigtime"];
 const categoryPriority = new Map(
   PREFERRED_CATEGORY_ORDER.map((label, index) => [label.toLowerCase(), index])
 );

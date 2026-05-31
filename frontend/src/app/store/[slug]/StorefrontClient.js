@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const NETWORK_ASSETS = {
   mtn: { label: "MTN", icon: "/icons/mtn.svg" },
+  mtnExpress: { label: "MTN Express", icon: "/icons/mtn.svg" },
   telecel: { label: "Telecel", icon: "/icons/telecel.svg" },
   airteltigo: { label: "AirtelTigo", icon: "/icons/airteltigo.svg" },
   airteltigoBigtime: { label: "AT Bigtime", icon: "/icons/airteltigo.svg" },
@@ -12,13 +13,14 @@ const NETWORK_ASSETS = {
   default: { label: "Other", icon: "/icons/data.svg" }
 };
 
-const PREFERRED_NETWORK_ORDER = ["mtn", "telecel", "airteltigoIshare", "airteltigoBigtime"];
+const PREFERRED_NETWORK_ORDER = ["mtn", "mtnExpress", "telecel", "airteltigoIshare", "airteltigoBigtime"];
 const preferredNetworkPriority = new Map(
   PREFERRED_NETWORK_ORDER.map((key, index) => [key, index])
 );
 
 const resolveNetworkMeta = (name = "") => {
   const normalized = name.toLowerCase();
+  if (normalized.includes("express")) return { key: "mtnExpress", ...NETWORK_ASSETS.mtnExpress };
   if (normalized.includes("mtn")) return { key: "mtn", ...NETWORK_ASSETS.mtn };
   if (normalized.includes("telecel")) return { key: "telecel", ...NETWORK_ASSETS.telecel };
   if (normalized.includes("bigtime") || normalized.includes("atbig")) {

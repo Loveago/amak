@@ -34,7 +34,8 @@ const NETWORK_KEY_BY_CATEGORY = {
   mtn: "YELLO",
   telecel: "TELECEL",
   "at-ishare": "AT_PREMIUM",
-  "at-bigtime": "AT_BIGTIME"
+  "at-bigtime": "AT_BIGTIME",
+  "mtn-express": "MTN_EXPRESS"
 };
 
 const DELIVERED_STATUSES = new Set(["DELIVERED", "COMPLETED", "SUCCESS"]);
@@ -46,6 +47,7 @@ const resolveNetworkKey = (category) => {
     return NETWORK_KEY_BY_CATEGORY[slug];
   }
   const name = category.name?.toLowerCase() || "";
+  if (name.includes("express")) return "MTN_EXPRESS";
   if (name.includes("mtn")) return "YELLO";
   if (name.includes("telecel") || name.includes("vodafone")) return "TELECEL";
   if (name.includes("ishare")) return "AT_PREMIUM";
@@ -339,8 +341,10 @@ async function dispatchOrderToProvider(orderId, options = {}) {
     return order;
   }
 
+  const isMtnExpress = networkKey === "MTN_EXPRESS";
+
   const activeProvider = await resolveActiveProvider();
-  if (!providerOverride && activeProvider.dispatcherEnabled === false) {
+  if (!providerOverride && activeProvider.dispatcherEnabled === false && !isMtnExpress) {
     await prisma.order.update({
       where: { id: orderId },
       data: {
@@ -355,8 +359,12 @@ async function dispatchOrderToProvider(orderId, options = {}) {
     return order;
   }
 
-  const provider = providerOverride || activeProvider.provider;
-  const reason = providerOverride ? "admin_failed_retry_override" : activeProvider.reason;
+  const provider = isMtnExpress ? "XPRESS" : (providerOverride || activeProvider.provider);
+  const reason = isMtnExpress
+    ? "mtn_express_forced"
+    : providerOverride
+      ? "admin_failed_retry_override"
+      : activeProvider.reason;
 
   if (!provider) {
     await prisma.order.update({
