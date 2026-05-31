@@ -18,7 +18,7 @@ const XPRESS_NETWORK_MAP = {
   TELECEL: "telecel",
   AT_PREMIUM: "at_premium",
   AT_BIGTIME: "at_bigtime",
-  MTN_EXPRESS: "mtn_express"
+  MTN_EXPRESS: "mtn"
 };
 
 const STATUS_MAP = {
