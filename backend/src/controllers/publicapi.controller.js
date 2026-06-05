@@ -4,7 +4,7 @@ const { dispatchOrderToProvider, refreshOrderProviderStatus, ensureOrderWalletCr
 async function listPackages(req, res, next) {
   try {
     const products = await prisma.product.findMany({
-      where: { status: "ACTIVE", apiPriceGhs: { not: null } },
+      where: { status: "ACTIVE", apiPriceGhs: { not: null }, category: { status: "ACTIVE" } },
       include: { category: true },
       orderBy: { name: "asc" }
     });
@@ -49,6 +49,9 @@ async function placeOrder(req, res, next) {
     });
     if (!product || product.status !== "ACTIVE" || product.apiPriceGhs === null) {
       return res.status(404).json({ success: false, error: "Product not found or not available via API" });
+    }
+    if (product.category.status !== "ACTIVE") {
+      return res.status(400).json({ success: false, error: "Category is currently disabled" });
     }
 
     const qty = Number.isFinite(quantity) && quantity > 0 ? quantity : 1;

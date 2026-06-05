@@ -180,6 +180,7 @@ async function listAffiliatePricing(req, res, next) {
   try {
     const agentId = req.user.sub;
     const products = await prisma.product.findMany({
+      where: { category: { status: "ACTIVE" } },
       include: { category: true, agentProducts: { where: { agentId } } }
     });
 
@@ -249,6 +250,7 @@ async function listProducts(req, res, next) {
   try {
     const agentId = req.user.sub;
     const products = await prisma.product.findMany({
+      where: { category: { status: "ACTIVE" } },
       include: { category: true, agentProducts: { where: { agentId } } }
     });
 
@@ -723,6 +725,9 @@ async function createDirectOrder(req, res, next) {
     });
     if (!product || product.status !== "ACTIVE") {
       return res.status(404).json({ success: false, error: "Product not found or inactive" });
+    }
+    if (product.category.status !== "ACTIVE") {
+      return res.status(400).json({ success: false, error: "Category is currently disabled" });
     }
 
     const productIds = [product.id];

@@ -357,9 +357,13 @@ async function updateCategory(req, res, next) {
     const payload = validate(categorySchema, req.body);
     const { id } = req.params;
     const slug = payload.slug || slugify(payload.name);
+    const data = { name: payload.name, slug };
+    if (payload.status) {
+      data.status = payload.status;
+    }
     const category = await prisma.category.update({
       where: { id },
-      data: { name: payload.name, slug }
+      data
     });
     return res.json({ success: true, data: category });
   } catch (error) {

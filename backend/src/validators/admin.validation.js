@@ -2,7 +2,8 @@ const { z } = require("zod");
 
 const categorySchema = z.object({
   name: z.string().min(2),
-  slug: z.string().min(2).optional()
+  slug: z.string().min(2).optional(),
+  status: z.enum(["ACTIVE", "INACTIVE"]).optional()
 });
 
 const productSchema = z.object({

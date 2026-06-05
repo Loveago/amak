@@ -90,7 +90,7 @@ async function getStorefront(req, res, next) {
     }
 
     const agentProducts = await prisma.agentProduct.findMany({
-      where: { agentId: agent.id, isActive: true },
+      where: { agentId: agent.id, isActive: true, product: { category: { status: "ACTIVE" } } },
       include: { product: { include: { category: true } } }
     });
 
@@ -133,9 +133,10 @@ async function createOrder(req, res, next) {
       where: {
         agentId: agent.id,
         productId: { in: productIds },
-        isActive: true
+        isActive: true,
+        product: { category: { status: "ACTIVE" } }
       },
-      include: { product: true }
+      include: { product: { include: { category: true } } }
     });
 
     const ancestorMarkupMap = await getAncestorAffiliateMarkupMap(agent.id, productIds);
