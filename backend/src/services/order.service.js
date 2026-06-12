@@ -342,9 +342,10 @@ async function dispatchOrderToProvider(orderId, options = {}) {
   }
 
   const isMtnExpress = networkKey === "MTN_EXPRESS";
+  const isTelecel = networkKey === "TELECEL";
 
   const activeProvider = await resolveActiveProvider();
-  if (!providerOverride && activeProvider.dispatcherEnabled === false && !isMtnExpress) {
+  if (!providerOverride && activeProvider.dispatcherEnabled === false && !isMtnExpress && !isTelecel) {
     await prisma.order.update({
       where: { id: orderId },
       data: {
@@ -359,12 +360,18 @@ async function dispatchOrderToProvider(orderId, options = {}) {
     return order;
   }
 
-  const provider = isMtnExpress ? "XPRESS" : (providerOverride || activeProvider.provider);
+  const provider = isMtnExpress
+    ? "XPRESS"
+    : isTelecel
+      ? "GRANDAPI"
+      : (providerOverride || activeProvider.provider);
   const reason = isMtnExpress
     ? "mtn_express_forced"
-    : providerOverride
-      ? "admin_failed_retry_override"
-      : activeProvider.reason;
+    : isTelecel
+      ? "telecel_grandapi_forced"
+      : providerOverride
+        ? "admin_failed_retry_override"
+        : activeProvider.reason;
 
   if (!provider) {
     await prisma.order.update({
