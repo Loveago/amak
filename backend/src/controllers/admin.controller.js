@@ -746,10 +746,11 @@ async function exportOrders(req, res, next) {
       orderBy: { createdAt: "desc" }
     });
 
-    const headers = ["Receipt Number", "GB Ordered"];
+    const headers = ["Receipt Number", "Customer Phone", "GB Ordered"];
 
     const rows = orders.map(order => {
       const receiptNumber = order.paymentRef || order.id;
+      const customerPhone = order.customerPhone || "";
       const gbOrdered = order.items.map(item => {
         const size = item.product?.size || "0";
         const qty = item.quantity || 1;
@@ -759,6 +760,7 @@ async function exportOrders(req, res, next) {
 
       return [
         receiptNumber,
+        customerPhone,
         gbOrdered
       ].map(field => {
         const str = String(field || "");
