@@ -702,6 +702,83 @@ async function listOrders(req, res, next) {
   }
 }
 
+async function exportOrders(req, res, next) {
+  try {
+    const startDateRaw = req.query.startDate;
+    const endDateRaw = req.query.endDate;
+    const statusRaw = req.query.status;
+
+    const where = {};
+    if (startDateRaw || endDateRaw) {
+      where.createdAt = {};
+      if (startDateRaw) {
+        const startDate = new Date(startDateRaw);
+        if (!isNaN(startDate.getTime())) {
+          where.createdAt.gte = startDate;
+        }
+      }
+      if (endDateRaw) {
+        const endDate = new Date(endDateRaw);
+        if (!isNaN(endDate.getTime())) {
+          endDate.setHours(23, 59, 59, 999);
+          where.createdAt.lte = endDate;
+        }
+      }
+    }
+    if (statusRaw) {
+      where.status = statusRaw;
+    }
+
+    const orders = await prisma.order.findMany({
+      where,
+      include: {
+        items: {
+          include: {
+            product: {
+              include: {
+                category: true
+              }
+            }
+          }
+        },
+        agent: true
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    const headers = ["Receipt Number", "GB Ordered"];
+
+    const rows = orders.map(order => {
+      const receiptNumber = order.paymentRef || order.id;
+      const gbOrdered = order.items.map(item => {
+        const size = item.product?.size || "0";
+        const qty = item.quantity || 1;
+        const sizeNum = parseFloat(size) || 0;
+        return (sizeNum * qty).toFixed(2);
+      }).join("; ");
+
+      return [
+        receiptNumber,
+        gbOrdered
+      ].map(field => {
+        const str = String(field || "");
+        if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      }).join(",");
+    });
+
+    const csv = [headers.join(","), ...rows].join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename="orders-export-${Date.now()}.csv"`);
+    return res.send(csv);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function fulfillOrder(req, res, next) {
   try {
     const { id } = req.params;
@@ -1211,6 +1288,7 @@ module.exports = {
   updateAgentWallet,
   updateAgentSubscription,
   listOrders,
+  exportOrders,
   fulfillOrder,
   recheckOrderPayment,
   updateFailedOrderProvider,
