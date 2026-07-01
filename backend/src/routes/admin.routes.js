@@ -28,6 +28,7 @@ const {
   updateFailedOrderProvider,
   resendFailedOrder,
   fulfillOrdersByHour,
+  deleteOrder,
   listSubscriptions,
   listWithdrawals,
   updateWithdrawal,
@@ -78,6 +79,7 @@ router.post("/orders/:id/recheck-payment", recheckOrderPayment);
 router.patch("/orders/:id/provider", updateFailedOrderProvider);
 router.post("/orders/:id/resend", resendFailedOrder);
 router.patch("/orders/fulfill-hour", fulfillOrdersByHour);
+router.delete("/orders/:id", deleteOrder);
 router.get("/subscriptions", listSubscriptions);
 router.get("/withdrawals", listWithdrawals);
 router.patch("/withdrawals/:id", updateWithdrawal);

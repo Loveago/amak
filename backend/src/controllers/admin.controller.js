@@ -1012,6 +1012,35 @@ async function fulfillOrdersByHour(req, res, next) {
   }
 }
 
+async function deleteOrder(req, res, next) {
+  try {
+    const { id } = req.params;
+
+    const order = await prisma.order.findUnique({ where: { id } });
+    if (!order) {
+      return res.status(404).json({ success: false, error: "Order not found" });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.payment.deleteMany({ where: { orderId: id } });
+      await tx.orderItem.deleteMany({ where: { orderId: id } });
+      await tx.order.delete({ where: { id } });
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        actorId: req.user.sub,
+        action: "ADMIN_DELETE_ORDER",
+        meta: { orderId: id, previousStatus: order.status }
+      }
+    });
+
+    return res.json({ success: true, data: { id } });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function listSubscriptions(req, res, next) {
   try {
     const subscriptions = await prisma.subscription.findMany({ include: { agent: true, plan: true } });
@@ -1296,6 +1325,7 @@ module.exports = {
   updateFailedOrderProvider,
   resendFailedOrder,
   fulfillOrdersByHour,
+  deleteOrder,
   listSubscriptions,
   listWithdrawals,
   updateWithdrawal,

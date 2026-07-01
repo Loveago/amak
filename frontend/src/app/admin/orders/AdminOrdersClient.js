@@ -85,7 +85,8 @@ export default function AdminOrdersClient({
   onRecheckOrderPayment,
   onBulkFulfillHour,
   onUpdateFailedOrderProvider,
-  onResendFailedOrder
+  onResendFailedOrder,
+  onDeleteOrder
 }) {
   const [query, setQuery] = useState("");
   const [copiedOrderId, setCopiedOrderId] = useState("");
@@ -472,6 +473,24 @@ export default function AdminOrdersClient({
                             </button>
                           </div>
                         </div>
+                      </form>
+                    </div>
+                  ) : null}
+                  {typeof onDeleteOrder === "function" ? (
+                    <div className="mt-3">
+                      <form action={onDeleteOrder}>
+                        <input type="hidden" name="orderId" value={order.id} />
+                        <button
+                          type="submit"
+                          className="rounded-full border border-rose-300 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-rose-700 transition hover:bg-rose-50"
+                          onClick={(e) => {
+                            if (!confirm(`Delete order ${order.id}? This cannot be undone.`)) {
+                              e.preventDefault();
+                            }
+                          }}
+                        >
+                          Delete order
+                        </button>
                       </form>
                     </div>
                   ) : null}

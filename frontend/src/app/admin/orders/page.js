@@ -91,6 +91,18 @@ async function fulfillOrdersByHour(formData) {
   revalidatePath("/admin/orders");
 }
 
+async function deleteOrder(formData) {
+  "use server";
+  const orderId = String(formData.get("orderId") || "").trim();
+  if (!orderId) {
+    return;
+  }
+  await serverApi(`/admin/orders/${orderId}`, {
+    method: "DELETE"
+  });
+  revalidatePath("/admin/orders");
+}
+
 export default async function AdminOrdersPage({ searchParams }) {
   requireAdmin("/admin/orders");
   let orders = [];
@@ -123,6 +135,7 @@ export default async function AdminOrdersPage({ searchParams }) {
       onBulkFulfillHour={fulfillOrdersByHour}
       onUpdateFailedOrderProvider={updateFailedOrderProvider}
       onResendFailedOrder={resendFailedOrder}
+      onDeleteOrder={deleteOrder}
     />
   );
 }
