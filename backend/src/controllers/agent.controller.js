@@ -14,6 +14,7 @@ const { getAncestorAffiliateMarkupMap, getEffectiveBasePrice } = require("../ser
 const { hashKey } = require("../middleware/api-key");
 const { markPaymentVerified } = require("../services/payment.service");
 const { verifyTransaction } = require("../services/paystack.service");
+const { generateOrderId } = require("../utils/order-id");
 
 async function dashboard(req, res, next) {
   try {
@@ -753,6 +754,7 @@ async function createDirectOrder(req, res, next) {
     const order = await prisma.$transaction(async (tx) => {
       const newOrder = await tx.order.create({
         data: {
+          id: generateOrderId("DASH"),
           agentId,
           customerName: payload.customerName || "Direct Order",
           customerPhone: payload.recipientPhone,

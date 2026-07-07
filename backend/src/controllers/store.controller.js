@@ -3,6 +3,7 @@ const { createOrderSchema } = require("../validators/store.validation");
 const { validate } = require("../utils/validation");
 const { enforceProductLimit } = require("../services/subscription.service");
 const { getAncestorAffiliateMarkupMap, getEffectiveBasePrice } = require("../services/pricing.service");
+const { generateOrderId } = require("../utils/order-id");
 
 function buildPhoneCandidates(rawValue) {
   const raw = String(rawValue || "").trim();
@@ -186,6 +187,7 @@ async function createOrder(req, res, next) {
     const customerPhone = payload.recipientPhone || payload.customerPhone || "0000000000";
     const order = await prisma.order.create({
       data: {
+        id: generateOrderId("STORE"),
         agentId: agent.id,
         customerName,
         customerPhone,

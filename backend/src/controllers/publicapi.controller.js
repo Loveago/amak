@@ -1,5 +1,6 @@
 const prisma = require("../config/prisma");
 const { dispatchOrderToProvider, refreshOrderProviderStatus, ensureOrderWalletCredits } = require("../services/order.service");
+const { generateOrderId } = require("../utils/order-id");
 
 async function listPackages(req, res, next) {
   try {
@@ -66,6 +67,7 @@ async function placeOrder(req, res, next) {
     const order = await prisma.$transaction(async (tx) => {
       const newOrder = await tx.order.create({
         data: {
+          id: generateOrderId("API"),
           agentId,
           customerName: clientRef || "API Order",
           customerPhone: recipientPhone,

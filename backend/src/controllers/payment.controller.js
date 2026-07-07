@@ -24,7 +24,7 @@ async function initializeOrderPayment(req, res, next) {
       return res.status(400).json({ success: false, error: "Order already paid" });
     }
 
-    const reference = `order_${order.id}_${Date.now()}`;
+    const reference = order.id;
     const { fee: paystackFeeGhs, gross: paystackGrossGhs } = computePaystackGross(order.totalAmountGhs);
     const baseUrl = process.env.BASE_URL || "";
     const callbackParams = new URLSearchParams({
