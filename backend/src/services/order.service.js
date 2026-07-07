@@ -540,7 +540,7 @@ async function dispatchOrderToProvider(orderId, options = {}) {
   return order;
 }
 
-async function refreshOrderProviderStatus(order) {
+async function refreshOrderProviderStatus(order, options = {}) {
   if (!order?.providerReference) {
     return order;
   }
@@ -550,7 +550,7 @@ async function refreshOrderProviderStatus(order) {
     return order;
   }
 
-  if (!shouldRefreshStatus(order.providerLastCheckedAt)) {
+  if (!options.force && !shouldRefreshStatus(order.providerLastCheckedAt)) {
     return order;
   }
 
@@ -577,6 +577,17 @@ async function refreshOrderProviderStatus(order) {
     }
 
     const status = normalizeStatus(result.status);
+
+    if (!status) {
+      // Provider response contained no real order status (e.g. only an API-call
+      // acknowledgement). Keep the current status instead of overwriting it.
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { providerLastCheckedAt: new Date() }
+      });
+      return { ...order, providerLastCheckedAt: new Date() };
+    }
+
     const updates = {
       providerStatus: status,
       providerPayload:

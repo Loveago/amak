@@ -31,7 +31,12 @@ async function tick() {
     const processingOrders = await prisma.order.findMany({
       where: {
         providerReference: { not: null },
-        providerStatus: { notIn: ["DELIVERED", "COMPLETED", "SUCCESS", "FAILED", "CANCELED"] }
+        providerStatus: { notIn: ["DELIVERED", "COMPLETED", "SUCCESS", "FAILED", "CANCELED"] },
+        // Shanka and EliteNut orders are handled by their dedicated status workers.
+        NOT: [
+          { providerPayload: { path: ["provider"], equals: "SHANKA" } },
+          { providerPayload: { path: ["provider"], equals: "ELITENUT" } }
+        ]
       },
       include: { items: { include: { product: { include: { category: true } } } } },
       orderBy: { createdAt: "asc" },

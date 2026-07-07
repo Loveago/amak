@@ -48,6 +48,38 @@ const normalizeStatus = (value) => {
   return STATUS_MAP[key] || key.toUpperCase();
 };
 
+const API_CALL_STATUS_VALUES = new Set(["success", "successful", "ok", "true", "200", "api success", "api_success"]);
+
+const isApiCallStatus = (value) => {
+  if (value === null || value === undefined) return false;
+  const key = value.toString().trim().toLowerCase();
+  return API_CALL_STATUS_VALUES.has(key) || (key.includes("api") && key.includes("success"));
+};
+
+const pickOrderStatus = (item, payload) => {
+  // Prefer explicit order-status fields; never confuse API-call outcome with order status.
+  const candidates = [
+    item?.order_status,
+    item?.delivery_status,
+    item?.status,
+    payload?.order_status,
+    payload?.order?.status,
+    payload?.data?.status
+  ];
+  for (const candidate of candidates) {
+    if (candidate === null || candidate === undefined || candidate === "") continue;
+    return candidate;
+  }
+  // Fall back to api_status / top-level status only when it looks like a real order status.
+  const fallbacks = [item?.api_status, payload?.status];
+  for (const candidate of fallbacks) {
+    if (candidate === null || candidate === undefined || candidate === "") continue;
+    if (isApiCallStatus(candidate)) continue;
+    return candidate;
+  }
+  return null;
+};
+
 const resolveNetworkId = (networkKey) => {
   if (!networkKey) return null;
   return SHANKA_NETWORK_MAP[networkKey] || null;
@@ -148,7 +180,7 @@ async function fetchOrderStatus(reference) {
   }
 
   const item = Array.isArray(payload?.items) ? payload.items[0] : null;
-  const statusValue = item?.api_status ?? item?.status ?? payload?.status;
+  const statusValue = pickOrderStatus(item, payload);
   const status = normalizeStatus(statusValue);
 
   return {

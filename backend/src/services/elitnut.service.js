@@ -49,19 +49,47 @@ const normalizeStatus = (value) => {
   return key.toUpperCase();
 };
 
-const extractStatusFromPayload = (payload) => {
+const STATUS_FIELD_KEYS = [
+  "order_status",
+  "orderStatus",
+  "delivery_status",
+  "deliveryStatus",
+  "status",
+  "state"
+];
+
+const looksLikeApiCallMessage = (value) => {
+  const key = value.toString().trim().toLowerCase();
+  // Messages like "api success", "api request successful", "request initiated"
+  // describe the API call, not the order itself.
+  return key.includes("api") || key.includes("request") || key.includes("initiat");
+};
+
+const extractOrderStatus = (payload) => {
   if (!payload) return "";
-  if (typeof payload === "string") return payload;
-  if (Array.isArray(payload) && payload.length > 0) return extractStatusFromPayload(payload[0]);
+  if (typeof payload === "string") {
+    return looksLikeApiCallMessage(payload) ? "" : payload;
+  }
+  if (Array.isArray(payload)) {
+    for (const entry of payload) {
+      const found = extractOrderStatus(entry);
+      if (found) return found;
+    }
+    return "";
+  }
 
-  const direct = payload.status || payload.state || payload.message;
-  if (typeof direct === "string" && direct.trim()) return direct;
+  for (const key of STATUS_FIELD_KEYS) {
+    const value = payload[key];
+    if (typeof value === "string" && value.trim() && !looksLikeApiCallMessage(value)) {
+      return value;
+    }
+  }
 
-  const nestedCandidates = [payload.data, payload.payload, payload.transaction, payload.result];
+  const nestedCandidates = [payload.order, payload.transaction, payload.data, payload.result, payload.payload];
   for (const candidate of nestedCandidates) {
     if (candidate && candidate !== payload) {
-      const nested = extractStatusFromPayload(candidate);
-      if (nested) return nested;
+      const found = extractOrderStatus(candidate);
+      if (found) return found;
     }
   }
 
@@ -125,7 +153,7 @@ async function purchaseDataBundle({ networkKey, recipient, capacity, reference }
     throw error;
   }
 
-  const status = normalizeStatus(extractStatusFromPayload(payload) || "PROCESSING");
+  const status = normalizeStatus(extractOrderStatus(payload)) || "PROCESSING";
 
   return {
     raw: payload,
@@ -171,7 +199,7 @@ async function fetchOrderStatus(reference, networkKey) {
     throw error;
   }
 
-  const status = normalizeStatus(extractStatusFromPayload(payload));
+  const status = normalizeStatus(extractOrderStatus(payload));
 
   return {
     raw: payload,
