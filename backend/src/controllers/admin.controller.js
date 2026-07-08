@@ -63,7 +63,7 @@ function parseOptionalBoolean(value) {
 
 async function dashboard(req, res, next) {
   try {
-    const [orders, agents, subscriptions, revenueAgg, payoutsAgg, afaRegistrations] = await Promise.all([
+    const [orders, agents, subscriptions, revenueAgg, payoutsAgg, afaRegistrations, monthlyRevenue, todayOrders, pendingOrders, failedOrders, totalProducts, activeAgents] = await Promise.all([
       prisma.order.count(),
       prisma.user.count({ where: { role: "AGENT", status: "ACTIVE" } }),
       prisma.subscription.count({ where: { status: { not: "CANCELED" } } }),
@@ -77,18 +77,69 @@ async function dashboard(req, res, next) {
       }),
       prisma.afaRegistration.count({
         where: { status: { in: ["SUBMITTED", "PROCESSING"] } }
-      })
+      }),
+      // Monthly revenue for chart (last 12 months)
+      getMonthlyRevenue(),
+      // Today's orders count
+      prisma.order.count({
+        where: {
+          createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) }
+        }
+      }),
+      // Pending orders
+      prisma.order.count({ where: { status: "PAID" } }),
+      // Failed orders
+      prisma.order.count({ where: { status: "FAILED" } }),
+      // Total products
+      prisma.product.count(),
+      // Active agents
+      prisma.user.count({ where: { role: "AGENT", status: "ACTIVE" } })
     ]);
     const revenueTotal = revenueAgg?._sum?.totalAmountGhs || 0;
     const walletPayouts = payoutsAgg?._sum?.amountGhs || 0;
 
     return res.json({
       success: true,
-      data: { orders, agents, subscriptions, revenueTotal, walletPayouts, afaRegistrations }
+      data: {
+        orders,
+        agents: activeAgents,
+        subscriptions,
+        revenueTotal,
+        walletPayouts,
+        afaRegistrations,
+        totalProducts,
+        chartData: monthlyRevenue,
+        todayOrders,
+        pendingOrders,
+        failedOrders
+      }
     });
   } catch (error) {
     return next(error);
   }
+}
+
+async function getMonthlyRevenue() {
+  const months = [];
+  const now = new Date();
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const start = new Date(d.getFullYear(), d.getMonth(), 1);
+    const end = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    const agg = await prisma.order.aggregate({
+      _sum: { totalAmountGhs: true },
+      where: {
+        status: { in: ["PAID", "FULFILLED"] },
+        createdAt: { gte: start, lt: end }
+      }
+    });
+    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    months.push({
+      month: monthNames[d.getMonth()],
+      revenue: agg._sum.totalAmountGhs || 0
+    });
+  }
+  return months;
 }
 
 async function updateFailedOrderProvider(req, res, next) {
@@ -396,6 +447,59 @@ async function updateProduct(req, res, next) {
     const { id } = req.params;
     const product = await prisma.product.update({ where: { id }, data: payload });
     return res.json({ success: true, data: product });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function deleteProduct(req, res, next) {
+  try {
+    const { id } = req.params;
+    const product = await prisma.product.findUnique({ where: { id } });
+    if (!product) {
+      return res.status(404).json({ success: false, error: "Product not found" });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.agentProduct.deleteMany({ where: { productId: id } });
+      await tx.orderItem.deleteMany({ where: { productId: id } });
+      await tx.product.delete({ where: { id } });
+      await tx.auditLog.create({
+        data: {
+          actorId: req.user.sub,
+          action: "ADMIN_DELETE_PRODUCT",
+          meta: { productId: id, productName: product.name, productSize: product.size }
+        }
+      });
+    });
+    return res.json({ success: true, data: { id } });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function disableProduct(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const product = await prisma.product.findUnique({ where: { id } });
+    if (!product) {
+      return res.status(404).json({ success: false, error: "Product not found" });
+    }
+
+    const newStatus = status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    const updated = await prisma.product.update({
+      where: { id },
+      data: { status: newStatus }
+    });
+    await prisma.auditLog.create({
+      data: {
+        actorId: req.user.sub,
+        action: "ADMIN_TOGGLE_PRODUCT_STATUS",
+        meta: { productId: id, previousStatus: product.status, newStatus, productName: product.name }
+      }
+    });
+    return res.json({ success: true, data: updated });
   } catch (error) {
     return next(error);
   }
@@ -1346,6 +1450,8 @@ module.exports = {
   listProducts,
   createProduct,
   updateProduct,
+  deleteProduct,
+  disableProduct,
   listPlans,
   createPlan,
   updatePlan,

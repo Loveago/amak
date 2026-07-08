@@ -45,6 +45,31 @@ async function toggleCategory(formData) {
   revalidatePath("/admin/products");
 }
 
+async function deleteProduct(formData) {
+  "use server";
+  const productId = String(formData.get("productId") || "").trim();
+  if (!productId) return;
+
+  await serverApi(`/admin/products/${productId}`, {
+    method: "DELETE"
+  });
+  revalidatePath("/admin/products");
+}
+
+async function toggleProductStatus(formData) {
+  "use server";
+  const productId = String(formData.get("productId") || "").trim();
+  const currentStatus = String(formData.get("currentStatus") || "ACTIVE").trim();
+
+  if (!productId) return;
+
+  await serverApi(`/admin/products/${productId}/status`, {
+    method: "PATCH",
+    body: { status: currentStatus }
+  });
+  revalidatePath("/admin/products");
+}
+
 async function updateProduct(formData) {
   "use server";
   const productId = String(formData.get("productId") || "").trim();
@@ -353,6 +378,37 @@ export default async function AdminProductsPage() {
                           Update product
                         </button>
                       </form>
+                      <div className="mt-3 flex items-center gap-3 border-t border-accent/5 pt-3">
+                        <form action={toggleProductStatus} className="flex items-center gap-2">
+                          <input type="hidden" name="productId" value={product.id} />
+                          <input type="hidden" name="currentStatus" value={product.status || "ACTIVE"} />
+                          <button
+                            type="submit"
+                            className={`rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition-all mobile-tap ${
+                              product.status === "ACTIVE" || !product.status
+                                ? "bg-yellow-500/15 text-yellow-400 hover:bg-yellow-500/25"
+                                : "bg-accent/15 text-accent hover:bg-accent/25"
+                            }`}
+                          >
+                            {product.status === "ACTIVE" || !product.status ? "Disable" : "Enable"}
+                          </button>
+                        </form>
+                        <span className={`text-[10px] font-semibold uppercase tracking-wider ${
+                          product.status === "ACTIVE" || !product.status ? "text-accent" : "text-ink-muted"
+                        }`}>
+                          {product.status || "ACTIVE"}
+                        </span>
+                        <form action={deleteProduct} className="ml-auto">
+                          <input type="hidden" name="productId" value={product.id} />
+                          <button
+                            type="submit"
+                            className="flex items-center gap-1 rounded-full bg-red-500/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-red-400 transition-all hover:bg-red-500/20 mobile-tap"
+                          >
+                            <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                            Delete
+                          </button>
+                        </form>
+                      </div>
                     </div>
                   ))}
                 </div>

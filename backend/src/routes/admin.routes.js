@@ -10,6 +10,8 @@ const {
   listProducts,
   createProduct,
   updateProduct,
+  deleteProduct,
+  disableProduct,
   listPlans,
   createPlan,
   updatePlan,
@@ -61,6 +63,8 @@ router.patch("/categories/:id", updateCategory);
 router.get("/products", listProducts);
 router.post("/products", createProduct);
 router.patch("/products/:id", updateProduct);
+router.delete("/products/:id", deleteProduct);
+router.patch("/products/:id/status", disableProduct);
 router.get("/plans", listPlans);
 router.post("/plans", createPlan);
 router.patch("/plans/:id", updatePlan);
