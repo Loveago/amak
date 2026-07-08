@@ -23,7 +23,7 @@ export default function RootLayout({ children }) {
   const dashboardHref = user?.role === "ADMIN" ? "/admin/dashboard" : "/agent/dashboard";
   return (
     <html lang="en" className={`${spaceGrotesk.variable} ${manrope.variable}`}>
-      <body className="bg-sand text-ink antialiased">
+      <body className="bg-surface text-ink antialiased">
         <div className="page-glow" aria-hidden />
         <div className="page-noise" aria-hidden />
         <SiteHeader user={user} dashboardHref={dashboardHref} />

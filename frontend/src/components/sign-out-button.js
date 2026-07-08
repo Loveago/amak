@@ -22,7 +22,7 @@ export function SignOutButton({ className = "" }) {
       type="button"
       onClick={handleSignOut}
       disabled={loading}
-      className={`rounded-full border border-ink/20 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink transition hover:border-ink/40 ${className}`}
+      className={`flex items-center gap-2 rounded-full border border-ink/20 bg-surface-card px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink transition hover:border-accent/30 ${className}`}
     >
       {loading ? "Signing out" : "Sign out"}
     </button>

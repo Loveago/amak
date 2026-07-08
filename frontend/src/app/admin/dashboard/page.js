@@ -21,27 +21,28 @@ export default async function AdminDashboardPage() {
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <div key={stat.label} className="card-outline rounded-3xl bg-white/90 p-5">
-            <p className="text-xs uppercase tracking-[0.2em] text-ink/60">{stat.label}</p>
+          <div key={stat.label} className="card-outline rounded-2xl bg-surface-card p-5">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">{stat.label}</p>
             <p className="mt-3 text-2xl font-semibold text-ink">{stat.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="glass rounded-3xl p-6">
+      <div className="card-outline rounded-2xl bg-surface-card p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="badge">System pulse</p>
-            <h2 className="mt-3 font-display text-2xl text-ink">Operational metrics update in real time.</h2>
+            <h2 className="mt-3 font-display text-xl text-ink">Operational metrics update in real time.</h2>
           </div>
           <a
             href="/api/admin/reports/orders"
-            className="rounded-full bg-aurora px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+            className="flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.15em] text-night"
           >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
             Export report
           </a>
         </div>
-        <p className="mt-6 text-sm text-ink/60">
+        <p className="mt-6 text-sm text-ink-muted">
           Webhook health, payment verification, and fraud monitoring reflect live Paystack events once transactions flow in.
         </p>
       </div>

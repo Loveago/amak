@@ -60,13 +60,13 @@ export default function LoginPage() {
     <main className="min-h-screen">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 pb-20 pt-16 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="glass relative overflow-hidden rounded-3xl p-10">
-          <div className="pointer-events-none absolute -right-24 top-10 h-48 w-48 rounded-full bg-aurora/20 blur-3xl" />
-          <div className="pointer-events-none absolute -left-12 bottom-8 h-32 w-32 rounded-full bg-sunset/30 blur-2xl" />
+          <div className="pointer-events-none absolute -right-24 top-10 h-48 w-48 rounded-full bg-accent/10 blur-3xl" />
+          <div className="pointer-events-none absolute -left-12 bottom-8 h-32 w-32 rounded-full bg-accent/5 blur-2xl" />
           <p className="badge">ABK Enterprise</p>
           <h1 className="mt-4 font-display text-4xl text-ink md:text-5xl">
             Sign in to your bundle command center.
           </h1>
-          <p className="mt-4 max-w-xl text-sm text-ink/70">
+          <p className="mt-4 max-w-xl text-sm text-ink-muted">
             Manage storefronts, payouts, and subscriptions from one portal. Agents can self-register and start a
             complimentary 30-day starter plan automatically.
           </p>
@@ -77,49 +77,49 @@ export default function LoginPage() {
               { title: "Affiliate growth", detail: "Earn commissions on downlines." },
               { title: "Admin controls", detail: "Oversee pricing, plans, and audits." }
             ].map((item) => (
-              <div key={item.title} className="rounded-2xl border border-ink/10 bg-white/70 p-4 text-sm">
+              <div key={item.title} className="rounded-2xl border border-accent/10 bg-surface-card p-4 text-sm">
                 <p className="font-semibold text-ink">{item.title}</p>
-                <p className="mt-2 text-xs text-ink/60">{item.detail}</p>
+                <p className="mt-2 text-xs text-ink-muted">{item.detail}</p>
               </div>
             ))}
           </div>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/signup"
-              className="rounded-full bg-ink px-6 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+              className="rounded-full bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night"
             >
               Create agent account
             </Link>
             <Link
               href="/"
-              className="rounded-full border border-ink/20 bg-white/70 px-6 py-3 text-xs font-semibold uppercase tracking-[0.3em]"
+              className="rounded-full border border-ink/20 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
             >
               Back to landing
             </Link>
           </div>
-          <p className="mt-6 text-xs text-ink/60">
+          <p className="mt-6 text-xs text-ink-muted">
             Admin accounts are provisioned by the HQ team. Need access? Contact support.
           </p>
         </section>
 
-        <section className="card-outline flex-1 rounded-3xl bg-white/95 p-10 shadow-xl">
+        <section className="card-outline flex-1 rounded-3xl bg-surface-card p-10">
           <h2 className="font-display text-2xl text-ink">Welcome back</h2>
-          <p className="mt-2 text-sm text-ink/60">Use your email and password to continue.</p>
+          <p className="mt-2 text-sm text-ink-muted">Use your email and password to continue.</p>
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Email</label>
+              <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Email</label>
               <input
                 type="email"
                 name="email"
                 required
                 value={form.email}
                 onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+                className="mt-2 w-full rounded-2xl border border-accent/15 bg-surface px-4 py-3 text-sm text-ink focus:border-accent/40 focus:outline-none"
                 placeholder="you@example.com"
               />
             </div>
             <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Password</label>
+              <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Password</label>
               <div className="relative mt-2">
                 <input
                   type={passwordVisible ? "text" : "password"}
@@ -127,13 +127,13 @@ export default function LoginPage() {
                   required
                   value={form.password}
                   onChange={handleChange}
-                  className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 pr-20 text-sm"
+                  className="w-full rounded-2xl border border-accent/15 bg-surface px-4 py-3 pr-20 text-sm text-ink focus:border-accent/40 focus:outline-none"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setPasswordVisible((prev) => !prev)}
-                  className="absolute inset-y-0 right-3 my-auto rounded-full border border-transparent bg-white/0 px-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink/60"
+                  className="absolute inset-y-0 right-3 my-auto rounded-full px-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted"
                   aria-pressed={passwordVisible}
                 >
                   {passwordVisible ? "Hide" : "View"}
@@ -143,18 +143,18 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={status.type === "loading"}
-              className="w-full rounded-full bg-ink px-6 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
+              className="w-full rounded-full bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night disabled:opacity-60"
             >
               {status.type === "loading" ? "Signing in" : "Access portal"}
             </button>
             {status.message && (
-              <p className={`text-xs ${status.type === "error" ? "text-red-600" : "text-ink/70"}`}>{status.message}</p>
+              <p className={`text-xs ${status.type === "error" ? "text-red-500" : "text-ink-muted"}`}>{status.message}</p>
             )}
           </form>
-          <div className="mt-8 border-t border-ink/10 pt-6 text-xs text-ink/60">
+          <div className="mt-8 border-t border-accent/10 pt-6 text-xs text-ink-muted">
             <p>
               New agent?{" "}
-              <Link href="/signup" className="font-semibold text-ink">
+              <Link href="/signup" className="font-semibold text-accent">
                 Start your free trial →
               </Link>
             </p>

@@ -84,13 +84,13 @@ export default function SignupPage() {
     <main className="min-h-screen">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 pb-20 pt-16 lg:grid-cols-[1.05fr_0.95fr]">
         <section className="glass relative overflow-hidden rounded-3xl p-10">
-          <div className="pointer-events-none absolute -right-16 top-6 h-40 w-40 rounded-full bg-aurora/30 blur-3xl" />
-          <div className="pointer-events-none absolute -left-14 bottom-8 h-32 w-32 rounded-full bg-sunset/30 blur-2xl" />
+          <div className="pointer-events-none absolute -right-16 top-6 h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
+          <div className="pointer-events-none absolute -left-14 bottom-8 h-32 w-32 rounded-full bg-accent/5 blur-2xl" />
           <p className="badge">Start free trial</p>
           <h1 className="mt-4 font-display text-4xl text-ink md:text-5xl">
             Launch your agent storefront in minutes.
           </h1>
-          <p className="mt-4 max-w-xl text-sm text-ink/70">
+          <p className="mt-4 max-w-xl text-sm text-ink-muted">
             Create your agent account and unlock the lowest plan free for 30 days. You can activate bundles, accept
             orders, and earn commissions right away.
           </p>
@@ -101,69 +101,69 @@ export default function SignupPage() {
               { title: "Affiliate rewards", detail: "Invite agents and earn downline commissions." },
               { title: "Fast fulfillment", detail: "Orders flow straight to fulfillment." }
             ].map((item) => (
-              <div key={item.title} className="rounded-2xl border border-ink/10 bg-white/70 p-4 text-sm">
+              <div key={item.title} className="rounded-2xl border border-accent/10 bg-surface-card p-4 text-sm">
                 <p className="font-semibold text-ink">{item.title}</p>
-                <p className="mt-2 text-xs text-ink/60">{item.detail}</p>
+                <p className="mt-2 text-xs text-ink-muted">{item.detail}</p>
               </div>
             ))}
           </div>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/login"
-              className="rounded-full border border-ink/20 bg-white/70 px-6 py-3 text-xs font-semibold uppercase tracking-[0.3em]"
+              className="rounded-full border border-ink/20 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
             >
               Back to sign in
             </Link>
             <Link
               href="/store/ama-store"
-              className="rounded-full bg-ink px-6 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+              className="rounded-full bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night"
             >
               Preview storefront
             </Link>
           </div>
         </section>
 
-        <section className="card-outline flex-1 rounded-3xl bg-white/95 p-10 shadow-xl">
+        <section className="card-outline flex-1 rounded-3xl bg-surface-card p-10">
           <h2 className="font-display text-2xl text-ink">Create agent account</h2>
-          <p className="mt-2 text-sm text-ink/60">Enter your details to start the trial plan.</p>
+          <p className="mt-2 text-sm text-ink-muted">Enter your details to start the trial plan.</p>
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Full name</label>
+              <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Full name</label>
               <input
                 type="text"
                 name="name"
                 required
                 value={form.name}
                 onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+                className="mt-2 w-full rounded-2xl border border-accent/15 bg-surface px-4 py-3 text-sm text-ink focus:border-accent/40 focus:outline-none"
                 placeholder="Ama Konadu"
               />
             </div>
             <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Email</label>
+              <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Email</label>
               <input
                 type="email"
                 name="email"
                 required
                 value={form.email}
                 onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+                className="mt-2 w-full rounded-2xl border border-accent/15 bg-surface px-4 py-3 text-sm text-ink focus:border-accent/40 focus:outline-none"
                 placeholder="you@example.com"
               />
             </div>
             <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Phone (optional)</label>
+              <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Phone (optional)</label>
               <input
                 type="tel"
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+                className="mt-2 w-full rounded-2xl border border-accent/15 bg-surface px-4 py-3 text-sm text-ink focus:border-accent/40 focus:outline-none"
                 placeholder="+233 55 000 0000"
               />
             </div>
             <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Password</label>
+              <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Password</label>
               <div className="relative mt-2">
                 <input
                   type={passwordVisible ? "text" : "password"}
@@ -172,13 +172,13 @@ export default function SignupPage() {
                   minLength={8}
                   value={form.password}
                   onChange={handleChange}
-                  className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 pr-20 text-sm"
+                  className="w-full rounded-2xl border border-accent/15 bg-surface px-4 py-3 pr-20 text-sm text-ink focus:border-accent/40 focus:outline-none"
                   placeholder="Create a secure password"
                 />
                 <button
                   type="button"
                   onClick={() => setPasswordVisible((prev) => !prev)}
-                  className="absolute inset-y-0 right-3 my-auto rounded-full border border-transparent bg-white/0 px-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink/60"
+                  className="absolute inset-y-0 right-3 my-auto rounded-full px-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted"
                   aria-pressed={passwordVisible}
                 >
                   {passwordVisible ? "Hide" : "View"}
@@ -186,7 +186,7 @@ export default function SignupPage() {
               </div>
             </div>
             <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Referral code (required)</label>
+              <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Referral code (required)</label>
               <input
                 type="text"
                 name="referralCode"
@@ -194,25 +194,25 @@ export default function SignupPage() {
                 value={form.referralCode}
                 onChange={handleChange}
                 readOnly={referralLocked}
-                className="mt-2 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+                className="mt-2 w-full rounded-2xl border border-accent/15 bg-surface px-4 py-3 text-sm text-ink focus:border-accent/40 focus:outline-none"
                 placeholder="Enter referral code"
               />
               {referralLocked && (
-                <p className="mt-2 text-xs text-ink/60">Referral code applied from your invite link.</p>
+                <p className="mt-2 text-xs text-ink-muted">Referral code applied from your invite link.</p>
               )}
             </div>
             <button
               type="submit"
               disabled={status.type === "loading"}
-              className="w-full rounded-full bg-ink px-6 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
+              className="w-full rounded-full bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night disabled:opacity-60"
             >
               {status.type === "loading" ? "Creating account" : "Start free trial"}
             </button>
             {status.message && (
-              <p className={`text-xs ${status.type === "error" ? "text-red-600" : "text-ink/70"}`}>{status.message}</p>
+              <p className={`text-xs ${status.type === "error" ? "text-red-500" : "text-ink-muted"}`}>{status.message}</p>
             )}
           </form>
-          <p className="mt-6 text-xs text-ink/60">
+          <p className="mt-6 text-xs text-ink-muted">
             By creating an account you agree to ABK&apos;s service terms and fulfillment policies.
           </p>
         </section>

@@ -17,7 +17,7 @@ export default function MobileDrawer({ title, buttonLabel = "Menu", items = [], 
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-white/80 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink"
+        className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-surface-card px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink"
       >
         {buttonLabel}
       </button>
@@ -28,23 +28,23 @@ export default function MobileDrawer({ title, buttonLabel = "Menu", items = [], 
               <button
                 type="button"
                 aria-label="Close menu"
-                className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
+                className="absolute inset-0 bg-night/70 backdrop-blur-sm"
                 onClick={() => setOpen(false)}
               />
-              <div className="absolute left-0 top-0 h-full w-[85%] max-w-xs overflow-y-auto bg-white/95 p-6 shadow-2xl">
+              <div className="absolute left-0 top-0 h-full w-[85%] max-w-xs overflow-y-auto bg-surface-card border-r border-accent/10 p-6 shadow-2xl">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-ink/60">{title}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-ink-muted">{title}</p>
                   <button
                     type="button"
                     onClick={() => setOpen(false)}
-                    className="text-xs font-semibold uppercase tracking-[0.2em] text-ink/60"
+                    className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted"
                   >
                     Close
                   </button>
                 </div>
                 <nav className="mt-5 space-y-3">
                   {items.map((item) => {
-                    const className = "flex items-center justify-between rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm font-semibold text-ink";
+                    const className = "flex items-center justify-between rounded-2xl border border-accent/10 bg-surface-elevated px-4 py-3 text-sm font-semibold text-ink";
                     if (item.external) {
                       return (
                         <a
@@ -56,7 +56,7 @@ export default function MobileDrawer({ title, buttonLabel = "Menu", items = [], 
                           className={className}
                         >
                           {item.label}
-                          <span className="text-xs text-ink/40">↗</span>
+                          <span className="text-xs text-accent/60">↗</span>
                         </a>
                       );
                     }
@@ -68,7 +68,7 @@ export default function MobileDrawer({ title, buttonLabel = "Menu", items = [], 
                         className={className}
                       >
                         {item.label}
-                        <span className="text-xs text-ink/40">↗</span>
+                        <span className="text-xs text-accent/60">↗</span>
                       </Link>
                     );
                   })}

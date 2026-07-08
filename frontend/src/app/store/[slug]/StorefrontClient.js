@@ -176,7 +176,7 @@ export default function StorefrontClient({ store, slug }) {
   };
 
   return (
-    <main className="min-h-screen storefront-shell">
+    <main className="min-h-screen storefront-shell bg-surface">
       <div className="storefront-orb orb-1" />
       <div className="storefront-orb orb-2" />
       <div className="storefront-orb orb-3" />
@@ -186,10 +186,10 @@ export default function StorefrontClient({ store, slug }) {
             <div className="space-y-3">
               <div className="badge">Agent storefront</div>
               <h1 className="font-display text-3xl text-ink sm:text-4xl md:text-5xl">
-                Welcome to <span className="text-emerald-600">{agentName}</span>
+                Welcome to <span className="text-accent">{agentName}</span>
                 <span className="text-ink"> Store</span>
               </h1>
-              <p className="text-sm text-ink/70">
+              <p className="text-sm text-ink-muted">
                 Premium bundles, instant delivery, and a storefront that keeps you moving.
               </p>
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -199,7 +199,7 @@ export default function StorefrontClient({ store, slug }) {
                   { label: "Bundles available", value: `${bundleCount} packages` }
                 ].map((item) => (
                   <div key={item.label} className="storefront-stat rounded-2xl px-4 py-3 text-xs">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-ink/50">{item.label}</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">{item.label}</p>
                     <p className="mt-2 text-sm font-semibold text-ink">{item.value}</p>
                   </div>
                 ))}
@@ -207,9 +207,9 @@ export default function StorefrontClient({ store, slug }) {
               <div className="mt-2 flex flex-wrap gap-3 pt-1">
                 <Link
                   href={`/store/${slug}/track`}
-                  className="inline-flex items-center gap-2 rounded-full border border-ink/20 bg-white/80 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-ink shadow-sm transition hover:-translate-y-0.5 hover:border-ink/40 hover:shadow-md"
+                  className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-surface-card px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-ink transition hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-md"
                 >
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-accent" aria-hidden="true">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.25a.75.75 0 00-1.5 0v4.59L7.3 9.24a.75.75 0 00-1.1 1.02l3 3.25a.75.75 0 001.1 0l3-3.25a.75.75 0 10-1.1-1.02l-1.95 2.1V6.75z" clipRule="evenodd" />
                   </svg>
                   Track my order
@@ -221,23 +221,23 @@ export default function StorefrontClient({ store, slug }) {
             <input
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              className="w-full rounded-full border border-ink/10 bg-white/90 px-4 py-3 text-sm text-ink shadow-sm focus:outline-none"
+              className="w-full rounded-full border border-accent/15 bg-surface px-4 py-3 text-sm text-ink shadow-sm focus:border-accent/40 focus:outline-none"
               placeholder="Search bundles, sizes, or networks..."
             />
             <button
               onClick={microFeedback}
-              className="w-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-md sm:w-auto"
+              className="w-full rounded-full bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night shadow-md sm:w-auto"
             >
               Explore
             </button>
           </div>
 
-          <div className="group relative z-10 mt-5 rounded-xl border border-amber-200/60 bg-amber-50/50 px-4 py-3 text-[11px] text-amber-800">
-            <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-600">
+          <div className="group relative z-10 mt-5 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3 text-[11px] text-yellow-300/90">
+            <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em] text-yellow-400">
               Important notice
-              <span className="text-sm font-bold text-amber-500">!</span>
+              <span className="text-sm font-bold text-yellow-400">!</span>
             </div>
-            <div className="mt-2 space-y-1.5 text-[11px] text-amber-700/90">
+            <div className="mt-2 space-y-1.5 text-[11px] text-yellow-300/80">
               <p>Make sure the phone number is correct before proceeding.</p>
               <p>
                 SIMs not supported: Transfer/EVD, TurboNet/Fibre, Inactive/Dormant SIMs, SIMs owing airtime.
@@ -259,7 +259,7 @@ export default function StorefrontClient({ store, slug }) {
               key={filter.key}
               onClick={() => handleFilterChange(filter.key)}
               className={`filter-pill flex-shrink-0 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] ${
-                activeFilter === filter.key ? "filter-pill-active" : "text-ink"
+                activeFilter === filter.key ? "filter-pill-active" : ""
               }`}
             >
               {filter.label}
@@ -271,31 +271,31 @@ export default function StorefrontClient({ store, slug }) {
           className={`mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 ${isFiltering ? "filtering-grid" : ""}`}
         >
           {filteredBundles.length === 0 ? (
-            <div className="col-span-full rounded-3xl border border-dashed border-ink/20 bg-white/70 p-10 text-center text-sm text-ink/60">
+            <div className="col-span-full rounded-3xl border border-dashed border-accent/20 bg-surface-card p-10 text-center text-sm text-ink-muted">
               No bundles are available yet for this storefront. Ask the agent to activate products in their portal.
             </div>
           ) : (
             filteredBundles.map((bundle) => (
-              <div key={bundle.id} className="bundle-card card-outline fade-up rounded-3xl bg-white/90 p-5 sm:p-6">
+              <div key={bundle.id} className="bundle-card card-outline fade-up rounded-3xl bg-surface-card p-5 sm:p-6">
                 <div className="bundle-shine" />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-sand sm:h-10 sm:w-10">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-surface-elevated sm:h-10 sm:w-10">
                       <img src={bundle.networkIcon} alt={`${bundle.network} icon`} className="h-6 w-6 sm:h-7 sm:w-7" />
                     </div>
-                    <span className="text-xs uppercase tracking-[0.2em] text-ink/60">{bundle.network}</span>
+                    <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">{bundle.network}</span>
                   </div>
-                  <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
                     Fast delivery
                   </span>
                 </div>
                 <h2 className="mt-4 text-xl font-semibold text-ink">{bundle.name}</h2>
-                <p className="mt-1 text-xs uppercase tracking-[0.2em] text-ink/50">{bundle.size}</p>
-                <p className="mt-3 text-sm text-ink/60">Price</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.2em] text-ink-muted">{bundle.size}</p>
+                <p className="mt-3 text-sm text-ink-muted">Price</p>
                 <p className="text-2xl font-semibold text-ink">GHS {bundle.price.toFixed(2)}</p>
                 <Link
                   href={`/checkout?slug=${slug}&productId=${bundle.id}&qty=1`}
-                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-ink px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
+                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-accent px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
                   Buy now
                 </Link>
@@ -311,7 +311,7 @@ export default function StorefrontClient({ store, slug }) {
           href={whatsappLink}
           target="_blank"
           rel="noreferrer"
-          className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl animate-bounce"
+          className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-night shadow-lg shadow-accent/20 transition hover:-translate-y-1 hover:shadow-xl animate-bounce"
           aria-label="Chat on WhatsApp"
         >
           <svg aria-hidden="true" viewBox="0 0 24 24" className="h-7 w-7" fill="currentColor">
