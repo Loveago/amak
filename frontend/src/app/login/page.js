@@ -92,7 +92,7 @@ export default function LoginPage() {
             </Link>
             <Link
               href="/"
-              className="rounded-full border border-ink/20 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
+              className="rounded-full border border-accent/15 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
             >
               Back to landing
             </Link>

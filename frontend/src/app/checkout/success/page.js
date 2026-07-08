@@ -54,15 +54,15 @@ export default function CheckoutSuccessPage() {
         <div className="glass rounded-3xl p-10 text-center">
           <p className="badge">Payment complete</p>
           <h1 className="mt-4 font-display text-3xl text-ink md:text-4xl">Bundle purchase successful.</h1>
-          <p className="mt-3 text-sm text-ink/70">
+          <p className="mt-3 text-sm text-ink-muted">
             Your order is being fulfilled. A receipt has been sent to your phone and email.
           </p>
           {status.message && (
             <div
               className={`mt-5 rounded-2xl border px-4 py-3 text-xs ${
                 status.type === "error"
-                  ? "border-red-200 bg-red-50 text-red-700"
-                  : "border-ink/10 bg-white/80 text-ink/70"
+                  ? "border-red-500/20 bg-red-500/5 text-red-400"
+                  : "border-accent/10 bg-surface-card text-ink-muted"
               }`}
             >
               {status.message}
@@ -71,7 +71,7 @@ export default function CheckoutSuccessPage() {
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link
               href={receiptHref}
-              className={`rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white ${
+              className={`rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night ${
                 orderId ? "bg-ink" : "bg-ink/50 pointer-events-none"
               }`}
             >
@@ -79,7 +79,7 @@ export default function CheckoutSuccessPage() {
             </Link>
             <Link
               href={storefrontHref}
-              className="rounded-full border border-ink/20 bg-white/70 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em]"
+              className="rounded-full border border-accent/15 bg-surface-elevated px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em]"
             >
               Back to storefront
             </Link>

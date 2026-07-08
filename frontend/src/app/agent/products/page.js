@@ -84,7 +84,7 @@ export default async function AgentProductsPage() {
   const subscriptionStatus = subscription?.status || "INACTIVE";
   const usageRatio = productLimit ? Math.min(activeCount / productLimit, 1) : 0;
   const usagePercent = Math.round(usageRatio * 100);
-  const usageTone = usagePercent >= 100 ? "bg-rose-500" : usagePercent >= 80 ? "bg-amber-500" : "bg-emerald-500";
+  const usageTone = usagePercent >= 100 ? "bg-red-500" : usagePercent >= 80 ? "bg-yellow-500" : "bg-accent";
   const grouped = products.reduce((acc, product) => {
     const category = product.category || {};
     const key = category.id || category.slug || category.name || "uncategorized";
@@ -116,26 +116,26 @@ export default async function AgentProductsPage() {
           </div>
           <Link
             href="#catalog"
-            className="rounded-full bg-aurora px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+            className="rounded-full bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night"
           >
             Browse catalog
           </Link>
         </div>
         {productLimit > 0 ? (
-          <div className="mt-4 rounded-2xl border border-ink/10 bg-white/80 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-ink/50">
+          <div className="mt-4 rounded-2xl border border-accent/10 bg-surface-card p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-ink-muted">
               <span>Active bundles</span>
               <span>
                 {activeCount} of {productLimit}
               </span>
             </div>
-            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-ink/10">
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface-elevated">
               <div className={`h-full ${usageTone}`} style={{ width: `${usagePercent}%` }} />
             </div>
-            <p className="mt-2 text-xs text-ink/60">Subscription status: {subscriptionStatus}</p>
+            <p className="mt-2 text-xs text-ink-muted">Subscription status: {subscriptionStatus}</p>
           </div>
         ) : (
-          <div className="mt-4 rounded-2xl border border-dashed border-ink/20 bg-white/70 p-4 text-xs text-ink/60">
+          <div className="mt-4 rounded-2xl border border-dashed border-accent/15 bg-surface-elevated p-4 text-xs text-ink-muted">
             Subscription inactive. Activate a plan to publish bundles.
           </div>
         )}
@@ -143,7 +143,7 @@ export default async function AgentProductsPage() {
 
       <div id="catalog" className="space-y-4">
         {categories.length === 0 ? (
-          <div className="col-span-full rounded-3xl border border-dashed border-ink/20 bg-white/70 p-8 text-center text-sm text-ink/60">
+          <div className="col-span-full rounded-3xl border border-dashed border-accent/15 bg-surface-elevated p-8 text-center text-sm text-ink-muted">
             No products have been assigned yet. Ask the admin team to publish bundles for your storefront.
           </div>
         ) : (
@@ -154,13 +154,13 @@ export default async function AgentProductsPage() {
               return String(a.name || "").localeCompare(String(b.name || ""));
             });
             return (
-            <details key={category.id} open={index === 0} className="card-outline rounded-3xl bg-white/90 p-6">
+            <details key={category.id} open={index === 0} className="card-outline rounded-3xl bg-surface-card p-6">
               <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="badge">Network</p>
                   <h3 className="mt-2 font-display text-2xl text-ink">{category.name}</h3>
                 </div>
-                <span className="text-xs uppercase tracking-[0.2em] text-ink/60">
+                <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">
                   {category.products.length} bundles
                 </span>
               </summary>
@@ -173,12 +173,12 @@ export default async function AgentProductsPage() {
                   const status = product.isActive ? "Active" : "Inactive";
                   const actionLabel = product.isActive ? "Update profit" : "Activate product";
                   return (
-                    <div key={product.id || product.name} className="rounded-3xl border border-ink/10 bg-white/70 p-5">
+                    <div key={product.id || product.name} className="rounded-3xl border border-accent/10 bg-surface-elevated p-5">
                       <div className="flex items-center justify-between">
                         <h4 className="text-lg font-semibold text-ink">{product.name}</h4>
-                        <span className="text-xs uppercase tracking-[0.2em] text-ink/60">{product.size}</span>
+                        <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">{product.size}</span>
                       </div>
-                      <div className="mt-3 space-y-2 text-sm text-ink/70">
+                      <div className="mt-3 space-y-2 text-sm text-ink-muted">
                         <p>Base price: {base}</p>
                         <p>Profit: {markup}</p>
                         <p>Status: {status}</p>
@@ -191,10 +191,10 @@ export default async function AgentProductsPage() {
                           min="0"
                           step="0.01"
                           defaultValue={Number(product.markupGhs || 0)}
-                          className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+                          className="w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
                           placeholder="Profit (GHS)"
                         />
-                        <button className="w-full rounded-full bg-ink px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                        <button className="w-full rounded-full bg-accent px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night">
                           {actionLabel}
                         </button>
                       </form>
@@ -202,7 +202,7 @@ export default async function AgentProductsPage() {
                         <form action={updateProductMarkup} className="mt-3">
                           <input type="hidden" name="productId" value={product.id} />
                           <input type="hidden" name="isActive" value="false" />
-                          <button className="w-full rounded-full border border-ink/20 bg-white/70 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em]">
+                          <button className="w-full rounded-full border border-accent/15 bg-surface-elevated px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em]">
                             Deactivate product
                           </button>
                         </form>

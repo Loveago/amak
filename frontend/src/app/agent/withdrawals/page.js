@@ -43,25 +43,25 @@ export default async function AgentWithdrawalsPage() {
             type="number"
             min="50"
             step="0.01"
-            className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+            className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
             placeholder="Min GHS 50"
             required
           />
           <input
             name="momoName"
-            className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+            className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
             placeholder="MoMo account name"
             required
           />
           <input
             name="momoNumber"
-            className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+            className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
             placeholder="Mobile money number"
             required
           />
           <select
             name="momoNetwork"
-            className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+            className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
             required
             defaultValue=""
           >
@@ -72,31 +72,31 @@ export default async function AgentWithdrawalsPage() {
             <option value="Telecel Cash">Telecel Cash</option>
             <option value="AirtelTigo Money">AirtelTigo Money</option>
           </select>
-          <button className="rounded-full bg-ink px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+          <button className="rounded-full bg-accent px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night">
             Submit request
           </button>
         </form>
-        <p className="mt-2 text-xs text-ink/50">A 2% processing fee is deducted from your wallet on each withdrawal.</p>
+        <p className="mt-2 text-xs text-ink-muted">A 2% processing fee is deducted from your wallet on each withdrawal.</p>
       </div>
 
-      <div className="card-outline rounded-3xl bg-white/90 p-6">
+      <div className="card-outline rounded-3xl bg-surface-card p-6">
         <h3 className="font-display text-2xl text-ink">Recent withdrawals</h3>
         <div className="mt-6 space-y-3">
           {withdrawals.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-ink/20 px-4 py-6 text-center text-sm text-ink/60">
+            <div className="rounded-2xl border border-dashed border-accent/15 px-4 py-6 text-center text-sm text-ink-muted">
               No withdrawal requests yet. Submit a request above to move funds to mobile money.
             </div>
           ) : (
             withdrawals.map((item) => (
-              <div key={item.id} className="flex items-center justify-between rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm">
+              <div key={item.id} className="flex items-center justify-between rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm">
                 <div>
                   <p className="font-semibold text-ink">{item.id}</p>
-                  <p className="text-xs text-ink/60">{item.status}</p>
+                  <p className="text-xs text-ink-muted">{item.status}</p>
                 </div>
                 <div className="text-right">
                   <span className="font-semibold text-ink">GHS {Number(item.amountGhs || 0).toFixed(2)}</span>
                   {Number(item.feeGhs) > 0 && (
-                    <p className="text-[10px] text-ink/50">Fee: GHS {Number(item.feeGhs).toFixed(2)}</p>
+                    <p className="text-[10px] text-ink-muted">Fee: GHS {Number(item.feeGhs).toFixed(2)}</p>
                   )}
                 </div>
               </div>

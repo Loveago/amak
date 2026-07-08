@@ -35,9 +35,9 @@ export default function AdminAgentsClient({
   function FeedbackMsg({ agentId, action }) {
     const fb = feedback[`${agentId}_${action}`];
     if (!fb) return null;
-    if (fb.type === "loading") return <p className="mt-1 text-xs text-ink/50">Saving...</p>;
-    if (fb.type === "error") return <p className="mt-1 text-xs text-red-600">{fb.message}</p>;
-    if (fb.type === "success") return <p className="mt-1 text-xs text-green-600">{fb.message}</p>;
+    if (fb.type === "loading") return <p className="mt-1 text-xs text-ink-muted">Saving...</p>;
+    if (fb.type === "error") return <p className="mt-1 text-xs text-red-400">{fb.message}</p>;
+    if (fb.type === "success") return <p className="mt-1 text-xs text-accent">{fb.message}</p>;
     return null;
   }
   const normalizedQuery = query.trim().toLowerCase();
@@ -67,24 +67,24 @@ export default function AdminAgentsClient({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="font-display text-2xl text-ink">Agents</h2>
-            <p className="text-sm text-ink/60">Edit agent profiles, wallets, and subscriptions.</p>
+            <p className="text-sm text-ink-muted">Edit agent profiles, wallets, and subscriptions.</p>
           </div>
           <div className="w-full max-w-sm">
-            <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Search users</label>
+            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Search users</label>
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search by name, email, or slug"
-              className="mt-2 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+              className="mt-2 w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
             />
           </div>
         </div>
       </div>
 
-      <div className="card-outline rounded-3xl bg-white/90 p-6">
+      <div className="card-outline rounded-3xl bg-surface-card p-6">
         <div className="space-y-6">
           {filteredAgents.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-ink/20 px-4 py-6 text-center text-sm text-ink/60">
+            <div className="rounded-2xl border border-dashed border-accent/15 px-4 py-6 text-center text-sm text-ink-muted">
               No users found. Try another search.
             </div>
           ) : (
@@ -93,22 +93,22 @@ export default function AdminAgentsClient({
               const currentPlan = agent.subscriptions?.[0]?.plan;
               const isExpanded = expandedIds.includes(agent.id);
               return (
-                <div key={agent.id} className="rounded-3xl border border-ink/10 bg-white/80 p-5 text-sm">
+                <div key={agent.id} className="rounded-3xl border border-accent/10 bg-surface-card p-5 text-sm">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Agent</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Agent</p>
                       <p className="mt-1 text-lg font-semibold text-ink">{agent.name}</p>
-                      <p className="text-xs text-ink/60">{agent.email}</p>
-                      <p className="text-xs text-ink/60">{agent.phone || "No phone"}</p>
-                      <p className="text-xs text-ink/60">Storefront: {agent.slug ? `/store/${agent.slug}` : "Pending"}</p>
+                      <p className="text-xs text-ink-muted">{agent.email}</p>
+                      <p className="text-xs text-ink-muted">{agent.phone || "No phone"}</p>
+                      <p className="text-xs text-ink-muted">Storefront: {agent.slug ? `/store/${agent.slug}` : "Pending"}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Status</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Status</p>
                       <p className="mt-1 font-semibold text-ink">{agent.status}</p>
-                      <p className="mt-2 text-xs uppercase tracking-[0.2em] text-ink/50">Wallet</p>
+                      <p className="mt-2 text-xs uppercase tracking-[0.2em] text-ink-muted">Wallet</p>
                       <p className="mt-1 font-semibold text-ink">GHS {walletBalance.toFixed(2)}</p>
-                      <p className="mt-2 text-xs uppercase tracking-[0.2em] text-ink/50">Plan</p>
-                      <p className="mt-1 text-xs text-ink/60">{currentPlan?.name || "None"}</p>
+                      <p className="mt-2 text-xs uppercase tracking-[0.2em] text-ink-muted">Plan</p>
+                      <p className="mt-1 text-xs text-ink-muted">{currentPlan?.name || "None"}</p>
                     </div>
                   </div>
                   <div className="mt-4 flex justify-end">
@@ -121,7 +121,7 @@ export default function AdminAgentsClient({
                             : [...prev, agent.id]
                         )
                       }
-                      className="rounded-full border border-ink/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
+                      className="rounded-full border border-accent/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
                     >
                       {isExpanded ? "Hide details" : "Edit details"}
                     </button>
@@ -130,35 +130,35 @@ export default function AdminAgentsClient({
                   {isExpanded && (
                     <div className="mt-5 space-y-4">
                       <div className="grid gap-4 lg:grid-cols-2">
-                        <div className="rounded-2xl border border-ink/10 bg-white/70 p-4">
-                          <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Profile</p>
+                        <div className="rounded-2xl border border-accent/10 bg-surface-elevated p-4">
+                          <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Profile</p>
                           <form action={withFeedback(agent.id, "profile", onUpdateProfile)} className="mt-3 grid gap-2">
                             <input type="hidden" name="agentId" value={agent.id} />
                             <input
                               name="name"
                               defaultValue={agent.name}
-                              className="rounded-2xl border border-ink/10 bg-white/80 px-3 py-2 text-sm"
+                              className="rounded-2xl border border-accent/10 bg-surface-card px-3 py-2 text-sm"
                               placeholder="Full name"
                             />
                             <input
                               name="email"
                               defaultValue={agent.email}
-                              className="rounded-2xl border border-ink/10 bg-white/80 px-3 py-2 text-sm"
+                              className="rounded-2xl border border-accent/10 bg-surface-card px-3 py-2 text-sm"
                               placeholder="Email"
                             />
                             <input
                               name="phone"
                               defaultValue={agent.phone || ""}
-                              className="rounded-2xl border border-ink/10 bg-white/80 px-3 py-2 text-sm"
+                              className="rounded-2xl border border-accent/10 bg-surface-card px-3 py-2 text-sm"
                               placeholder="Phone"
                             />
                             <input
                               name="slug"
                               defaultValue={agent.slug || ""}
-                              className="rounded-2xl border border-ink/10 bg-white/80 px-3 py-2 text-sm"
+                              className="rounded-2xl border border-accent/10 bg-surface-card px-3 py-2 text-sm"
                               placeholder="Storefront username"
                             />
-                            <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                            <button className="rounded-full bg-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night">
                               Save profile
                             </button>
                             <FeedbackMsg agentId={agent.id} action="profile" />
@@ -166,28 +166,28 @@ export default function AdminAgentsClient({
                         </div>
 
                         <div className="space-y-4">
-                          <div className="rounded-2xl border border-ink/10 bg-white/70 p-4">
-                            <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Status</p>
+                          <div className="rounded-2xl border border-accent/10 bg-surface-elevated p-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Status</p>
                             <form action={withFeedback(agent.id, "status", onUpdateStatus)} className="mt-3 flex flex-wrap items-center gap-2">
                               <input type="hidden" name="agentId" value={agent.id} />
                               <select
                                 name="status"
                                 defaultValue={agent.status || "ACTIVE"}
-                                className="rounded-full border border-ink/10 bg-white/80 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em]"
+                                className="rounded-full border border-accent/10 bg-surface-card px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em]"
                               >
                                 <option value="ACTIVE">ACTIVE</option>
                                 <option value="INACTIVE">INACTIVE</option>
                                 <option value="SUSPENDED">SUSPENDED</option>
                               </select>
-                              <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                              <button className="rounded-full bg-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night">
                                 Update status
                               </button>
                             </form>
                             <FeedbackMsg agentId={agent.id} action="status" />
                           </div>
 
-                          <div className="rounded-2xl border border-ink/10 bg-white/70 p-4">
-                            <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Wallet balance</p>
+                          <div className="rounded-2xl border border-accent/10 bg-surface-elevated p-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Wallet balance</p>
                             <form action={withFeedback(agent.id, "wallet", onUpdateWallet)} className="mt-3 grid gap-2">
                               <input type="hidden" name="agentId" value={agent.id} />
                               <input
@@ -196,15 +196,15 @@ export default function AdminAgentsClient({
                                 step="0.01"
                                 min="0"
                                 defaultValue={walletBalance}
-                                className="rounded-2xl border border-ink/10 bg-white/80 px-3 py-2 text-sm"
+                                className="rounded-2xl border border-accent/10 bg-surface-card px-3 py-2 text-sm"
                                 placeholder="Balance (GHS)"
                               />
                               <input
                                 name="reason"
-                                className="rounded-2xl border border-ink/10 bg-white/80 px-3 py-2 text-sm"
+                                className="rounded-2xl border border-accent/10 bg-surface-card px-3 py-2 text-sm"
                                 placeholder="Reason (optional)"
                               />
-                              <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                              <button className="rounded-full bg-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night">
                                 Set balance
                               </button>
                               <FeedbackMsg agentId={agent.id} action="wallet" />
@@ -214,14 +214,14 @@ export default function AdminAgentsClient({
                       </div>
 
                       <div className="grid gap-4 lg:grid-cols-2">
-                        <div className="rounded-2xl border border-ink/10 bg-white/70 p-4">
-                          <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Subscription</p>
+                        <div className="rounded-2xl border border-accent/10 bg-surface-elevated p-4">
+                          <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Subscription</p>
                           <form action={withFeedback(agent.id, "subscription", onUpdateSubscription)} className="mt-3 grid gap-2">
                             <input type="hidden" name="agentId" value={agent.id} />
                             <select
                               name="planId"
                               defaultValue={currentPlan?.id || ""}
-                              className="rounded-2xl border border-ink/10 bg-white/80 px-3 py-2 text-sm"
+                              className="rounded-2xl border border-accent/10 bg-surface-card px-3 py-2 text-sm"
                             >
                               <option value="" disabled>
                                 Select plan
@@ -232,32 +232,32 @@ export default function AdminAgentsClient({
                                 </option>
                               ))}
                             </select>
-                            <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                            <button className="rounded-full bg-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night">
                               Update subscription
                             </button>
                             <FeedbackMsg agentId={agent.id} action="subscription" />
                           </form>
                         </div>
 
-                        <div className="rounded-2xl border border-ink/10 bg-white/70 p-4">
-                          <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Reset password</p>
+                        <div className="rounded-2xl border border-accent/10 bg-surface-elevated p-4">
+                          <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Reset password</p>
                           <form action={withFeedback(agent.id, "password", onUpdatePassword)} className="mt-3 grid gap-2">
                             <input type="hidden" name="agentId" value={agent.id} />
                             <input
                               name="password"
                               type="password"
-                              className="rounded-2xl border border-ink/10 bg-white/80 px-3 py-2 text-sm"
+                              className="rounded-2xl border border-accent/10 bg-surface-card px-3 py-2 text-sm"
                               placeholder="New password (min 6 chars)"
                               minLength={6}
                             />
                             <input
                               name="confirmPassword"
                               type="password"
-                              className="rounded-2xl border border-ink/10 bg-white/80 px-3 py-2 text-sm"
+                              className="rounded-2xl border border-accent/10 bg-surface-card px-3 py-2 text-sm"
                               placeholder="Confirm password"
                               minLength={6}
                             />
-                            <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                            <button className="rounded-full bg-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night">
                               Update password
                             </button>
                             <FeedbackMsg agentId={agent.id} action="password" />
@@ -265,9 +265,9 @@ export default function AdminAgentsClient({
                         </div>
                       </div>
 
-                      <div className="rounded-2xl border border-red-200 bg-red-50/50 p-4">
+                      <div className="rounded-2xl border border-red-500/20 bg-red-500/50/5 p-4">
                         <p className="text-xs uppercase tracking-[0.2em] text-red-500">Danger zone</p>
-                        <p className="mt-1 text-xs text-ink/60">Permanently delete this agent and all their data (orders, wallet, referrals, etc).</p>
+                        <p className="mt-1 text-xs text-ink-muted">Permanently delete this agent and all their data (orders, wallet, referrals, etc).</p>
                         <form
                           action={withFeedback(agent.id, "delete", onDeleteAgent)}
                           onSubmit={(e) => {
@@ -278,7 +278,7 @@ export default function AdminAgentsClient({
                           className="mt-3"
                         >
                           <input type="hidden" name="agentId" value={agent.id} />
-                          <button className="rounded-full bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                          <button className="rounded-full bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night">
                             Delete agent
                           </button>
                           <FeedbackMsg agentId={agent.id} action="delete" />

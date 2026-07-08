@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 
 const VARIANT_STYLES = {
-  success: "border-emerald-200 bg-emerald-50 text-emerald-900",
-  warning: "border-amber-200 bg-amber-50 text-amber-900",
-  error: "border-rose-200 bg-rose-50 text-rose-900",
-  info: "border-ink/10 bg-white text-ink"
+  success: "border-accent/20 bg-accent/10 text-accent",
+  warning: "border-yellow-500/20 bg-yellow-500/10 text-yellow-300",
+  error: "border-red-500/20 bg-red-500/50/10 text-red-400",
+  info: "border-accent/10 bg-surface-card text-ink"
 };
 
 export default function ToastLayer({ items = [], duration = 6000 }) {

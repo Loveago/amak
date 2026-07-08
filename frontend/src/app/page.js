@@ -96,7 +96,7 @@ export default function HomePage() {
                 </Link>
                 <Link
                   href="/agent/dashboard"
-                  className="flex items-center gap-2 rounded-full border border-ink/20 px-6 py-3 text-sm font-semibold uppercase tracking-[0.15em] text-ink"
+                  className="flex items-center gap-2 rounded-full border border-accent/15 px-6 py-3 text-sm font-semibold uppercase tracking-[0.15em] text-ink"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                   Agent portal

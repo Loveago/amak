@@ -110,7 +110,7 @@ export default function SignupPage() {
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/login"
-              className="rounded-full border border-ink/20 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
+              className="rounded-full border border-accent/15 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
             >
               Back to sign in
             </Link>

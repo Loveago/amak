@@ -8,31 +8,31 @@ const STATUS_META = {
   CREATED: {
     label: "Awaiting payment",
     short: "Pending",
-    className: "bg-amber-100 text-amber-800 border-amber-200",
+    className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
     dot: "bg-amber-400"
   },
   PAID: {
     label: "Payment confirmed",
     short: "Paid",
-    className: "bg-sky-100 text-sky-700 border-sky-200",
+    className: "bg-sky-500/50/10 text-sky-400 border-sky-500/20",
     dot: "bg-sky-400"
   },
   FULFILLED: {
     label: "Delivered successfully",
     short: "Delivered",
-    className: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    dot: "bg-emerald-500"
+    className: "bg-accent/10 text-accent border-accent/20",
+    dot: "bg-accent/100"
   },
   FAILED: {
     label: "Delivery failed",
     short: "Failed",
-    className: "bg-rose-100 text-rose-700 border-rose-200",
-    dot: "bg-rose-500"
+    className: "bg-rose-100 text-red-400 border-red-500/20",
+    dot: "bg-red-500/50"
   },
   CANCELED: {
     label: "Canceled",
     short: "Canceled",
-    className: "bg-slate-100 text-slate-600 border-slate-200",
+    className: "bg-surface-elevated text-slate-600 border-slate-200",
     dot: "bg-slate-400"
   }
 };
@@ -125,7 +125,7 @@ export default function TrackOrderClient({ slug }) {
       <div className="flex flex-col gap-2">
         <p className="badge">Lookup</p>
         <h2 className="font-display text-2xl text-ink">Check your order status</h2>
-        <p className="text-sm text-ink/60">
+        <p className="text-sm text-ink-muted">
           Enter the <strong>recipient phone number</strong> used when placing your order.
         </p>
       </div>
@@ -134,7 +134,7 @@ export default function TrackOrderClient({ slug }) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-ink/40" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-ink-muted" aria-hidden="true">
                 <path fillRule="evenodd" d="M2 3.5A1.5 1.5 0 013.5 2h1.148a1.5 1.5 0 011.465 1.175l.716 3.223a1.5 1.5 0 01-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 006.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 011.767-1.052l3.223.716A1.5 1.5 0 0118 15.352V16.5a1.5 1.5 0 01-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 012.43 8.326 13.019 13.019 0 012 5V3.5z" clipRule="evenodd" />
               </svg>
             </div>
@@ -145,7 +145,7 @@ export default function TrackOrderClient({ slug }) {
                 setError("");
               }}
               onKeyDown={handleKeyDown}
-              className="w-full rounded-full border border-ink/10 bg-white/90 py-3 pl-11 pr-4 text-sm text-ink shadow-sm focus:border-ink/30 focus:outline-none focus:ring-2 focus:ring-ink/10"
+              className="w-full rounded-full border border-accent/10 bg-surface-card py-3 pl-11 pr-4 text-sm text-ink shadow-sm focus:border-ink/30 focus:outline-none focus:ring-2 focus:ring-ink/10"
               placeholder="e.g. 0240000000 or +233240000000"
               inputMode="tel"
               autoComplete="tel"
@@ -154,7 +154,7 @@ export default function TrackOrderClient({ slug }) {
           <button
             onClick={lookupOrderStatus}
             disabled={loading}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-ink px-7 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60 sm:shrink-0"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-accent px-7 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night shadow-md transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60 sm:shrink-0"
           >
             {loading ? (
               <>
@@ -176,7 +176,7 @@ export default function TrackOrderClient({ slug }) {
           </button>
         </div>
         {error ? (
-          <div className="mt-3 flex items-start gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
+          <div className="mt-3 flex items-start gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-xs text-red-400">
             <svg viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
             </svg>
@@ -187,8 +187,8 @@ export default function TrackOrderClient({ slug }) {
 
       {submitted && !loading && results.length > 0 ? (
         <>
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-ink/10 pt-4">
-            <p className="text-xs text-ink/60">
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-accent/10 pt-4">
+            <p className="text-xs text-ink-muted">
               Found <strong className="text-ink">{results.length}</strong> order{results.length !== 1 ? "s" : ""} for this number
             </p>
             <div className="flex flex-wrap gap-2">
@@ -198,8 +198,8 @@ export default function TrackOrderClient({ slug }) {
                   onClick={() => setStatusFilter(opt.key)}
                   className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.15em] transition ${
                     statusFilter === opt.key
-                      ? "bg-ink text-white"
-                      : "border border-ink/15 bg-white/70 text-ink/60 hover:border-ink/30"
+                      ? "bg-accent text-night"
+                      : "border border-accent/10 bg-surface-elevated text-ink-muted hover:border-ink/30"
                   }`}
                 >
                   {opt.label}
@@ -218,11 +218,11 @@ export default function TrackOrderClient({ slug }) {
                 return (
                   <div
                     key={order.id}
-                    className="order-tracker-card rounded-2xl border border-ink/10 bg-white/85 p-4 shadow-sm"
+                    className="order-tracker-card rounded-2xl border border-accent/10 bg-surface-card/85 p-4 shadow-sm"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="text-[10px] uppercase tracking-[0.18em] text-ink/40">Order ref</p>
+                        <p className="text-[10px] uppercase tracking-[0.18em] text-ink-muted">Order ref</p>
                         <p className="mt-0.5 font-mono text-sm font-semibold text-ink">#{shortId}</p>
                       </div>
                       <span
@@ -234,36 +234,36 @@ export default function TrackOrderClient({ slug }) {
                     </div>
 
                     <div className="mt-3 flex items-center gap-3 rounded-xl bg-ink/[0.03] px-3 py-2">
-                      <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-ink/40" aria-hidden="true">
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-ink-muted" aria-hidden="true">
                         <path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clipRule="evenodd" />
                       </svg>
                       <div>
                         <p className="text-xs font-semibold text-ink">{date}</p>
-                        <p className="text-[11px] text-ink/50">{time}</p>
+                        <p className="text-[11px] text-ink-muted">{time}</p>
                       </div>
                     </div>
 
                     {order.customerName ? (
-                      <p className="mt-2 text-xs text-ink/60">
+                      <p className="mt-2 text-xs text-ink-muted">
                         <span className="font-medium text-ink/80">{order.customerName}</span>
                       </p>
                     ) : null}
 
                     <div className="mt-2 flex items-center justify-between">
-                      <p className="text-xs text-ink/50">Amount</p>
+                      <p className="text-xs text-ink-muted">Amount</p>
                       <p className="text-sm font-semibold text-ink">
                         GHS {Number(order.totalAmountGhs || 0).toFixed(2)}
                       </p>
                     </div>
 
                     {providerLabel ? (
-                      <p className="mt-2 text-[11px] text-ink/50">{providerLabel}</p>
+                      <p className="mt-2 text-[11px] text-ink-muted">{providerLabel}</p>
                     ) : null}
 
                     {(order.items || []).length > 0 ? (
                       <ul className="mt-3 space-y-1 border-t border-ink/8 pt-3">
                         {(order.items || []).slice(0, 3).map((item) => (
-                          <li key={item.id} className="flex items-center justify-between text-xs text-ink/70">
+                          <li key={item.id} className="flex items-center justify-between text-xs text-ink-muted">
                             <span>
                               {item.productName}
                               {item.size ? ` · ${item.size}` : ""}
@@ -272,7 +272,7 @@ export default function TrackOrderClient({ slug }) {
                           </li>
                         ))}
                         {(order.items || []).length > 3 ? (
-                          <li className="text-[11px] text-ink/40">
+                          <li className="text-[11px] text-ink-muted">
                             +{order.items.length - 3} more item{order.items.length - 3 !== 1 ? "s" : ""}
                           </li>
                         ) : null}
@@ -280,26 +280,26 @@ export default function TrackOrderClient({ slug }) {
                     ) : null}
 
                     <div className="mt-3 rounded-xl border border-ink/8 bg-ink/[0.02] px-3 py-2">
-                      <p className="text-[11px] text-ink/50">{statusMeta.label}</p>
+                      <p className="text-[11px] text-ink-muted">{statusMeta.label}</p>
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="mt-4 rounded-2xl border border-dashed border-ink/20 px-4 py-5 text-center text-sm text-ink/50">
+            <div className="mt-4 rounded-2xl border border-dashed border-accent/15 px-4 py-5 text-center text-sm text-ink-muted">
               No <strong>{STATUS_FILTER_OPTIONS.find((o) => o.key === statusFilter)?.label}</strong> orders for this number.
             </div>
           )}
         </>
       ) : submitted && !loading && !error ? (
-        <div className="mt-5 rounded-2xl border border-dashed border-ink/20 bg-white/50 px-5 py-6 text-sm">
+        <div className="mt-5 rounded-2xl border border-dashed border-accent/15 bg-surface-elevated px-5 py-6 text-sm">
           <div className="flex flex-col items-center gap-2 text-center">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-10 w-10 text-ink/20" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803M10.5 7.5v6m3-3h-6" />
             </svg>
-            <p className="font-medium text-ink/60">No orders found for this number</p>
-            <p className="text-xs text-ink/40">
+            <p className="font-medium text-ink-muted">No orders found for this number</p>
+            <p className="text-xs text-ink-muted">
               Make sure you enter the <strong>exact recipient phone</strong> used at checkout, including the leading 0 (e.g. 0240000000).
             </p>
           </div>

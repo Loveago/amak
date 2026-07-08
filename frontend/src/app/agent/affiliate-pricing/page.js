@@ -76,7 +76,7 @@ export default async function AgentAffiliatePricingPage() {
       <div className="glass rounded-3xl p-6">
         <p className="badge">Affiliate pricing</p>
         <h2 className="mt-3 font-display text-2xl text-ink">Set level-one affiliate prices</h2>
-        <p className="mt-3 text-sm text-ink/70">
+        <p className="mt-3 text-sm text-ink-muted">
           Set the base price your level-one affiliates receive. They can add their own profit for their
           storefronts and also set prices for their own level-one affiliates.
         </p>
@@ -84,7 +84,7 @@ export default async function AgentAffiliatePricingPage() {
 
       <div className="space-y-4">
         {categories.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-ink/20 bg-white/70 p-8 text-center text-sm text-ink/60">
+          <div className="rounded-3xl border border-dashed border-accent/15 bg-surface-elevated p-8 text-center text-sm text-ink-muted">
             No products available yet.
           </div>
         ) : (
@@ -98,14 +98,14 @@ export default async function AgentAffiliatePricingPage() {
               <details
                 key={category.name}
                 open={index === 0}
-                className="card-outline rounded-3xl bg-white/90 p-6"
+                className="card-outline rounded-3xl bg-surface-card p-6"
               >
                 <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="badge">Network</p>
                     <h3 className="mt-2 font-display text-2xl text-ink">{category.name}</h3>
                   </div>
-                  <span className="text-xs uppercase tracking-[0.2em] text-ink/60">
+                  <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">
                     {category.products.length} bundles
                   </span>
                 </summary>
@@ -118,12 +118,12 @@ export default async function AgentAffiliatePricingPage() {
                       ? `GHS ${Number(product.affiliateBasePriceGhs).toFixed(2)}`
                       : "Pending";
                     return (
-                      <div key={product.id} className="rounded-3xl border border-ink/10 bg-white/70 p-5">
+                      <div key={product.id} className="rounded-3xl border border-accent/10 bg-surface-elevated p-5">
                         <div className="flex items-center justify-between">
                           <h4 className="text-lg font-semibold text-ink">{product.name}</h4>
-                          <span className="text-xs uppercase tracking-[0.2em] text-ink/60">{product.size}</span>
+                          <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">{product.size}</span>
                         </div>
-                        <div className="mt-3 space-y-2 text-sm text-ink/70">
+                        <div className="mt-3 space-y-2 text-sm text-ink-muted">
                           <p>Parent base price: {parentBase}</p>
                           <p>Affiliate base price: {affiliateBase}</p>
                         </div>
@@ -135,10 +135,10 @@ export default async function AgentAffiliatePricingPage() {
                             min="0"
                             step="0.01"
                             defaultValue={Number(product.affiliateMarkupGhs || 0)}
-                            className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+                            className="w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
                             placeholder="Affiliate price add-on (GHS)"
                           />
-                          <button className="w-full rounded-full bg-ink px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                          <button className="w-full rounded-full bg-accent px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night">
                             Save affiliate price
                           </button>
                         </form>

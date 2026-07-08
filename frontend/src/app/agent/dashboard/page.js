@@ -43,8 +43,8 @@ export default async function AgentDashboardPage() {
   const StatIcon = ({ icon }) => {
     const cls = "h-4 w-4 text-accent";
     switch (icon) {
-      case "clipboard": return <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/15"><svg className="h-4 w-4 text-amber-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div>;
-      case "wallet": return <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/15"><svg className="h-4 w-4 text-sky-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 10H18a2 2 0 000 4h4"/></svg></div>;
+      case "clipboard": return <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-yellow-500/50/15"><svg className="h-4 w-4 text-amber-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div>;
+      case "wallet": return <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/50/15"><svg className="h-4 w-4 text-sky-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 10H18a2 2 0 000 4h4"/></svg></div>;
       case "zap": return <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15"><svg className={cls} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>;
       case "users": return <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/15"><svg className="h-4 w-4 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>;
       default: return null;
@@ -156,7 +156,7 @@ export default async function AgentDashboardPage() {
                           ? "bg-accent/15 text-accent"
                           : order.status === "PENDING" || order.status === "pending"
                           ? "bg-yellow-500/15 text-yellow-400"
-                          : "bg-red-500/15 text-red-400"
+                          : "bg-red-500/50/15 text-red-400"
                       }`}>
                         {order.status}
                       </span>

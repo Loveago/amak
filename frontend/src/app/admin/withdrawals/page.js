@@ -28,44 +28,44 @@ export default async function AdminWithdrawalsPage() {
     <div className="space-y-6">
       <div className="glass rounded-3xl p-6">
         <h2 className="font-display text-2xl text-ink">Withdrawals</h2>
-        <p className="text-sm text-ink/60">Approve or reject agent payout requests.</p>
+        <p className="text-sm text-ink-muted">Approve or reject agent payout requests.</p>
       </div>
 
-      <div className="card-outline rounded-3xl bg-white/90 p-6">
+      <div className="card-outline rounded-3xl bg-surface-card p-6">
         <div className="space-y-3">
           {withdrawals.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-ink/20 px-4 py-6 text-center text-sm text-ink/60">
+            <div className="rounded-2xl border border-dashed border-accent/15 px-4 py-6 text-center text-sm text-ink-muted">
               No withdrawal requests to review right now.
             </div>
           ) : (
             withdrawals.map((item) => (
-              <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm">
+              <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm">
                 <div>
                   <p className="font-semibold text-ink">{item.agent?.name || "Agent"}</p>
-                  <p className="text-xs text-ink/60">Request ID: {item.id}</p>
-                  <p className="text-xs text-ink/60">MoMo name: {item.momoName || "-"}</p>
-                  <p className="text-xs text-ink/60">MoMo: {item.momoNetwork} · {item.momoNumber}</p>
+                  <p className="text-xs text-ink-muted">Request ID: {item.id}</p>
+                  <p className="text-xs text-ink-muted">MoMo name: {item.momoName || "-"}</p>
+                  <p className="text-xs text-ink-muted">MoMo: {item.momoNetwork} · {item.momoNumber}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-ink">GHS {Number(item.amountGhs || 0).toFixed(2)}</p>
                   {Number(item.feeGhs) > 0 && (
-                    <p className="text-[10px] text-ink/50">Fee: GHS {Number(item.feeGhs).toFixed(2)}</p>
+                    <p className="text-[10px] text-ink-muted">Fee: GHS {Number(item.feeGhs).toFixed(2)}</p>
                   )}
-                  <p className="text-xs text-ink/60">{item.status}</p>
+                  <p className="text-xs text-ink-muted">{item.status}</p>
                 </div>
                 <form action={updateWithdrawalStatus} className="flex flex-wrap items-center gap-2">
                   <input type="hidden" name="withdrawalId" value={item.id} />
                   <select
                     name="status"
                     defaultValue={item.status || "PENDING"}
-                    className="rounded-full border border-ink/10 bg-white/80 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em]"
+                    className="rounded-full border border-accent/10 bg-surface-card px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em]"
                   >
                     <option value="PENDING">PENDING</option>
                     <option value="APPROVED">APPROVED</option>
                     <option value="REJECTED">REJECTED</option>
                     <option value="PAID">PAID</option>
                   </select>
-                  <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                  <button className="rounded-full bg-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night">
                     Update
                   </button>
                 </form>

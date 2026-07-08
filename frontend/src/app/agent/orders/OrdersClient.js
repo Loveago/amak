@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 
 const STATUS_STYLES = {
-  emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  amber: "border-amber-200 bg-amber-50 text-amber-700",
-  rose: "border-rose-200 bg-rose-50 text-rose-700",
-  sky: "border-sky-200 bg-sky-50 text-sky-700",
-  violet: "border-violet-200 bg-violet-50 text-violet-700",
-  slate: "border-slate-200 bg-slate-50 text-slate-600"
+  emerald: "border-accent/20 bg-accent/10 text-accent",
+  amber: "border-yellow-500/20 bg-yellow-500/5 text-yellow-400",
+  rose: "border-red-500/20 bg-red-500/5 text-red-400",
+  sky: "border-sky-500/20 bg-sky-500/5 text-sky-400",
+  violet: "border-violet-500/20 bg-violet-500/5 text-violet-400",
+  slate: "border-slate-200 bg-surface-elevated text-slate-600"
 };
 
 const PAYMENT_STATUS_META = {
@@ -157,18 +157,18 @@ export default function OrdersClient({ orders, pagination, activeScope = "all", 
     }
 
     if (feedback.type === "loading") {
-      return <p className="mt-2 text-[11px] text-ink/60">{feedback.message}</p>;
+      return <p className="mt-2 text-[11px] text-ink-muted">{feedback.message}</p>;
     }
 
     if (feedback.type === "error") {
-      return <p className="mt-2 text-[11px] text-rose-700">{feedback.message}</p>;
+      return <p className="mt-2 text-[11px] text-red-400">{feedback.message}</p>;
     }
 
     if (feedback.type === "success") {
-      return <p className="mt-2 text-[11px] text-emerald-700">{feedback.message}</p>;
+      return <p className="mt-2 text-[11px] text-accent">{feedback.message}</p>;
     }
 
-    return <p className="mt-2 text-[11px] text-amber-700">{feedback.message}</p>;
+    return <p className="mt-2 text-[11px] text-yellow-400">{feedback.message}</p>;
   }
 
   const filteredOrders = useMemo(() => {
@@ -204,7 +204,7 @@ export default function OrdersClient({ orders, pagination, activeScope = "all", 
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="font-display text-2xl text-ink">Orders pipeline</h2>
-            <p className="text-sm text-ink/60">Track payment status, processing updates, and fulfillment details.</p>
+            <p className="text-sm text-ink-muted">Track payment status, processing updates, and fulfillment details.</p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {ORDER_SCOPE_OPTIONS.map((option) => {
                 const isActive = activeScope === option.value;
@@ -214,8 +214,8 @@ export default function OrdersClient({ orders, pagination, activeScope = "all", 
                     href={`/agent/orders?scope=${option.value}`}
                     className={`rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] ${
                       isActive
-                        ? "bg-ink text-white"
-                        : "border border-ink/15 bg-white/80 text-ink/70 hover:bg-white"
+                        ? "bg-accent text-night"
+                        : "border border-accent/10 bg-surface-card text-ink-muted hover:bg-surface-card"
                     }`}
                   >
                     {option.label}
@@ -225,21 +225,21 @@ export default function OrdersClient({ orders, pagination, activeScope = "all", 
             </div>
           </div>
           <div className="w-full max-w-sm">
-            <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Search orders</label>
+            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Search orders</label>
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search by order, recipient, status, or bundle"
-              className="mt-2 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+              className="mt-2 w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
             />
           </div>
         </div>
       </div>
 
-      <div className="card-outline rounded-3xl bg-white/90 p-6">
+      <div className="card-outline rounded-3xl bg-surface-card p-6">
         <div className="space-y-4">
           {filteredOrders.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-ink/20 px-4 py-6 text-center text-sm text-ink/60">
+            <div className="rounded-2xl border border-dashed border-accent/15 px-4 py-6 text-center text-sm text-ink-muted">
               No orders found. Try a different search or share your storefront link to get started.
             </div>
           ) : (
@@ -258,60 +258,60 @@ export default function OrdersClient({ orders, pagination, activeScope = "all", 
               const canRecheckPayment =
                 paymentStatus === "CREATED" && !order.isIndirect && typeof onRecheckOrderPayment === "function";
               return (
-                <div key={order.id} className="rounded-2xl border border-ink/10 bg-white/80 px-5 py-4">
+                <div key={order.id} className="rounded-2xl border border-accent/10 bg-surface-card px-5 py-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Order</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Order</p>
                       <p className="mt-1 font-semibold text-ink">{order.id}</p>
-                      <p className="mt-1 text-xs text-ink/60">
+                      <p className="mt-1 text-xs text-ink-muted">
                         {createdAt ? createdAt.toLocaleString() : ""}
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         <span
                           className={`rounded-full px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] ${
-                            isPaid ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700"
+                            isPaid ? "bg-accent/10 text-accent" : "bg-rose-100 text-red-400"
                           }`}
                         >
                           {isPaid ? "Paid" : "Unpaid"}
                         </span>
                         {order.isIndirect ? (
-                          <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-violet-700">
+                          <span className="rounded-full bg-violet-500/50/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-violet-400">
                             {downlineLabel}
                           </span>
                         ) : (
-                          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-sky-700">
+                          <span className="rounded-full bg-sky-500/50/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-sky-400">
                             Direct order
                           </span>
                         )}
-                        <span className="rounded-full bg-ink/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-ink/70">
+                        <span className="rounded-full bg-ink/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-ink-muted">
                           {network}
                         </span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Total</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Total</p>
                       <p className="mt-1 text-lg font-semibold text-ink">GHS {total.toFixed(2)}</p>
                     </div>
                   </div>
 
                   <div className="mt-4 grid gap-3 lg:grid-cols-3">
-                    <div className="rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-sm">
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Recipient</p>
+                    <div className="rounded-2xl border border-accent/10 bg-surface-elevated px-4 py-3 text-sm">
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Recipient</p>
                       <p className="mt-1 font-semibold text-ink">{order.customerPhone || "Not provided"}</p>
-                      <p className="text-xs text-ink/60">{order.customerName || "Guest customer"}</p>
+                      <p className="text-xs text-ink-muted">{order.customerName || "Guest customer"}</p>
                       {order.isIndirect ? (
-                        <p className="mt-1 text-xs text-ink/60">
+                        <p className="mt-1 text-xs text-ink-muted">
                           Source agent: {order.sourceAgent?.name || order.sourceAgent?.slug || downlineLabel}
                         </p>
                       ) : null}
-                      <p className="mt-1 text-xs text-ink/60">Network: {network}</p>
+                      <p className="mt-1 text-xs text-ink-muted">Network: {network}</p>
                     </div>
-                    <div className="rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-sm">
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Bundles</p>
+                    <div className="rounded-2xl border border-accent/10 bg-surface-elevated px-4 py-3 text-sm">
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Bundles</p>
                       {items.length === 0 ? (
-                        <p className="mt-1 text-xs text-ink/60">No items recorded.</p>
+                        <p className="mt-1 text-xs text-ink-muted">No items recorded.</p>
                       ) : (
-                        <ul className="mt-1 space-y-1 text-xs text-ink/70">
+                        <ul className="mt-1 space-y-1 text-xs text-ink-muted">
                           {items.map((item) => (
                             <li key={item.id || item.productId}>
                               {item.product?.name || "Bundle"} · {item.quantity}x
@@ -320,9 +320,9 @@ export default function OrdersClient({ orders, pagination, activeScope = "all", 
                         </ul>
                       )}
                     </div>
-                    <div className="rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-sm">
+                    <div className="rounded-2xl border border-accent/10 bg-surface-elevated px-4 py-3 text-sm">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Status</p>
+                        <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Status</p>
                         {canRecheckPayment ? (
                           <form action={onRecheckOrderPayment}>
                             <input type="hidden" name="orderId" value={order.id} />
@@ -330,7 +330,7 @@ export default function OrdersClient({ orders, pagination, activeScope = "all", 
                               type="submit"
                               formAction={handleRecheckPayment(order.id, onRecheckOrderPayment)}
                               disabled={isPending}
-                              className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-amber-800"
+                              className="rounded-full border border-yellow-500/30 bg-yellow-500/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-yellow-400"
                             >
                               Check payment fallback
                             </button>
@@ -340,11 +340,11 @@ export default function OrdersClient({ orders, pagination, activeScope = "all", 
                       {canRecheckPayment ? renderActionFeedback(order.id) : null}
                       <div className="mt-2 space-y-2">
                         <div className="flex items-center justify-between gap-3 text-xs">
-                          <span className="text-ink/60">Payment</span>
+                          <span className="text-ink-muted">Payment</span>
                           <span className={buildBadgeClass(paymentMeta.tone)}>{paymentMeta.label}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3 text-xs">
-                          <span className="text-ink/60">Processing</span>
+                          <span className="text-ink-muted">Processing</span>
                           <span className={buildBadgeClass(providerMeta.tone)}>{providerMeta.label}</span>
                         </div>
                       </div>
@@ -356,8 +356,8 @@ export default function OrdersClient({ orders, pagination, activeScope = "all", 
           )}
         </div>
         {pagination ? (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-ink/10 pt-5 text-xs">
-            <p className="text-ink/60">
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-accent/10 pt-5 text-xs">
+            <p className="text-ink-muted">
               Page <span className="font-semibold text-ink">{pagination.page}</span> of{" "}
               <span className="font-semibold text-ink">{pagination.totalPages}</span> ·{" "}
               <span className="font-semibold text-ink">{pagination.total}</span> total
@@ -366,24 +366,24 @@ export default function OrdersClient({ orders, pagination, activeScope = "all", 
               {pagination.hasPrev ? (
                 <Link
                   href={`/agent/orders?page=${pagination.page - 1}&scope=${activeScope}`}
-                  className="rounded-full border border-ink/10 bg-white/80 px-4 py-2 font-semibold uppercase tracking-[0.2em] text-ink"
+                  className="rounded-full border border-accent/10 bg-surface-card px-4 py-2 font-semibold uppercase tracking-[0.2em] text-ink"
                 >
                   Prev
                 </Link>
               ) : (
-                <span className="rounded-full border border-ink/10 bg-white/50 px-4 py-2 font-semibold uppercase tracking-[0.2em] text-ink/40">
+                <span className="rounded-full border border-accent/10 bg-surface-elevated px-4 py-2 font-semibold uppercase tracking-[0.2em] text-ink-muted">
                   Prev
                 </span>
               )}
               {pagination.hasNext ? (
                 <Link
                   href={`/agent/orders?page=${pagination.page + 1}&scope=${activeScope}`}
-                  className="rounded-full bg-ink px-4 py-2 font-semibold uppercase tracking-[0.2em] text-white"
+                  className="rounded-full bg-accent px-4 py-2 font-semibold uppercase tracking-[0.2em] text-night"
                 >
                   Next
                 </Link>
               ) : (
-                <span className="rounded-full bg-ink/20 px-4 py-2 font-semibold uppercase tracking-[0.2em] text-white/70">
+                <span className="rounded-full bg-ink/20 px-4 py-2 font-semibold uppercase tracking-[0.2em] text-night/70">
                   Next
                 </span>
               )}

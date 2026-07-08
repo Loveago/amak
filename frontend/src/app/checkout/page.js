@@ -256,7 +256,7 @@ export default function CheckoutPage() {
               <div
                 className={`mt-4 rounded-2xl border px-4 py-3 text-xs ${
                   status.type === "error"
-                    ? "border-red-500/20 bg-red-500/5 text-red-400"
+                    ? "border-red-500/20 bg-red-500/50/5 text-red-400"
                     : "border-accent/10 bg-surface-card text-ink-muted"
                 }`}
               >

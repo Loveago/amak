@@ -61,7 +61,7 @@ export default function SiteHeader({ user, dashboardHref }) {
             {user?.role !== "ADMIN" && (
               <Link
                 href={storefrontHref}
-                className="flex items-center gap-2 rounded-full border border-ink/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
+                className="flex items-center gap-2 rounded-full border border-accent/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
               >
                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
                 Visit storefront
@@ -82,7 +82,7 @@ export default function SiteHeader({ user, dashboardHref }) {
               <>
                 <Link
                   href="/signup"
-                  className="rounded-full border border-ink/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
+                  className="rounded-full border border-accent/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
                 >
                   Sign up
                 </Link>

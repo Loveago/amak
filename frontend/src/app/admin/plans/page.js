@@ -64,16 +64,16 @@ export default async function AdminPlansPage() {
     <div className="space-y-6">
       <div className="glass rounded-3xl p-6">
         <h2 className="font-display text-2xl text-ink">Plan management</h2>
-        <p className="text-sm text-ink/60">Create, price, and update subscription tiers.</p>
+        <p className="text-sm text-ink-muted">Create, price, and update subscription tiers.</p>
       </div>
 
-      <div className="card-outline rounded-3xl bg-white/90 p-6">
+      <div className="card-outline rounded-3xl bg-surface-card p-6">
         <h3 className="font-display text-xl text-ink">Create plan</h3>
         <form action={createPlan} className="mt-4 grid gap-3 md:grid-cols-2">
           <input
             name="name"
             required
-            className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+            className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
             placeholder="Plan name"
           />
           <input
@@ -82,7 +82,7 @@ export default async function AdminPlansPage() {
             min="1"
             step="0.01"
             required
-            className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+            className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
             placeholder="Price (GHS)"
           />
           <input
@@ -91,41 +91,41 @@ export default async function AdminPlansPage() {
             min="1"
             step="1"
             required
-            className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+            className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
             placeholder="Product limit"
           />
           <select
             name="status"
             defaultValue="ACTIVE"
-            className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+            className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
           >
             <option value="ACTIVE">ACTIVE</option>
             <option value="INACTIVE">INACTIVE</option>
           </select>
-          <button className="rounded-full bg-ink px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+          <button className="rounded-full bg-accent px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night">
             Save plan
           </button>
         </form>
       </div>
 
-      <div className="card-outline rounded-3xl bg-white/90 p-6">
+      <div className="card-outline rounded-3xl bg-surface-card p-6">
         <h3 className="font-display text-xl text-ink">Existing plans</h3>
         <div className="mt-4 space-y-4">
           {plans.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-ink/20 px-4 py-6 text-center text-sm text-ink/60">
+            <div className="rounded-2xl border border-dashed border-accent/15 px-4 py-6 text-center text-sm text-ink-muted">
               No plans found yet.
             </div>
           ) : (
             plans.map((plan) => (
-              <div key={plan.id} className="rounded-2xl border border-ink/10 bg-white/80 p-4 text-sm">
+              <div key={plan.id} className="rounded-2xl border border-accent/10 bg-surface-card p-4 text-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-semibold text-ink">{plan.name}</p>
-                    <p className="text-xs text-ink/60">Status: {plan.status}</p>
+                    <p className="text-xs text-ink-muted">Status: {plan.status}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-ink">GHS {Number(plan.priceGhs || 0).toFixed(2)}</p>
-                    <p className="text-xs text-ink/60">Limit: {plan.productLimit} products</p>
+                    <p className="text-xs text-ink-muted">Limit: {plan.productLimit} products</p>
                   </div>
                 </div>
                 <form action={updatePlan} className="mt-4 grid gap-3 md:grid-cols-2">
@@ -133,7 +133,7 @@ export default async function AdminPlansPage() {
                   <input
                     name="name"
                     defaultValue={plan.name}
-                    className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                    className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-2 text-sm"
                     placeholder="Plan name"
                   />
                   <input
@@ -142,7 +142,7 @@ export default async function AdminPlansPage() {
                     min="1"
                     step="0.01"
                     defaultValue={plan.priceGhs}
-                    className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                    className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-2 text-sm"
                     placeholder="Price (GHS)"
                   />
                   <input
@@ -151,18 +151,18 @@ export default async function AdminPlansPage() {
                     min="1"
                     step="1"
                     defaultValue={plan.productLimit}
-                    className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                    className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-2 text-sm"
                     placeholder="Product limit"
                   />
                   <select
                     name="status"
                     defaultValue={plan.status || "ACTIVE"}
-                    className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                    className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-2 text-sm"
                   >
                     <option value="ACTIVE">ACTIVE</option>
                     <option value="INACTIVE">INACTIVE</option>
                   </select>
-                  <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                  <button className="rounded-full bg-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night">
                     Update plan
                   </button>
                 </form>

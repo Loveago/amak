@@ -54,7 +54,7 @@ export default async function AgentDirectOrderPage() {
       <div className="glass rounded-3xl p-6">
         <p className="badge">Direct Order</p>
         <h2 className="mt-3 font-display text-2xl text-ink">Place an order from your wallet</h2>
-        <p className="text-sm text-ink/60">
+        <p className="text-sm text-ink-muted">
           Select a network, choose a package, and enter the recipient phone number. Your wallet will be debited
           immediately.
         </p>

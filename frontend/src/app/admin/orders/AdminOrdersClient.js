@@ -32,15 +32,15 @@ function getOrderProvider(order) {
 function getProviderBadgeStyle(provider) {
   switch (provider) {
     case "ENCARTA":
-      return { label: "Encarta", className: "bg-sky-100 text-sky-700" };
+      return { label: "Encarta", className: "bg-sky-500/50/10 text-sky-400" };
     case "GRANDAPI":
-      return { label: "GrandAPI", className: "bg-violet-100 text-violet-700" };
+      return { label: "GrandAPI", className: "bg-violet-500/50/10 text-violet-400" };
     case "DATAHUBNET":
-      return { label: "DataHubNet", className: "bg-amber-100 text-amber-800" };
+      return { label: "DataHubNet", className: "bg-yellow-500/10 text-yellow-400" };
     case "ELITENUT":
-      return { label: "EliteNut", className: "bg-emerald-100 text-emerald-800" };
+      return { label: "EliteNut", className: "bg-accent/10 text-accent" };
     case "SHANKA":
-      return { label: "Shanka", className: "bg-rose-100 text-rose-700" };
+      return { label: "Shanka", className: "bg-rose-100 text-red-400" };
     case "XPRESS":
       return { label: "Xpress", className: "bg-cyan-100 text-cyan-700" };
     default:
@@ -58,7 +58,7 @@ function getPaymentSource(order) {
     return { label: "Wallet", className: "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100" };
   }
   if (ref.startsWith("ADMIN_MANUAL_")) {
-    return { label: "Manual", className: "bg-slate-100 text-slate-600 ring-1 ring-slate-200" };
+    return { label: "Manual", className: "bg-surface-elevated text-slate-600 ring-1 ring-slate-200" };
   }
   return { label: "Paystack", className: "bg-teal-50 text-teal-700 ring-1 ring-teal-100" };
 }
@@ -201,18 +201,18 @@ export default function AdminOrdersClient({
     }
 
     if (feedback.type === "loading") {
-      return <p className="mt-2 text-[11px] text-ink/60">{feedback.message}</p>;
+      return <p className="mt-2 text-[11px] text-ink-muted">{feedback.message}</p>;
     }
 
     if (feedback.type === "error") {
-      return <p className="mt-2 text-[11px] text-rose-700">{feedback.message}</p>;
+      return <p className="mt-2 text-[11px] text-red-400">{feedback.message}</p>;
     }
 
     if (feedback.type === "success") {
-      return <p className="mt-2 text-[11px] text-emerald-700">{feedback.message}</p>;
+      return <p className="mt-2 text-[11px] text-accent">{feedback.message}</p>;
     }
 
-    return <p className="mt-2 text-[11px] text-amber-700">{feedback.message}</p>;
+    return <p className="mt-2 text-[11px] text-yellow-400">{feedback.message}</p>;
   }
 
   return (
@@ -221,38 +221,38 @@ export default function AdminOrdersClient({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="font-display text-2xl text-ink">Orders</h2>
-            <p className="text-sm text-ink/60">Monitor order flow from payment to fulfillment.</p>
+            <p className="text-sm text-ink-muted">Monitor order flow from payment to fulfillment.</p>
           </div>
           <div className="w-full max-w-sm">
-            <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Search orders</label>
+            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Search orders</label>
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search by order, agent, or bundle"
-              className="mt-2 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+              className="mt-2 w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
             />
           </div>
         </div>
       </div>
 
       {typeof onBulkFulfillHour === "function" ? (
-        <div className="card-outline rounded-3xl bg-white/90 p-6">
+        <div className="card-outline rounded-3xl bg-surface-card p-6">
           <div className="flex flex-col gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Bulk action</p>
-              <p className="mt-1 text-sm text-ink/70">
+              <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Bulk action</p>
+              <p className="mt-1 text-sm text-ink-muted">
                 Mark all paid orders within a selected hour as delivered.
               </p>
             </div>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="w-full sm:w-auto">
-                <label className="text-xs uppercase tracking-[0.2em] text-ink/60">Date</label>
+                <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Date</label>
                 <input
                   type="date"
                   value={bulkDate}
                   onChange={(event) => setBulkDate(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm sm:w-auto"
+                  className="mt-2 w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm sm:w-auto"
                 />
               </div>
 
@@ -266,7 +266,7 @@ export default function AdminOrdersClient({
                       type="submit"
                       name="hour"
                       value={hour}
-                      className="flex h-10 items-center justify-center rounded-2xl border border-ink/10 bg-white/80 px-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/70 transition-all hover:bg-white active:scale-95 sm:h-auto sm:py-2 sm:text-xs sm:tracking-[0.18em]"
+                      className="flex h-10 items-center justify-center rounded-2xl border border-accent/10 bg-surface-card px-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-muted transition-all hover:bg-surface-card active:scale-95 sm:h-auto sm:py-2 sm:text-xs sm:tracking-[0.18em]"
                       title={`Mark ${hour}:00 to ${hour}:59 as delivered`}
                     >
                       {String(hour).padStart(2, "0")}:00
@@ -279,10 +279,10 @@ export default function AdminOrdersClient({
         </div>
       ) : null}
 
-      <div className="card-outline rounded-3xl bg-white/90 p-6">
+      <div className="card-outline rounded-3xl bg-surface-card p-6">
         <div className="space-y-4">
           {filteredOrders.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-ink/20 px-4 py-6 text-center text-sm text-ink/60">
+            <div className="rounded-2xl border border-dashed border-accent/15 px-4 py-6 text-center text-sm text-ink-muted">
               No orders found. Try another search term.
             </div>
           ) : (
@@ -299,19 +299,19 @@ export default function AdminOrdersClient({
               const selectedStatus =
                 order.status === "FULFILLED" ? "FULFILLED" : order.status === "PAID" ? "PAID" : "CREATED";
               return (
-                <div key={order.id} className="rounded-2xl border border-ink/10 bg-white/80 px-5 py-4 text-sm">
+                <div key={order.id} className="rounded-2xl border border-accent/10 bg-surface-card px-5 py-4 text-sm">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Order</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Order</p>
                       <p className="mt-1 font-semibold text-ink">{order.id}</p>
-                      <p className="mt-1 text-xs text-ink/60">{createdAt ? createdAt.toLocaleString() : ""}</p>
-                      <p className="mt-1 text-xs text-ink/60">
+                      <p className="mt-1 text-xs text-ink-muted">{createdAt ? createdAt.toLocaleString() : ""}</p>
+                      <p className="mt-1 text-xs text-ink-muted">
                         {order.agent?.name || "Agent"} · {order.agent?.email || "No email"}
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         <span
                           className={`rounded-full px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] ${
-                            isPaid ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700"
+                            isPaid ? "bg-accent/10 text-accent" : "bg-rose-100 text-red-400"
                           }`}
                         >
                           {isPaid ? "Paid" : "Unpaid"}
@@ -332,29 +332,29 @@ export default function AdminOrdersClient({
                             {paymentSource.label}
                           </span>
                         ) : null}
-                        <span className="rounded-full bg-ink/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-ink/70">
+                        <span className="rounded-full bg-ink/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-ink-muted">
                           {network}
                         </span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Total</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Total</p>
                       <p className="mt-1 text-lg font-semibold text-ink">
                         GHS {Number(order.totalAmountGhs || 0).toFixed(2)}
                       </p>
-                      <p className="text-xs text-ink/60">{order.status}</p>
+                      <p className="text-xs text-ink-muted">{order.status}</p>
                     </div>
                   </div>
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    <div className="rounded-2xl border border-ink/10 bg-white/70 px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Recipient</p>
+                    <div className="rounded-2xl border border-accent/10 bg-surface-elevated px-4 py-3">
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Recipient</p>
                       <div className="mt-1 flex items-center gap-2">
                         <p className="font-semibold text-ink">{order.customerPhone || "Not provided"}</p>
                         <button
                           type="button"
                           onClick={() => copyRecipientNumber(order.id, order.customerPhone)}
                           disabled={!order.customerPhone}
-                          className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-ink/15 text-ink/70 transition hover:bg-ink/5 disabled:cursor-not-allowed disabled:opacity-40"
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-accent/10 text-ink-muted transition hover:bg-ink/5 disabled:cursor-not-allowed disabled:opacity-40"
                           title="Copy recipient number"
                           aria-label="Copy recipient number"
                         >
@@ -371,17 +371,17 @@ export default function AdminOrdersClient({
                             />
                           </svg>
                         </button>
-                        {copiedOrderId === order.id ? <span className="text-[10px] text-emerald-700">Copied</span> : null}
+                        {copiedOrderId === order.id ? <span className="text-[10px] text-accent">Copied</span> : null}
                       </div>
-                      <p className="text-xs text-ink/60">{order.customerName || "Guest customer"}</p>
-                      <p className="mt-1 text-xs text-ink/60">Network: {network}</p>
+                      <p className="text-xs text-ink-muted">{order.customerName || "Guest customer"}</p>
+                      <p className="mt-1 text-xs text-ink-muted">Network: {network}</p>
                     </div>
-                    <div className="rounded-2xl border border-ink/10 bg-white/70 px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Bundles</p>
+                    <div className="rounded-2xl border border-accent/10 bg-surface-elevated px-4 py-3">
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Bundles</p>
                       {items.length === 0 ? (
-                        <p className="mt-1 text-xs text-ink/60">No items recorded.</p>
+                        <p className="mt-1 text-xs text-ink-muted">No items recorded.</p>
                       ) : (
-                        <ul className="mt-1 space-y-1 text-xs text-ink/70">
+                        <ul className="mt-1 space-y-1 text-xs text-ink-muted">
                           {items.map((item) => (
                             <li key={item.id || item.productId}>
                               {item.product?.name || "Bundle"} · {item.quantity}x
@@ -392,16 +392,16 @@ export default function AdminOrdersClient({
                     </div>
                   </div>
                   <div className="mt-4">
-                    <form action={onFulfill} className="rounded-2xl border border-ink/10 bg-white/70 px-4 py-3">
+                    <form action={onFulfill} className="rounded-2xl border border-accent/10 bg-surface-elevated px-4 py-3">
                       <input type="hidden" name="orderId" value={order.id} />
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Order status</p>
+                        <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Order status</p>
                         {canRecheckPayment ? (
                           <button
                             type="submit"
                             formAction={handleRecheckPayment(order.id)}
                             disabled={isPending}
-                            className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-amber-800"
+                            className="rounded-full border border-yellow-500/30 bg-yellow-500/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-yellow-400"
                           >
                             Check payment fallback
                           </button>
@@ -433,7 +433,7 @@ export default function AdminOrdersClient({
                         </label>
                       </div>
                       <button
-                        className="mt-3 rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+                        className="mt-3 rounded-full bg-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night"
                       >
                         Update status
                       </button>
@@ -441,14 +441,14 @@ export default function AdminOrdersClient({
                   </div>
                   {isFailedOrder && typeof onUpdateFailedOrderProvider === "function" && typeof onResendFailedOrder === "function" ? (
                     <div className="mt-3">
-                      <form className="rounded-2xl border border-rose-200 bg-rose-50/50 px-4 py-3">
+                      <form className="rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3">
                         <input type="hidden" name="orderId" value={order.id} />
-                        <p className="text-xs uppercase tracking-[0.2em] text-rose-700">Failed order actions</p>
+                        <p className="text-xs uppercase tracking-[0.2em] text-red-400">Failed order actions</p>
                         <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
                           <select
                             name="provider"
                             defaultValue={getRetryProviderDefault(provider)}
-                            className="w-full rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-rose-800 sm:w-auto"
+                            className="w-full rounded-xl border border-red-500/20 bg-surface-card px-3 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-rose-800 sm:w-auto"
                           >
                             {FAILED_PROVIDER_OPTIONS.map((option) => (
                               <option key={option} value={option}>
@@ -460,14 +460,14 @@ export default function AdminOrdersClient({
                             <button
                               type="submit"
                               formAction={onUpdateFailedOrderProvider}
-                              className="rounded-full border border-rose-300 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-rose-700"
+                              className="rounded-full border border-red-500/30 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-red-400"
                             >
                               Change provider
                             </button>
                             <button
                               type="submit"
                               formAction={onResendFailedOrder}
-                              className="rounded-full bg-rose-600 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white"
+                              className="rounded-full bg-rose-600 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-night"
                             >
                               Resend order
                             </button>
@@ -482,7 +482,7 @@ export default function AdminOrdersClient({
                         <input type="hidden" name="orderId" value={order.id} />
                         <button
                           type="submit"
-                          className="rounded-full border border-rose-300 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-rose-700 transition hover:bg-rose-50"
+                          className="rounded-full border border-red-500/30 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-red-400 transition hover:bg-red-500/5"
                           onClick={(e) => {
                             if (!confirm(`Delete order ${order.id}? This cannot be undone.`)) {
                               e.preventDefault();
@@ -500,8 +500,8 @@ export default function AdminOrdersClient({
           )}
         </div>
         {pagination ? (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-ink/10 pt-5 text-xs">
-            <p className="text-ink/60">
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-accent/10 pt-5 text-xs">
+            <p className="text-ink-muted">
               Page <span className="font-semibold text-ink">{pagination.page}</span> of{" "}
               <span className="font-semibold text-ink">{pagination.totalPages}</span> ·{" "}
               <span className="font-semibold text-ink">{pagination.total}</span> total
@@ -510,24 +510,24 @@ export default function AdminOrdersClient({
               {pagination.hasPrev ? (
                 <Link
                   href={`/admin/orders?page=${pagination.page - 1}`}
-                  className="rounded-full border border-ink/10 bg-white/80 px-4 py-2 font-semibold uppercase tracking-[0.2em] text-ink"
+                  className="rounded-full border border-accent/10 bg-surface-card px-4 py-2 font-semibold uppercase tracking-[0.2em] text-ink"
                 >
                   Prev
                 </Link>
               ) : (
-                <span className="rounded-full border border-ink/10 bg-white/50 px-4 py-2 font-semibold uppercase tracking-[0.2em] text-ink/40">
+                <span className="rounded-full border border-accent/10 bg-surface-elevated px-4 py-2 font-semibold uppercase tracking-[0.2em] text-ink-muted">
                   Prev
                 </span>
               )}
               {pagination.hasNext ? (
                 <Link
                   href={`/admin/orders?page=${pagination.page + 1}`}
-                  className="rounded-full bg-ink px-4 py-2 font-semibold uppercase tracking-[0.2em] text-white"
+                  className="rounded-full bg-accent px-4 py-2 font-semibold uppercase tracking-[0.2em] text-night"
                 >
                   Next
                 </Link>
               ) : (
-                <span className="rounded-full bg-ink/20 px-4 py-2 font-semibold uppercase tracking-[0.2em] text-white/70">
+                <span className="rounded-full bg-ink/20 px-4 py-2 font-semibold uppercase tracking-[0.2em] text-night/70">
                   Next
                 </span>
               )}

@@ -23,7 +23,7 @@ export default function CopyReferralButton({ value }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="inline-flex items-center gap-2 rounded-full border border-ink/10 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink/60"
+      className="inline-flex items-center gap-2 rounded-full border border-accent/10 bg-surface-card px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-muted"
       aria-label="Copy referral link"
     >
       <svg

@@ -16,7 +16,7 @@ export default function TrackOrderPage({ params }) {
             <div>
               <p className="badge">Order tracking</p>
               <h1 className="mt-3 font-display text-3xl text-ink sm:text-4xl">Track your order status</h1>
-              <p className="mt-2 text-sm text-ink/70">Enter your phone number to see your recent orders and delivery progress.</p>
+              <p className="mt-2 text-sm text-ink-muted">Enter your phone number to see your recent orders and delivery progress.</p>
             </div>
             <Link
               href={`/store/${slug}`}

@@ -145,9 +145,9 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
 
   if (success) {
     return (
-      <div className="card-outline rounded-3xl bg-white/90 p-6 sm:p-8 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
-          <svg viewBox="0 0 20 20" fill="currentColor" className="h-7 w-7 text-emerald-600" aria-hidden="true">
+      <div className="card-outline rounded-3xl bg-surface-card p-6 sm:p-8 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent/10">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-7 w-7 text-accent" aria-hidden="true">
             <path
               fillRule="evenodd"
               d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0l-3.5-3.5a1 1 0 111.4-1.4l2.8 2.8 6.8-6.8a1 1 0 011.4 0z"
@@ -156,12 +156,12 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
           </svg>
         </div>
         <h3 className="mt-4 font-display text-xl text-ink">Order placed successfully</h3>
-        <p className="mt-2 text-sm text-ink/60">
+        <p className="mt-2 text-sm text-ink-muted">
           {success.productName} sent to {success.recipientPhone}. Wallet debited GHS {success.total.toFixed(2)}.
         </p>
         <button
           onClick={startNewOrder}
-          className="mt-6 rounded-full bg-ink px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+          className="mt-6 rounded-full bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night"
         >
           Place another order
         </button>
@@ -170,7 +170,7 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
   }
 
   return (
-    <div className="card-outline rounded-3xl bg-white/90 p-6 sm:p-8">
+    <div className="card-outline rounded-3xl bg-surface-card p-6 sm:p-8">
       {/* Stepper */}
       <div className="flex items-center justify-center gap-2 sm:gap-4">
         {STEPS.map((s, index) => (
@@ -179,10 +179,10 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
               <div
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition ${
                   step === s.id
-                    ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 text-white shadow-md"
+                    ? "bg-gradient-to-r from-accent via-emerald-400 to-teal-400 text-night shadow-md"
                     : step > s.id
-                    ? "bg-emerald-500/15 text-emerald-700"
-                    : "bg-ink/5 text-ink/40"
+                    ? "bg-accent/100/15 text-accent"
+                    : "bg-ink/5 text-ink-muted"
                 }`}
               >
                 {step > s.id ? (
@@ -197,7 +197,7 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
                   s.id
                 )}
               </div>
-              <span className={`text-sm font-semibold ${step === s.id ? "text-ink" : "text-ink/40"}`}>
+              <span className={`text-sm font-semibold ${step === s.id ? "text-ink" : "text-ink-muted"}`}>
                 {s.label}
               </span>
             </div>
@@ -207,13 +207,13 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
       </div>
 
       {/* Wallet balance */}
-      <div className="mt-6 flex items-center justify-between rounded-2xl border border-ink/10 bg-sand px-4 py-3 text-sm">
-        <span className="text-xs uppercase tracking-[0.2em] text-ink/50">Wallet balance</span>
+      <div className="mt-6 flex items-center justify-between rounded-2xl border border-accent/10 bg-surface px-4 py-3 text-sm">
+        <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">Wallet balance</span>
         <span className="font-semibold text-ink">GHS {balance}</span>
       </div>
 
       {error && (
-        <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+        <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-xs text-red-400">
           {error}
         </div>
       )}
@@ -222,10 +222,10 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
       {step === 1 && (
         <div className="mt-6 space-y-6">
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-ink/60">Select network</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-ink-muted">Select network</h3>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {networksAvailable.length === 0 ? (
-                <p className="col-span-full text-sm text-ink/50">No active products available.</p>
+                <p className="col-span-full text-sm text-ink-muted">No active products available.</p>
               ) : (
                 networksAvailable.map((key) => {
                   const meta = NETWORK_META[key];
@@ -237,8 +237,8 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
                       onClick={() => handleSelectNetwork(key)}
                       className={`flex flex-col items-center gap-2 rounded-2xl border px-3 py-4 transition ${
                         active
-                          ? "border-emerald-400 bg-emerald-50/70 shadow-md"
-                          : "border-ink/10 bg-white/80 hover:-translate-y-0.5 hover:shadow-md"
+                          ? "border-accent/30 bg-accent/10 shadow-md"
+                          : "border-accent/10 bg-surface-card hover:-translate-y-0.5 hover:shadow-md"
                       }`}
                     >
                       <img src={meta.icon} alt={`${meta.label} icon`} className="h-11 w-11 rounded-xl" />
@@ -252,13 +252,13 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
 
           {networkKey && (
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-ink/60">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-ink-muted">
                 Select package
-                <span className="ml-2 normal-case tracking-normal text-ink/40">(smallest to biggest)</span>
+                <span className="ml-2 normal-case tracking-normal text-ink-muted">(smallest to biggest)</span>
               </h3>
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {productsForNetwork.length === 0 ? (
-                  <p className="col-span-full text-sm text-ink/50">No packages available for this network.</p>
+                  <p className="col-span-full text-sm text-ink-muted">No packages available for this network.</p>
                 ) : (
                   productsForNetwork.map((p) => {
                     const active = productId === p.id;
@@ -269,13 +269,13 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
                         onClick={() => handleSelectProduct(p.id)}
                         className={`flex flex-col items-start rounded-2xl border px-4 py-3 text-left transition ${
                           active
-                            ? "border-emerald-400 bg-emerald-50/70 shadow-md"
-                            : "border-ink/10 bg-white/80 hover:-translate-y-0.5 hover:shadow-md"
+                            ? "border-accent/30 bg-accent/10 shadow-md"
+                            : "border-accent/10 bg-surface-card hover:-translate-y-0.5 hover:shadow-md"
                         }`}
                       >
-                        <span className="text-xs uppercase tracking-[0.2em] text-ink/50">{p.size}</span>
+                        <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">{p.size}</span>
                         <span className="mt-1 text-sm font-semibold text-ink">{p.name}</span>
-                        <span className="mt-2 text-sm font-semibold text-emerald-700">
+                        <span className="mt-2 text-sm font-semibold text-accent">
                           GHS {Number(p.basePriceGhs || 0).toFixed(2)}
                         </span>
                       </button>
@@ -291,8 +291,8 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
       {/* Step 2: Number */}
       {step === 2 && (
         <div className="mt-6 space-y-4">
-          <div className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Selected package</p>
+          <div className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm">
+            <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Selected package</p>
             <p className="mt-1 font-semibold text-ink">
               {selectedProduct?.name} ({selectedProduct?.size}) — GHS{" "}
               {Number(selectedProduct?.basePriceGhs || 0).toFixed(2)}
@@ -300,7 +300,7 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
           </div>
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-ink/60">
+            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted">
               Recipient phone
             </label>
             <input
@@ -308,13 +308,13 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
               onChange={(e) => setRecipientPhone(e.target.value)}
               type="tel"
               placeholder="e.g. 0240000000"
-              className="mt-1 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+              className="mt-1 w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
             />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-ink/60">
+              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted">
                 Customer name (optional)
               </label>
               <input
@@ -322,17 +322,17 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
                 onChange={(e) => setCustomerName(e.target.value)}
                 type="text"
                 placeholder="Customer name"
-                className="mt-1 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+                className="mt-1 w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-ink/60">Quantity</label>
+              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted">Quantity</label>
               <input
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value) || 1)}
                 type="number"
                 min="1"
-                className="mt-1 w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+                className="mt-1 w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
               />
             </div>
           </div>
@@ -355,28 +355,28 @@ export default function DirectOrderClient({ products, balance, onSubmit }) {
       {/* Step 3: Confirm */}
       {step === 3 && (
         <div className="mt-6 space-y-4">
-          <div className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-4 text-sm">
+          <div className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-4 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-[0.2em] text-ink/50">Package</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">Package</span>
               <span className="font-semibold text-ink">
                 {selectedProduct?.name} ({selectedProduct?.size})
               </span>
             </div>
             <div className="mt-3 flex items-center justify-between">
-              <span className="text-xs uppercase tracking-[0.2em] text-ink/50">Recipient</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">Recipient</span>
               <span className="font-semibold text-ink">{recipientPhone}</span>
             </div>
             {customerName && (
               <div className="mt-3 flex items-center justify-between">
-                <span className="text-xs uppercase tracking-[0.2em] text-ink/50">Customer</span>
+                <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">Customer</span>
                 <span className="font-semibold text-ink">{customerName}</span>
               </div>
             )}
             <div className="mt-3 flex items-center justify-between">
-              <span className="text-xs uppercase tracking-[0.2em] text-ink/50">Quantity</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">Quantity</span>
               <span className="font-semibold text-ink">{quantity}</span>
             </div>
-            <div className="mt-4 flex items-center justify-between border-t border-ink/10 pt-3 text-base">
+            <div className="mt-4 flex items-center justify-between border-t border-accent/10 pt-3 text-base">
               <span className="font-semibold text-ink">Total</span>
               <span className="font-semibold text-ink">GHS {total.toFixed(2)}</span>
             </div>

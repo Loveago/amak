@@ -141,51 +141,51 @@ export default async function AdminProductsPage() {
     <div className="space-y-6">
       <div className="glass rounded-3xl p-6">
         <h2 className="font-display text-2xl text-ink">Products & pricing</h2>
-        <p className="text-sm text-ink/60">Set base prices for each network bundle.</p>
+        <p className="text-sm text-ink-muted">Set base prices for each network bundle.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="card-outline rounded-3xl bg-white/90 p-6">
+        <div className="card-outline rounded-3xl bg-surface-card p-6">
           <h3 className="font-display text-xl text-ink">Create category</h3>
-          <p className="text-sm text-ink/60">Add a new network or bundle category.</p>
+          <p className="text-sm text-ink-muted">Add a new network or bundle category.</p>
           <form action={createCategory} className="mt-4 space-y-3">
             <input
               name="name"
               required
-              className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+              className="w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
               placeholder="Category name"
             />
             <input
               name="slug"
-              className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+              className="w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
               placeholder="Slug (optional)"
             />
-            <button className="rounded-full bg-ink px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+            <button className="rounded-full bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night">
               Save category
             </button>
           </form>
         </div>
 
-        <div className="card-outline rounded-3xl bg-white/90 p-6">
+        <div className="card-outline rounded-3xl bg-surface-card p-6">
           <h3 className="font-display text-xl text-ink">Add product</h3>
-          <p className="text-sm text-ink/60">Create a new bundle product for agents.</p>
+          <p className="text-sm text-ink-muted">Create a new bundle product for agents.</p>
           <form action={createProduct} className="mt-4 space-y-3">
             <input
               name="name"
               required
-              className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+              className="w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
               placeholder="Product name"
             />
             <input
               name="size"
               required
-              className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+              className="w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
               placeholder="Bundle size (e.g. 5GB)"
             />
             <select
               name="categoryId"
               required
-              className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+              className="w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
               defaultValue=""
             >
               <option value="" disabled>
@@ -202,7 +202,7 @@ export default async function AdminProductsPage() {
               type="number"
               min="0"
               step="0.01"
-              className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+              className="w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
               placeholder="Base price (GHS)"
             />
             <input
@@ -210,25 +210,25 @@ export default async function AdminProductsPage() {
               type="number"
               min="0"
               step="0.01"
-              className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+              className="w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
               placeholder="API price (GHS)"
             />
             <select
               name="status"
-              className="w-full rounded-2xl border border-ink/10 bg-white/80 px-4 py-3 text-sm"
+              className="w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
               defaultValue="ACTIVE"
             >
               <option value="ACTIVE">ACTIVE</option>
               <option value="INACTIVE">INACTIVE</option>
             </select>
             <button
-              className="rounded-full bg-ink px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+              className="rounded-full bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night"
               disabled={categoryData.length === 0}
             >
               Create product
             </button>
             {categoryData.length === 0 && (
-              <p className="text-xs text-ink/50">Create a category first to add products.</p>
+              <p className="text-xs text-ink-muted">Create a category first to add products.</p>
             )}
           </form>
         </div>
@@ -236,7 +236,7 @@ export default async function AdminProductsPage() {
 
       <div className="space-y-4">
         {categoryBlocks.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-ink/20 bg-white/70 p-8 text-center text-sm text-ink/60">
+          <div className="rounded-3xl border border-dashed border-accent/15 bg-surface-elevated p-8 text-center text-sm text-ink-muted">
             No products have been created yet.
           </div>
         ) : (
@@ -249,7 +249,7 @@ export default async function AdminProductsPage() {
             const catStatus = categoryStatusMap[category.categoryId] || "ACTIVE";
             const isDisabled = catStatus === "INACTIVE";
             return (
-              <details key={category.id} open={index === 0} className={`card-outline rounded-3xl bg-white/90 p-6 ${isDisabled ? "opacity-60" : ""}`}>
+              <details key={category.id} open={index === 0} className={`card-outline rounded-3xl bg-surface-card p-6 ${isDisabled ? "opacity-60" : ""}`}>
                 <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="badge">Category</p>
@@ -263,37 +263,37 @@ export default async function AdminProductsPage() {
                       <button
                         type="submit"
                         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                          catStatus === "ACTIVE" ? "bg-green-500" : "bg-ink/30"
+                          catStatus === "ACTIVE" ? "bg-accent" : "bg-ink/30"
                         }`}
                       >
                         <span
-                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-surface-card shadow ring-0 transition duration-200 ease-in-out ${
                             catStatus === "ACTIVE" ? "translate-x-5" : "translate-x-0"
                           }`}
                         />
                       </button>
-                      <span className={`text-xs font-semibold uppercase tracking-wider ${catStatus === "ACTIVE" ? "text-green-600" : "text-ink/60"}`}>
+                      <span className={`text-xs font-semibold uppercase tracking-wider ${catStatus === "ACTIVE" ? "text-accent" : "text-ink-muted"}`}>
                         {catStatus}
                       </span>
                     </form>
-                    <span className="text-xs uppercase tracking-[0.2em] text-ink/60">
+                    <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">
                       {category.products.length} bundles
                     </span>
                   </div>
                 </summary>
                 <div className="mt-6 space-y-4">
                   {sortedProducts.map((product) => (
-                    <div key={product.id || product.name} className="rounded-2xl border border-ink/10 bg-white/80 p-4 text-sm">
+                    <div key={product.id || product.name} className="rounded-2xl border border-accent/10 bg-surface-card p-4 text-sm">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                           <p className="font-semibold text-ink">{product.name}</p>
-                          <p className="text-xs text-ink/60">{product.size}</p>
+                          <p className="text-xs text-ink-muted">{product.size}</p>
                         </div>
                         <div className="text-right">
                           <p className="font-semibold text-ink">
                             Base: GHS {Number(product.basePriceGhs || 0).toFixed(2)}
                           </p>
-                          <p className="text-xs text-ink/60">
+                          <p className="text-xs text-ink-muted">
                             API: GHS {Number(product.apiPriceGhs ?? 0).toFixed(2)} · {product.status}
                           </p>
                         </div>
@@ -303,19 +303,19 @@ export default async function AdminProductsPage() {
                         <input
                           name="name"
                           defaultValue={product.name}
-                          className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                          className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-2 text-sm"
                           placeholder="Product name"
                         />
                         <input
                           name="size"
                           defaultValue={product.size}
-                          className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                          className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-2 text-sm"
                           placeholder="Bundle size"
                         />
                         <select
                           name="categoryId"
                           defaultValue={product.categoryId || product.category?.id || ""}
-                          className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                          className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-2 text-sm"
                         >
                           {categoryData.map((categoryItem) => (
                             <option key={categoryItem.id} value={categoryItem.id}>
@@ -329,7 +329,7 @@ export default async function AdminProductsPage() {
                           min="0"
                           step="0.01"
                           defaultValue={product.basePriceGhs ?? ""}
-                          className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                          className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-2 text-sm"
                           placeholder="Base price (GHS)"
                         />
                         <input
@@ -338,18 +338,18 @@ export default async function AdminProductsPage() {
                           min="0"
                           step="0.01"
                           defaultValue={product.apiPriceGhs ?? ""}
-                          className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                          className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-2 text-sm"
                           placeholder="API price (GHS)"
                         />
                         <select
                           name="status"
                           defaultValue={product.status || "ACTIVE"}
-                          className="rounded-2xl border border-ink/10 bg-white/80 px-4 py-2 text-sm"
+                          className="rounded-2xl border border-accent/10 bg-surface-card px-4 py-2 text-sm"
                         >
                           <option value="ACTIVE">ACTIVE</option>
                           <option value="INACTIVE">INACTIVE</option>
                         </select>
-                        <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                        <button className="rounded-full bg-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night">
                           Update product
                         </button>
                       </form>

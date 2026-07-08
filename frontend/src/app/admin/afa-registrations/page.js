@@ -29,13 +29,13 @@ export default async function AdminAfaRegistrationsPage() {
     <div className="space-y-6">
       <div className="glass rounded-3xl p-6">
         <h2 className="font-display text-2xl text-ink">AFA registrations</h2>
-        <p className="text-sm text-ink/60">Review submitted registrations and update processing status.</p>
+        <p className="text-sm text-ink-muted">Review submitted registrations and update processing status.</p>
       </div>
 
-      <div className="card-outline rounded-3xl bg-white/90 p-6">
+      <div className="card-outline rounded-3xl bg-surface-card p-6">
         <div className="space-y-4">
           {registrations.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-ink/20 px-4 py-6 text-center text-sm text-ink/60">
+            <div className="rounded-2xl border border-dashed border-accent/15 px-4 py-6 text-center text-sm text-ink-muted">
               No AFA registrations have been submitted yet.
             </div>
           ) : (
@@ -44,34 +44,34 @@ export default async function AdminAfaRegistrationsPage() {
               const dob = item.dateOfBirth ? new Date(item.dateOfBirth) : null;
               const payment = (item.payments || [])[0];
               return (
-                <div key={item.id} className="rounded-2xl border border-ink/10 bg-white/80 px-5 py-4 text-sm">
+                <div key={item.id} className="rounded-2xl border border-accent/10 bg-surface-card px-5 py-4 text-sm">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Agent</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Agent</p>
                       <p className="mt-1 font-semibold text-ink">{item.agent?.name || "Agent"}</p>
-                      <p className="text-xs text-ink/60">{item.agent?.email || "No email"}</p>
-                      <p className="mt-2 text-xs text-ink/60">Submitted: {createdAt ? createdAt.toLocaleString() : ""}</p>
+                      <p className="text-xs text-ink-muted">{item.agent?.email || "No email"}</p>
+                      <p className="mt-2 text-xs text-ink-muted">Submitted: {createdAt ? createdAt.toLocaleString() : ""}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Status</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Status</p>
                       <p className="mt-1 font-semibold text-ink">{item.status}</p>
-                      <p className="text-xs text-ink/60">
+                      <p className="text-xs text-ink-muted">
                         Payment {payment?.status || "Pending"} · GHS {Number(payment?.amountGhs || 0).toFixed(2)}
                       </p>
                     </div>
                   </div>
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    <div className="rounded-2xl border border-ink/10 bg-white/70 px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Registrant</p>
+                    <div className="rounded-2xl border border-accent/10 bg-surface-elevated px-4 py-3">
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Registrant</p>
                       <p className="mt-1 font-semibold text-ink">{item.fullName}</p>
-                      <p className="text-xs text-ink/60">{item.ghanaCardNumber}</p>
-                      <p className="text-xs text-ink/60">
+                      <p className="text-xs text-ink-muted">{item.ghanaCardNumber}</p>
+                      <p className="text-xs text-ink-muted">
                         {dob ? dob.toLocaleDateString() : ""} · {item.occupation}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-ink/10 bg-white/70 px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Notes</p>
-                      <p className="mt-1 text-xs text-ink/70">{item.notes || "No notes provided."}</p>
+                    <div className="rounded-2xl border border-accent/10 bg-surface-elevated px-4 py-3">
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Notes</p>
+                      <p className="mt-1 text-xs text-ink-muted">{item.notes || "No notes provided."}</p>
                     </div>
                   </div>
                   <form action={updateAfaStatus} className="mt-4 flex flex-wrap items-center gap-2">
@@ -79,7 +79,7 @@ export default async function AdminAfaRegistrationsPage() {
                     <select
                       name="status"
                       defaultValue={item.status || "SUBMITTED"}
-                      className="rounded-full border border-ink/10 bg-white/80 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em]"
+                      className="rounded-full border border-accent/10 bg-surface-card px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em]"
                     >
                       <option value="PENDING_PAYMENT">PENDING PAYMENT</option>
                       <option value="SUBMITTED">SUBMITTED</option>
@@ -87,7 +87,7 @@ export default async function AdminAfaRegistrationsPage() {
                       <option value="APPROVED">APPROVED</option>
                       <option value="REJECTED">REJECTED</option>
                     </select>
-                    <button className="rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                    <button className="rounded-full bg-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night">
                       Update
                     </button>
                   </form>
