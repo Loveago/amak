@@ -10,14 +10,14 @@ module.exports = {
       colors: {
         ink: "#e2e8f0",
         "ink-muted": "#94a3b8",
-        surface: "#0a0f0d",
-        "surface-card": "#0f1a16",
-        "surface-elevated": "#132b23",
+        surface: "#121816",
+        "surface-card": "#182421",
+        "surface-elevated": "#1e352e",
         accent: "#10b981",
         "accent-muted": "#065f46",
-        night: "#040806",
+        night: "#080c0a",
         aurora: "#10b981",
-        sand: "#0a0f0d"
+        sand: "#121816"
       },
       boxShadow: {
         glow: "0 20px 45px -20px rgba(16, 185, 129, 0.3)",
