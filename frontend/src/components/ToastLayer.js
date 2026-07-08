@@ -31,7 +31,7 @@ export default function ToastLayer({ items = [], duration = 6000 }) {
   }
 
   return (
-    <div className="pointer-events-none fixed bottom-6 right-6 z-50 flex w-80 flex-col gap-3">
+    <div className="pointer-events-none fixed bottom-6 right-6 z-50 flex w-80 flex-col gap-3 mobile-toast-container">
       {queue.map((item) => {
         const palette = VARIANT_STYLES[item.variant] || VARIANT_STYLES.info;
         return (

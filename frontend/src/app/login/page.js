@@ -58,41 +58,41 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen">
-      <div className="mx-auto grid max-w-6xl gap-10 px-6 pb-20 pt-16 lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="glass relative overflow-hidden rounded-3xl p-10">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 pb-20 pt-10 sm:gap-10 sm:px-6 sm:pt-16 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="glass relative overflow-hidden rounded-3xl p-6 sm:p-10">
           <div className="pointer-events-none absolute -right-24 top-10 h-48 w-48 rounded-full bg-accent/10 blur-3xl" />
           <div className="pointer-events-none absolute -left-12 bottom-8 h-32 w-32 rounded-full bg-accent/5 blur-2xl" />
           <p className="badge">ABK Enterprise</p>
-          <h1 className="mt-4 font-display text-4xl text-ink md:text-5xl">
+          <h1 className="mt-4 font-display text-3xl text-ink sm:text-4xl md:text-5xl">
             Sign in to your bundle command center.
           </h1>
           <p className="mt-4 max-w-xl text-sm text-ink-muted">
             Manage storefronts, payouts, and subscriptions from one portal. Agents can self-register and start a
             complimentary 30-day starter plan automatically.
           </p>
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
+          <div className="mt-8 grid gap-3 sm:gap-4 sm:grid-cols-2">
             {[
               { title: "Agent storefront", detail: "Launch in minutes with dynamic pricing." },
               { title: "Instant payouts", detail: "Track balances and request withdrawals." },
               { title: "Affiliate growth", detail: "Earn commissions on downlines." },
               { title: "Admin controls", detail: "Oversee pricing, plans, and audits." }
             ].map((item) => (
-              <div key={item.title} className="rounded-2xl border border-accent/10 bg-surface-card p-4 text-sm">
+              <div key={item.title} className="rounded-2xl border border-accent/10 bg-surface-card p-3 text-sm sm:p-4">
                 <p className="font-semibold text-ink">{item.title}</p>
                 <p className="mt-2 text-xs text-ink-muted">{item.detail}</p>
               </div>
             ))}
           </div>
-          <div className="mt-10 flex flex-wrap gap-4">
+          <div className="mt-8 flex flex-wrap gap-3 sm:mt-10 sm:gap-4">
             <Link
               href="/signup"
-              className="rounded-full bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night"
+              className="rounded-full bg-accent px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night mobile-tap sm:px-6"
             >
               Create agent account
             </Link>
             <Link
               href="/"
-              className="rounded-full border border-accent/15 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
+              className="rounded-full border border-accent/15 px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink mobile-tap sm:px-6"
             >
               Back to landing
             </Link>
@@ -102,10 +102,10 @@ export default function LoginPage() {
           </p>
         </section>
 
-        <section className="card-outline flex-1 rounded-3xl bg-surface-card p-10">
-          <h2 className="font-display text-2xl text-ink">Welcome back</h2>
+        <section className="card-outline flex-1 rounded-3xl bg-surface-card p-6 sm:p-10">
+          <h2 className="font-display text-xl text-ink sm:text-2xl">Welcome back</h2>
           <p className="mt-2 text-sm text-ink-muted">Use your email and password to continue.</p>
-          <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+          <form className="mt-6 space-y-4 sm:mt-8 sm:space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Email</label>
               <input
@@ -133,7 +133,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setPasswordVisible((prev) => !prev)}
-                  className="absolute inset-y-0 right-3 my-auto rounded-full px-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted"
+                  className="absolute inset-y-0 right-3 my-auto rounded-full px-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted mobile-tap"
                   aria-pressed={passwordVisible}
                 >
                   {passwordVisible ? "Hide" : "View"}
@@ -143,7 +143,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={status.type === "loading"}
-              className="w-full rounded-full bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night disabled:opacity-60"
+              className="w-full rounded-full bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night disabled:opacity-60 mobile-tap"
             >
               {status.type === "loading" ? "Signing in" : "Access portal"}
             </button>

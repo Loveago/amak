@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { requireAgent } from "../../lib/auth";
 import { serverApi } from "../../lib/server-api";
 import MobileDrawer from "../../components/mobile-drawer";
+import MobileBottomNav from "../../components/mobile-bottom-nav";
 import CopyButton from "../../components/CopyButton";
 
 const navItems = [
@@ -77,21 +78,62 @@ export default async function AgentLayout({ children }) {
 
   return (
     <main className="min-h-screen">
-      <div className="mx-auto max-w-6xl px-6 pb-20 pt-10">
-        <div className="flex flex-wrap items-center justify-between gap-6">
+      <div className="mx-auto max-w-6xl px-4 pb-20 pt-6 sm:px-6 sm:pt-10 mobile-content-padding">
+        {/* Mobile Header - Compact & Beautiful */}
+        <div className="sm:hidden">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20">
+                <svg className="h-5 w-5 text-accent" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <p className="text-xs text-ink-muted">Welcome back</p>
+                <p className="text-sm font-semibold text-ink">ABK Agent</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="rounded-xl border border-accent/15 bg-surface-card px-3 py-2">
+                <p className="text-[9px] uppercase tracking-wider text-ink-muted">Balance</p>
+                <p className="text-sm font-bold text-accent">GHS {balance}</p>
+              </div>
+              <MobileDrawer title="Agent menu" buttonLabel="All" items={navItems} footer={mobileFooter} />
+            </div>
+          </div>
+
+          {/* Mobile Quick Actions */}
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <Link href="/agent/direct-order" className="flex flex-col items-center gap-1.5 rounded-2xl border border-accent/10 bg-surface-card p-3 transition active:scale-95">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15">
+                <svg className="h-4 w-4 text-accent" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </div>
+              <span className="text-[10px] font-medium text-ink-muted">Quick Send</span>
+            </Link>
+            <Link href="/agent/withdrawals" className="flex flex-col items-center gap-1.5 rounded-2xl border border-accent/10 bg-surface-card p-3 transition active:scale-95">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/15">
+                <svg className="h-4 w-4 text-sky-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+              </div>
+              <span className="text-[10px] font-medium text-ink-muted">Withdraw</span>
+            </Link>
+            <Link href="/agent/affiliate" className="flex flex-col items-center gap-1.5 rounded-2xl border border-accent/10 bg-surface-card p-3 transition active:scale-95">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/15">
+                <svg className="h-4 w-4 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+              </div>
+              <span className="text-[10px] font-medium text-ink-muted">Referrals</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-6">
           <div>
             <h1 className="font-display text-2xl text-ink">Welcome back,</h1>
-            <h2 className="font-display text-3xl text-ink">ABK Agent 👋</h2>
+            <h2 className="font-display text-3xl text-ink">ABK Agent</h2>
             <p className="mt-1 text-sm text-ink-muted">Here&apos;s what&apos;s happening with your business today.</p>
           </div>
           <div className="rounded-2xl border border-accent/10 bg-surface-card px-5 py-4 text-right">
             <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Wallet balance</p>
             <p className="mt-1 text-2xl font-semibold text-ink">GHS {balance}</p>
           </div>
-        </div>
-
-        <div className="mt-6 flex items-center justify-start lg:hidden">
-          <MobileDrawer title="Agent menu" buttonLabel="Menu" items={navItems} footer={mobileFooter} />
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
@@ -136,9 +178,11 @@ export default async function AgentLayout({ children }) {
             </div>
           </aside>
 
-          <section className="space-y-6">{children}</section>
+          <section className="mt-4 space-y-6 sm:mt-0">{children}</section>
         </div>
       </div>
+
+      <MobileBottomNav role="AGENT" />
     </main>
   );
 }

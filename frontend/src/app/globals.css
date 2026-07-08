@@ -493,6 +493,372 @@ main {
   }
 }
 
+/* ─── Mobile Drawer ─── */
+.mobile-drawer-backdrop {
+  background: rgba(4, 8, 6, 0.85);
+  backdrop-filter: blur(12px);
+  transition: opacity 0.3s ease;
+}
+
+.drawer-open .mobile-drawer-backdrop {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.drawer-closing .mobile-drawer-backdrop {
+  opacity: 0;
+}
+
+.mobile-drawer-panel {
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 -20px 60px -20px rgba(16, 185, 129, 0.15), 0 -4px 20px -4px rgba(0, 0, 0, 0.5);
+}
+
+.drawer-open .mobile-drawer-panel {
+  animation: slideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+.drawer-closing .mobile-drawer-panel {
+  transform: translateY(100%);
+}
+
+.mobile-nav-card {
+  opacity: 0;
+  transform: translateY(12px) scale(0.95);
+}
+
+.drawer-open .mobile-nav-card {
+  animation: cardReveal 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.drawer-closing .mobile-nav-card {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+/* ─── Mobile Bottom Nav ─── */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding: 8px 12px calc(env(safe-area-inset-bottom, 8px) + 8px);
+  background: rgba(10, 15, 13, 0.92);
+  backdrop-filter: blur(20px) saturate(1.5);
+  border-top: 1px solid rgba(16, 185, 129, 0.1);
+  box-shadow: 0 -8px 32px -8px rgba(0, 0, 0, 0.5);
+}
+
+.mobile-bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  color: #64748b;
+  position: relative;
+}
+
+.mobile-bottom-nav-item.active {
+  color: #10b981;
+}
+
+.mobile-bottom-nav-item.active::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.mobile-bottom-nav-item:active {
+  transform: scale(0.9);
+}
+
+/* ─── Mobile Menu Trigger ─── */
+.mobile-menu-trigger {
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile-menu-trigger::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-menu-trigger:active::after {
+  opacity: 1;
+}
+
+/* ─── Mobile Responsive Enhancements ─── */
+@media (max-width: 640px) {
+  .glass {
+    border-radius: 20px;
+    padding: 20px;
+  }
+
+  .card-outline {
+    border-radius: 20px;
+  }
+
+  .badge {
+    font-size: 0.6rem;
+    padding: 4px 10px;
+  }
+
+  .mobile-content-padding {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 16px));
+  }
+
+  /* ─── Mobile Typography ─── */
+  h1, .h1-mobile {
+    font-size: 1.75rem !important;
+    line-height: 1.15 !important;
+  }
+
+  h2, .h2-mobile {
+    font-size: 1.35rem !important;
+  }
+
+  /* ─── Mobile Table Override ─── */
+  .mobile-table-card thead {
+    display: none;
+  }
+
+  .mobile-table-card tr {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(16, 185, 129, 0.08);
+    background: #0f1a16;
+    margin-bottom: 10px;
+  }
+
+  .mobile-table-card td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border: none;
+    font-size: 0.8rem;
+  }
+
+  .mobile-table-card td::before {
+    content: attr(data-label);
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: #64748b;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  /* ─── Mobile Form Enhancements ─── */
+  .mobile-input-full {
+    width: 100%;
+    border-radius: 16px;
+    padding: 14px 16px;
+    font-size: 1rem;
+  }
+
+  .mobile-btn-full {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 0.8rem;
+    border-radius: 9999px;
+  }
+
+  /* ─── Mobile Stack ─── */
+  .mobile-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mobile-stack > * {
+    width: 100%;
+  }
+
+  /* ─── Mobile Grid Overrides ─── */
+  .mobile-grid-1 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .mobile-grid-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* ─── Mobile Hide/Show ─── */
+  .mobile-hide {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block !important;
+  }
+
+  /* ─── Mobile Scroll Snaps ─── */
+  .mobile-scroll-x {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 8px;
+  }
+
+  .mobile-scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-scroll-x > * {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+
+  /* ─── Mobile Spacing ─── */
+  .mobile-px {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .mobile-py {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .mobile-gap-sm {
+    gap: 8px;
+  }
+
+  /* ─── Mobile Touch Targets ─── */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ─── Mobile Rounded Refinements ─── */
+  .rounded-3xl {
+    border-radius: 20px !important;
+  }
+
+  .rounded-2xl {
+    border-radius: 16px !important;
+  }
+
+  /* ─── Mobile Tap Highlight ─── */
+  .mobile-tap:active {
+    opacity: 0.7;
+    transform: scale(0.97);
+    transition: transform 0.1s ease, opacity 0.1s ease;
+  }
+
+  /* ─── Toast Mobile ─── */
+  .mobile-toast-container {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: calc(80px + env(safe-area-inset-bottom, 16px)) !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  /* ─── Mobile Safe Area Bottom ─── */
+  .pb-safe {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 16px));
+  }
+
+  /* ─── Mobile Filter Row ─── */
+  .mobile-filter-row {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    margin-left: -16px;
+    margin-right: -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .mobile-filter-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-filter-row > * {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+}
+
+/* ─── Mobile Landscape / Tablet ─── */
+@media (min-width: 641px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* ─── Reduced Motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-tap:active {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* ─── Keyframes ─── */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .storefront-orb,
   .page-orb,
@@ -500,7 +866,10 @@ main {
   .bundle-card,
   .bundle-shine,
   .filtering-grid,
-  .modal-surface {
+  .modal-surface,
+  .mobile-nav-card,
+  .mobile-drawer-panel,
+  .mobile-drawer-backdrop {
     animation: none !important;
     transition: none !important;
   }

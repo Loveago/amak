@@ -82,51 +82,51 @@ export default function SignupPage() {
 
   return (
     <main className="min-h-screen">
-      <div className="mx-auto grid max-w-6xl gap-10 px-6 pb-20 pt-16 lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="glass relative overflow-hidden rounded-3xl p-10">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 pb-20 pt-10 sm:gap-10 sm:px-6 sm:pt-16 lg:grid-cols-[1.05fr_0.95fr]">
+        <section className="glass relative overflow-hidden rounded-3xl p-6 sm:p-10">
           <div className="pointer-events-none absolute -right-16 top-6 h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
           <div className="pointer-events-none absolute -left-14 bottom-8 h-32 w-32 rounded-full bg-accent/5 blur-2xl" />
           <p className="badge">Start free trial</p>
-          <h1 className="mt-4 font-display text-4xl text-ink md:text-5xl">
+          <h1 className="mt-4 font-display text-3xl text-ink sm:text-4xl md:text-5xl">
             Launch your agent storefront in minutes.
           </h1>
           <p className="mt-4 max-w-xl text-sm text-ink-muted">
             Create your agent account and unlock the lowest plan free for 30 days. You can activate bundles, accept
             orders, and earn commissions right away.
           </p>
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
+          <div className="mt-8 grid gap-3 sm:gap-4 sm:grid-cols-2">
             {[
               { title: "Instant setup", detail: "Auto-generated storefront URL and wallet." },
               { title: "30-day starter plan", detail: "Lowest plan free for your first month." },
               { title: "Affiliate rewards", detail: "Invite agents and earn downline commissions." },
               { title: "Fast fulfillment", detail: "Orders flow straight to fulfillment." }
             ].map((item) => (
-              <div key={item.title} className="rounded-2xl border border-accent/10 bg-surface-card p-4 text-sm">
+              <div key={item.title} className="rounded-2xl border border-accent/10 bg-surface-card p-3 text-sm sm:p-4">
                 <p className="font-semibold text-ink">{item.title}</p>
                 <p className="mt-2 text-xs text-ink-muted">{item.detail}</p>
               </div>
             ))}
           </div>
-          <div className="mt-10 flex flex-wrap gap-4">
+          <div className="mt-8 flex flex-wrap gap-3 sm:mt-10 sm:gap-4">
             <Link
               href="/login"
-              className="rounded-full border border-accent/15 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink"
+              className="rounded-full border border-accent/15 px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink mobile-tap sm:px-6"
             >
               Back to sign in
             </Link>
             <Link
               href="/store/ama-store"
-              className="rounded-full bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night"
+              className="rounded-full bg-accent px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night mobile-tap sm:px-6"
             >
               Preview storefront
             </Link>
           </div>
         </section>
 
-        <section className="card-outline flex-1 rounded-3xl bg-surface-card p-10">
-          <h2 className="font-display text-2xl text-ink">Create agent account</h2>
+        <section className="card-outline flex-1 rounded-3xl bg-surface-card p-6 sm:p-10">
+          <h2 className="font-display text-xl text-ink sm:text-2xl">Create agent account</h2>
           <p className="mt-2 text-sm text-ink-muted">Enter your details to start the trial plan.</p>
-          <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+          <form className="mt-6 space-y-4 sm:mt-8 sm:space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Full name</label>
               <input
@@ -178,7 +178,7 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={() => setPasswordVisible((prev) => !prev)}
-                  className="absolute inset-y-0 right-3 my-auto rounded-full px-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted"
+                  className="absolute inset-y-0 right-3 my-auto rounded-full px-3 text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted mobile-tap"
                   aria-pressed={passwordVisible}
                 >
                   {passwordVisible ? "Hide" : "View"}
@@ -204,7 +204,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={status.type === "loading"}
-              className="w-full rounded-full bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night disabled:opacity-60"
+              className="w-full rounded-full bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night disabled:opacity-60 mobile-tap"
             >
               {status.type === "loading" ? "Creating account" : "Start free trial"}
             </button>
@@ -213,7 +213,7 @@ export default function SignupPage() {
             )}
           </form>
           <p className="mt-6 text-xs text-ink-muted">
-            By creating an account you agree to ABK&apos;s service terms and fulfillment policies.
+            By creating an account you agree to ABK's service terms and fulfillment policies.
           </p>
         </section>
       </div>

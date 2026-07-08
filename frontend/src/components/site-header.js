@@ -34,11 +34,11 @@ export default function SiteHeader({ user, dashboardHref }) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-accent/10 bg-surface/90 backdrop-blur-xl">
-      <div className="mx-auto w-full max-w-6xl px-6 py-3 text-sm sm:py-4">
+      <div className="mx-auto w-full max-w-6xl px-4 py-2.5 text-sm sm:px-6 sm:py-4">
         <div className="flex items-center justify-between sm:hidden">
           <Link href="/" className="flex items-center gap-2 font-display text-base font-semibold text-ink">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-xs font-bold text-night">A</span>
-            ABK ENT
+            <span className="hidden xs:inline">ABK ENT</span>
           </Link>
           <MobileDrawer title="Menu" buttonLabel="Menu" items={menuItems} footer={menuFooter} />
         </div>

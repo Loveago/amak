@@ -176,38 +176,38 @@ export default function StorefrontClient({ store, slug }) {
   };
 
   return (
-    <main className="min-h-screen storefront-shell bg-surface">
+    <main className="min-h-screen storefront-shell bg-surface pb-safe">
       <div className="storefront-orb orb-1" />
       <div className="storefront-orb orb-2" />
       <div className="storefront-orb orb-3" />
-      <div className="mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6 sm:pt-12">
-        <div className="storefront-hero card-outline fade-up rounded-[32px] p-6 sm:p-7">
+      <div className="mx-auto max-w-6xl px-4 pb-20 pt-6 sm:px-6 sm:pt-12">
+        <div className="storefront-hero card-outline fade-up rounded-[28px] p-5 sm:rounded-[32px] sm:p-7">
           <div className="relative z-10 flex flex-col gap-6">
             <div className="space-y-3">
               <div className="badge">Agent storefront</div>
-              <h1 className="font-display text-3xl text-ink sm:text-4xl md:text-5xl">
+              <h1 className="font-display text-2xl text-ink sm:text-4xl md:text-5xl">
                 Welcome to <span className="text-accent">{agentName}</span>
                 <span className="text-ink"> Store</span>
               </h1>
               <p className="text-sm text-ink-muted">
                 Premium bundles, instant delivery, and a storefront that keeps you moving.
               </p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="mt-4 grid gap-2 sm:gap-3 grid-cols-3">
                 {[
-                  { label: "Instant delivery", value: "5-15 mins" },
-                  { label: "Verified networks", value: "MTN • Telecel • AT" },
-                  { label: "Bundles available", value: `${bundleCount} packages` }
+                  { label: "Delivery", value: "5-15 mins" },
+                  { label: "Networks", value: "MTN • Tel • AT" },
+                  { label: "Bundles", value: `${bundleCount} pkgs` }
                 ].map((item) => (
-                  <div key={item.label} className="storefront-stat rounded-2xl px-4 py-3 text-xs">
+                  <div key={item.label} className="storefront-stat rounded-2xl px-3 py-2.5 text-xs sm:px-4 sm:py-3">
                     <p className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">{item.label}</p>
-                    <p className="mt-2 text-sm font-semibold text-ink">{item.value}</p>
+                    <p className="mt-1.5 text-xs font-semibold text-ink sm:text-sm">{item.value}</p>
                   </div>
                 ))}
               </div>
               <div className="mt-2 flex flex-wrap gap-3 pt-1">
                 <Link
                   href={`/store/${slug}/track`}
-                  className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-surface-card px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-ink transition hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-md"
+                  className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-surface-card px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-ink transition hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-md mobile-tap"
                 >
                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-accent" aria-hidden="true">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.25a.75.75 0 00-1.5 0v4.59L7.3 9.24a.75.75 0 00-1.1 1.02l3 3.25a.75.75 0 001.1 0l3-3.25a.75.75 0 10-1.1-1.02l-1.95 2.1V6.75z" clipRule="evenodd" />
@@ -217,7 +217,7 @@ export default function StorefrontClient({ store, slug }) {
               </div>
             </div>
           </div>
-          <div className="relative z-10 mt-6 flex flex-col gap-3 lg:flex-row">
+          <div className="relative z-10 mt-6 flex flex-col gap-3 sm:flex-row">
             <input
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
@@ -226,13 +226,13 @@ export default function StorefrontClient({ store, slug }) {
             />
             <button
               onClick={microFeedback}
-              className="w-full rounded-full bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night shadow-md sm:w-auto"
+              className="w-full rounded-full bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night shadow-md sm:w-auto mobile-tap"
             >
               Explore
             </button>
           </div>
 
-          <div className="group relative z-10 mt-5 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3 text-[11px] text-yellow-300/90">
+          <div className="group relative z-10 mt-5 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-3 py-3 text-[11px] text-yellow-300/90 sm:px-4">
             <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em] text-yellow-400">
               Important notice
               <span className="text-sm font-bold text-yellow-400">!</span>
@@ -253,22 +253,24 @@ export default function StorefrontClient({ store, slug }) {
           </div>
         </div>
 
-        <div className="mt-10 flex items-center gap-3 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible">
-          {filterOptions.map((filter) => (
-            <button
-              key={filter.key}
-              onClick={() => handleFilterChange(filter.key)}
-              className={`filter-pill flex-shrink-0 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] ${
-                activeFilter === filter.key ? "filter-pill-active" : ""
-              }`}
-            >
-              {filter.label}
-            </button>
-          ))}
+        <div className="mt-8 sm:mt-10">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible scrollbar-hide" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+            {filterOptions.map((filter) => (
+              <button
+                key={filter.key}
+                onClick={() => handleFilterChange(filter.key)}
+                className={`filter-pill mobile-tap flex-shrink-0 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] ${
+                  activeFilter === filter.key ? "filter-pill-active" : ""
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div
-          className={`mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 ${isFiltering ? "filtering-grid" : ""}`}
+          className={`mt-6 grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 ${isFiltering ? "filtering-grid" : ""}`}
         >
           {filteredBundles.length === 0 ? (
             <div className="col-span-full rounded-3xl border border-dashed border-accent/20 bg-surface-card p-10 text-center text-sm text-ink-muted">
@@ -279,23 +281,23 @@ export default function StorefrontClient({ store, slug }) {
               <div key={bundle.id} className="bundle-card card-outline fade-up rounded-3xl bg-surface-card p-5 sm:p-6">
                 <div className="bundle-shine" />
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-surface-elevated sm:h-10 sm:w-10">
-                      <img src={bundle.networkIcon} alt={`${bundle.network} icon`} className="h-6 w-6 sm:h-7 sm:w-7" />
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-elevated sm:h-10 sm:w-10">
+                      <img src={bundle.networkIcon} alt={`${bundle.network} icon`} className="h-5 w-5 sm:h-7 sm:w-7" />
                     </div>
                     <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">{bundle.network}</span>
                   </div>
-                  <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
-                    Fast delivery
+                  <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-[10px] font-semibold text-accent sm:px-3 sm:py-1 sm:text-xs">
+                    Fast
                   </span>
                 </div>
-                <h2 className="mt-4 text-xl font-semibold text-ink">{bundle.name}</h2>
+                <h2 className="mt-4 text-lg font-semibold text-ink sm:text-xl">{bundle.name}</h2>
                 <p className="mt-1 text-xs uppercase tracking-[0.2em] text-ink-muted">{bundle.size}</p>
-                <p className="mt-3 text-sm text-ink-muted">Price</p>
-                <p className="text-2xl font-semibold text-ink">GHS {bundle.price.toFixed(2)}</p>
+                <p className="mt-3 text-xs text-ink-muted sm:text-sm">Price</p>
+                <p className="text-xl font-semibold text-ink sm:text-2xl">GHS {bundle.price.toFixed(2)}</p>
                 <Link
                   href={`/checkout?slug=${slug}&productId=${bundle.id}&qty=1`}
-                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-accent px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
+                  className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-accent px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night shadow-md transition hover:-translate-y-0.5 hover:shadow-lg mobile-tap"
                 >
                   Buy now
                 </Link>
@@ -311,7 +313,7 @@ export default function StorefrontClient({ store, slug }) {
           href={whatsappLink}
           target="_blank"
           rel="noreferrer"
-          className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-night shadow-lg shadow-accent/20 transition hover:-translate-y-1 hover:shadow-xl animate-bounce"
+          className="fixed bottom-24 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-night shadow-lg shadow-accent/20 transition hover:-translate-y-1 hover:shadow-xl animate-bounce sm:bottom-5"
           aria-label="Chat on WhatsApp"
         >
           <svg aria-hidden="true" viewBox="0 0 24 24" className="h-7 w-7" fill="currentColor">

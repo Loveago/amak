@@ -108,15 +108,15 @@ export default async function AgentProductsPage() {
   });
   return (
     <div className="space-y-6">
-      <div className="glass rounded-3xl p-6">
+      <div className="glass rounded-3xl p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="badge">Product catalog</p>
-            <h2 className="mt-3 font-display text-2xl text-ink">Activate bundles and set profit.</h2>
+            <h2 className="mt-3 font-display text-xl text-ink sm:text-2xl">Activate bundles and set profit.</h2>
           </div>
           <Link
             href="#catalog"
-            className="rounded-full bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night"
+            className="rounded-full bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night mobile-tap"
           >
             Browse catalog
           </Link>
@@ -154,17 +154,17 @@ export default async function AgentProductsPage() {
               return String(a.name || "").localeCompare(String(b.name || ""));
             });
             return (
-            <details key={category.id} open={index === 0} className="card-outline rounded-3xl bg-surface-card p-6">
+            <details key={category.id} open={index === 0} className="card-outline rounded-3xl bg-surface-card p-5 sm:p-6">
               <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="badge">Network</p>
-                  <h3 className="mt-2 font-display text-2xl text-ink">{category.name}</h3>
+                  <h3 className="mt-2 font-display text-xl text-ink sm:text-2xl">{category.name}</h3>
                 </div>
                 <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">
                   {category.products.length} bundles
                 </span>
               </summary>
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 {sortedProducts.map((product) => {
                   const base = product.basePriceGhs !== null && product.basePriceGhs !== undefined
                     ? `GHS ${Number(product.basePriceGhs).toFixed(2)}`
@@ -173,9 +173,9 @@ export default async function AgentProductsPage() {
                   const status = product.isActive ? "Active" : "Inactive";
                   const actionLabel = product.isActive ? "Update profit" : "Activate product";
                   return (
-                    <div key={product.id || product.name} className="rounded-3xl border border-accent/10 bg-surface-elevated p-5">
+                    <div key={product.id || product.name} className="rounded-3xl border border-accent/10 bg-surface-elevated p-4 sm:p-5">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-lg font-semibold text-ink">{product.name}</h4>
+                        <h4 className="text-base font-semibold text-ink sm:text-lg">{product.name}</h4>
                         <span className="text-xs uppercase tracking-[0.2em] text-ink-muted">{product.size}</span>
                       </div>
                       <div className="mt-3 space-y-2 text-sm text-ink-muted">
@@ -194,7 +194,7 @@ export default async function AgentProductsPage() {
                           className="w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
                           placeholder="Profit (GHS)"
                         />
-                        <button className="w-full rounded-full bg-accent px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night">
+                        <button className="w-full rounded-full bg-accent px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-night mobile-tap">
                           {actionLabel}
                         </button>
                       </form>
@@ -202,7 +202,7 @@ export default async function AgentProductsPage() {
                         <form action={updateProductMarkup} className="mt-3">
                           <input type="hidden" name="productId" value={product.id} />
                           <input type="hidden" name="isActive" value="false" />
-                          <button className="w-full rounded-full border border-accent/15 bg-surface-elevated px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em]">
+                          <button className="w-full rounded-full border border-accent/15 bg-surface-elevated px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] mobile-tap">
                             Deactivate product
                           </button>
                         </form>

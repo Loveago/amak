@@ -161,43 +161,43 @@ export default function CheckoutPage() {
   };
 
   return (
-    <main className="min-h-screen checkout-shell bg-surface">
+    <main className="min-h-screen checkout-shell bg-surface pb-safe">
       <div className="page-glow" />
       <div className="page-noise" />
       <div className="page-orb orb-1" />
       <div className="page-orb orb-2" />
       <div className="page-orb orb-3" />
-      <div className="mx-auto max-w-6xl px-6 pb-20 pt-12">
-        <div className="checkout-hero card-outline fade-up rounded-[32px] p-6 sm:p-7">
+      <div className="mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6 sm:pt-12">
+        <div className="checkout-hero card-outline fade-up rounded-[28px] p-5 sm:rounded-[32px] sm:p-7">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="badge">Checkout</p>
-              <h1 className="mt-3 font-display text-3xl text-ink">Secure checkout</h1>
+              <h1 className="mt-3 font-display text-2xl text-ink sm:text-3xl">Secure checkout</h1>
               <p className="text-sm text-ink-muted">Complete your order and receive data instantly.</p>
             </div>
-            <Link href={`/store/${slug}`} className="rounded-full border border-accent/20 bg-surface-card px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-ink transition hover:border-accent/40">
-              Back to storefront
+            <Link href={`/store/${slug}`} className="rounded-full border border-accent/20 bg-surface-card px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-ink transition hover:border-accent/40 mobile-tap sm:px-5">
+              Back to store
             </Link>
           </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="mt-5 grid gap-2 grid-cols-3">
             {[
-              { label: "Instant delivery", value: "5-15 mins" },
-              { label: "Paystack secured", value: "Verified checkout" },
-              { label: "Support", value: "24/7 WhatsApp" }
+              { label: "Delivery", value: "5-15 mins" },
+              { label: "Security", value: "Paystack" },
+              { label: "Support", value: "24/7 WA" }
             ].map((item) => (
-              <div key={item.label} className="rounded-2xl border border-accent/10 bg-surface-elevated px-4 py-3 text-xs">
+              <div key={item.label} className="rounded-2xl border border-accent/10 bg-surface-elevated px-3 py-2.5 text-xs sm:px-4 sm:py-3">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">{item.label}</p>
-                <p className="mt-2 text-sm font-semibold text-ink">{item.value}</p>
+                <p className="mt-1.5 text-xs font-semibold text-ink sm:text-sm">{item.value}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="mt-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <section className="glass rounded-3xl p-6 sm:p-7">
+        <div className="mt-8 grid gap-8 sm:mt-10 lg:grid-cols-[1.1fr_0.9fr]">
+          <section className="glass rounded-3xl p-5 sm:p-7">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h2 className="font-display text-2xl text-ink">Delivery details</h2>
+                <h2 className="font-display text-xl text-ink sm:text-2xl">Delivery details</h2>
                 <p className="text-sm text-ink-muted">Recipient phone is required. Other details are optional.</p>
               </div>
               <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
@@ -205,7 +205,7 @@ export default function CheckoutPage() {
               </span>
             </div>
 
-            <div className="mt-6 grid gap-5">
+            <div className="mt-6 grid gap-4 sm:gap-5">
               <div className="rounded-2xl border border-accent/10 bg-surface-card p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted">Recipient phone</p>
                 <input
@@ -214,7 +214,7 @@ export default function CheckoutPage() {
                   value={recipientPhone}
                   onChange={(event) => setRecipientPhone(event.target.value)}
                 />
-                <p className="mt-2 text-xs text-ink-muted">Valid prefixes: 024, 054, 055, 059</p>
+                <p className="mt-2 text-[11px] text-ink-muted">Valid prefixes: 024, 054, 055, 059</p>
               </div>
 
               <div className="rounded-2xl border border-accent/10 bg-surface-card p-4">
@@ -246,7 +246,7 @@ export default function CheckoutPage() {
             </div>
 
             <button
-              className="mt-6 w-full rounded-full bg-accent px-6 py-3.5 text-xs font-semibold uppercase tracking-[0.2em] text-night shadow-glow disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-6 w-full rounded-full bg-accent px-6 py-3.5 text-xs font-semibold uppercase tracking-[0.2em] text-night shadow-glow disabled:cursor-not-allowed disabled:opacity-60 mobile-tap"
               onClick={handlePay}
               disabled={status.type === "loading" || loadingItems}
             >
@@ -256,7 +256,7 @@ export default function CheckoutPage() {
               <div
                 className={`mt-4 rounded-2xl border px-4 py-3 text-xs ${
                   status.type === "error"
-                    ? "border-red-500/20 bg-red-500/50/5 text-red-400"
+                    ? "border-red-500/20 bg-red-500/5 text-red-400"
                     : "border-accent/10 bg-surface-card text-ink-muted"
                 }`}
               >
@@ -264,13 +264,13 @@ export default function CheckoutPage() {
               </div>
             )}
             <p className="mt-4 text-xs text-ink-muted">
-              By completing this order you agree to ABK&apos;s fulfillment policies.
+              By completing this order you agree to ABK's fulfillment policies.
             </p>
           </section>
 
-          <section className="card-outline rounded-3xl bg-surface-card p-6 sm:p-7">
+          <section className="card-outline rounded-3xl bg-surface-card p-5 sm:p-7">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-2xl text-ink">Order summary</h2>
+              <h2 className="font-display text-xl text-ink sm:text-2xl">Order summary</h2>
               <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
                 {loadingItems
                   ? "Loading"
