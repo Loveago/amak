@@ -91,7 +91,7 @@ async function getStorefront(req, res, next) {
     }
 
     const agentProducts = await prisma.agentProduct.findMany({
-      where: { agentId: agent.id, isActive: true, product: { category: { status: "ACTIVE" } } },
+      where: { agentId: agent.id, isActive: true, product: { status: "ACTIVE", category: { status: "ACTIVE" } } },
       include: { product: { include: { category: true } } }
     });
 
@@ -135,7 +135,7 @@ async function createOrder(req, res, next) {
         agentId: agent.id,
         productId: { in: productIds },
         isActive: true,
-        product: { category: { status: "ACTIVE" } }
+        product: { status: "ACTIVE", category: { status: "ACTIVE" } }
       },
       include: { product: { include: { category: true } } }
     });

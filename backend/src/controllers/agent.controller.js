@@ -181,7 +181,7 @@ async function listAffiliatePricing(req, res, next) {
   try {
     const agentId = req.user.sub;
     const products = await prisma.product.findMany({
-      where: { category: { status: "ACTIVE" } },
+      where: { status: "ACTIVE", category: { status: "ACTIVE" } },
       include: { category: true, agentProducts: { where: { agentId } } }
     });
 
@@ -251,7 +251,7 @@ async function listProducts(req, res, next) {
   try {
     const agentId = req.user.sub;
     const products = await prisma.product.findMany({
-      where: { category: { status: "ACTIVE" } },
+      where: { status: "ACTIVE", category: { status: "ACTIVE" } },
       include: { category: true, agentProducts: { where: { agentId } } }
     });
 
