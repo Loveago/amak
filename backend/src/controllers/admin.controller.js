@@ -702,6 +702,45 @@ async function listOrders(req, res, next) {
   }
 }
 
+async function listReconciledOrders(req, res, next) {
+  try {
+    const pageRaw = req.query.page;
+    const limitRaw = req.query.limit;
+    const page = Number.isFinite(Number(pageRaw)) ? Math.max(1, parseInt(pageRaw, 10)) : 1;
+    const limit = Number.isFinite(Number(limitRaw)) ? Math.min(50, Math.max(1, parseInt(limitRaw, 10))) : 20;
+    const skip = (page - 1) * limit;
+
+    const where = { autoReconciledAt: { not: null } };
+
+    const [total, orders] = await Promise.all([
+      prisma.order.count({ where }),
+      prisma.order.findMany({
+        where,
+        include: { items: { include: { product: { include: { category: true } } } }, agent: true },
+        orderBy: { autoReconciledAt: "desc" },
+        skip,
+        take: limit
+      })
+    ]);
+
+    const totalPages = total === 0 ? 1 : Math.ceil(total / limit);
+    return res.json({
+      success: true,
+      data: {
+        items: orders,
+        page,
+        limit,
+        total,
+        totalPages,
+        hasPrev: page > 1,
+        hasNext: page < totalPages
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function exportOrders(req, res, next) {
   try {
     const startDateRaw = req.query.startDate;
@@ -1319,6 +1358,7 @@ module.exports = {
   updateAgentWallet,
   updateAgentSubscription,
   listOrders,
+  listReconciledOrders,
   exportOrders,
   fulfillOrder,
   recheckOrderPayment,

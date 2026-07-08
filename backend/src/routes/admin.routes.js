@@ -22,6 +22,7 @@ const {
   updateAgentWallet,
   updateAgentSubscription,
   listOrders,
+  listReconciledOrders,
   exportOrders,
   fulfillOrder,
   recheckOrderPayment,
@@ -73,6 +74,7 @@ router.patch("/agents/:id/wallet", updateAgentWallet);
 router.patch("/agents/:id/subscription", updateAgentSubscription);
 router.delete("/agents/:id", deleteAgent);
 router.get("/orders", listOrders);
+router.get("/orders/reconciled", listReconciledOrders);
 router.get("/orders/export", exportOrders);
 router.patch("/orders/:id/fulfill", fulfillOrder);
 router.post("/orders/:id/recheck-payment", recheckOrderPayment);
