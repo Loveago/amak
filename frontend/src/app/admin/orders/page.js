@@ -70,27 +70,6 @@ async function resendFailedOrder(formData) {
   revalidatePath("/admin/orders");
 }
 
-async function fulfillOrdersByHour(formData) {
-  "use server";
-  const date = String(formData.get("date") || "").trim();
-  const hourRaw = formData.get("hour");
-  const tzOffsetMinutesRaw = formData.get("tzOffsetMinutes");
-  const hour = Number.isFinite(Number(hourRaw)) ? parseInt(String(hourRaw), 10) : null;
-  const tzOffsetMinutes = Number.isFinite(Number(tzOffsetMinutesRaw))
-    ? parseInt(String(tzOffsetMinutesRaw), 10)
-    : 0;
-
-  if (!date || hour === null) {
-    return;
-  }
-
-  await serverApi("/admin/orders/fulfill-hour", {
-    method: "PATCH",
-    body: { date, hour, tzOffsetMinutes }
-  });
-  revalidatePath("/admin/orders");
-}
-
 async function deleteOrder(formData) {
   "use server";
   const orderId = String(formData.get("orderId") || "").trim();
@@ -110,7 +89,15 @@ export default async function AdminOrdersPage({ searchParams }) {
   try {
     const pageRaw = searchParams?.page;
     const page = Number.isFinite(Number(pageRaw)) ? Math.max(1, parseInt(pageRaw, 10)) : 1;
-    const payload = await serverApi(`/admin/orders?page=${page}&limit=10`);
+
+    // Build query with optional date filters
+    const params = new URLSearchParams({ page, limit: "10" });
+    const dateFrom = searchParams?.dateFrom;
+    const dateTo = searchParams?.dateTo;
+    if (dateFrom) params.set("dateFrom", dateFrom);
+    if (dateTo) params.set("dateTo", dateTo);
+
+    const payload = await serverApi(`/admin/orders?${params.toString()}`);
     orders = payload?.items || [];
     pagination = payload
       ? {
@@ -132,7 +119,6 @@ export default async function AdminOrdersPage({ searchParams }) {
       pagination={pagination}
       onFulfill={fulfillOrder}
       onRecheckOrderPayment={recheckOrderPayment}
-      onBulkFulfillHour={fulfillOrdersByHour}
       onUpdateFailedOrderProvider={updateFailedOrderProvider}
       onResendFailedOrder={resendFailedOrder}
       onDeleteOrder={deleteOrder}

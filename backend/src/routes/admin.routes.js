@@ -47,7 +47,9 @@ const {
   updateProviderConfig,
   getProviderBalance,
   listApiAccessRequests,
-  updateApiAccessRequest
+  updateApiAccessRequest,
+  bulkUpdateOrders,
+  listOrdersForBulk
 } = require("../controllers/admin.controller");
 
 const router = express.Router();
@@ -78,6 +80,8 @@ router.patch("/agents/:id/wallet", updateAgentWallet);
 router.patch("/agents/:id/subscription", updateAgentSubscription);
 router.delete("/agents/:id", deleteAgent);
 router.get("/orders", listOrders);
+router.get("/orders/bulk", listOrdersForBulk);
+router.patch("/orders/bulk/status", bulkUpdateOrders);
 router.get("/orders/reconciled", listReconciledOrders);
 router.get("/orders/export", exportOrders);
 router.patch("/orders/:id/fulfill", fulfillOrder);

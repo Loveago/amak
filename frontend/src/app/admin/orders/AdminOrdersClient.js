@@ -78,48 +78,76 @@ function inferOrderNetwork(order) {
   return "Unknown";
 }
 
+function formatDateForInput(date) {
+  const d = new Date(date);
+  return d.toISOString().split("T")[0];
+}
+
 export default function AdminOrdersClient({
   orders,
   pagination,
   onFulfill,
   onRecheckOrderPayment,
-  onBulkFulfillHour,
   onUpdateFailedOrderProvider,
   onResendFailedOrder,
   onDeleteOrder
 }) {
   const [query, setQuery] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [copiedOrderId, setCopiedOrderId] = useState("");
   const [actionFeedback, setActionFeedback] = useState({});
   const [isPending, startTransition] = useTransition();
   const normalizedQuery = query.trim().toLowerCase();
-  const [bulkDate, setBulkDate] = useState(() => {
-    const now = new Date();
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, "0");
-    const dd = String(now.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  });
 
   const filteredOrders = useMemo(() => {
-    if (!normalizedQuery) return orders;
-    return orders.filter((order) => {
-      const items = order.items || [];
-      const haystack = [
-        order.id,
-        order.customerName,
-        order.customerPhone,
-        order.status,
-        order.agent?.name,
-        order.agent?.email,
-        ...items.map((item) => item.product?.name)
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(normalizedQuery);
-    });
-  }, [orders, normalizedQuery]);
+    let result = orders;
+
+    // Apply search filter
+    if (normalizedQuery) {
+      result = result.filter((order) => {
+        const items = order.items || [];
+        const haystack = [
+          order.id,
+          order.customerName,
+          order.customerPhone,
+          order.status,
+          order.agent?.name,
+          order.agent?.email,
+          ...items.map((item) => item.product?.name)
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(normalizedQuery);
+      });
+    }
+
+    // Apply date range filter (client-side as a supplement to server filter)
+    if (dateFrom || dateTo) {
+      result = result.filter((order) => {
+        if (!order.createdAt) return true;
+        const orderDate = new Date(order.createdAt);
+        if (dateFrom && orderDate < new Date(dateFrom)) return false;
+        if (dateTo) {
+          const endDate = new Date(dateTo);
+          endDate.setHours(23, 59, 59, 999);
+          if (orderDate > endDate) return false;
+        }
+        return true;
+      });
+    }
+
+    return result;
+  }, [orders, normalizedQuery, dateFrom, dateTo]);
+
+  // Build query string for server-side date filtering
+  const dateQueryString = useMemo(() => {
+    const params = new URLSearchParams();
+    if (dateFrom) params.set("dateFrom", dateFrom);
+    if (dateTo) params.set("dateTo", dateTo);
+    return params.toString();
+  }, [dateFrom, dateTo]);
 
   const copyRecipientNumber = async (orderId, phone) => {
     const normalizedPhone = String(phone || "").trim();
@@ -217,73 +245,96 @@ export default function AdminOrdersClient({
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="glass rounded-3xl p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="font-display text-2xl text-ink">Orders</h2>
             <p className="text-sm text-ink-muted">Monitor order flow from payment to fulfillment.</p>
           </div>
-          <div className="w-full max-w-sm">
-            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Search orders</label>
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search by order, agent, or bundle"
-              className="mt-2 w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
-            />
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/bulk-orders"
+              className="rounded-full border border-accent/10 bg-surface-card px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-accent transition hover:bg-accent/10"
+            >
+              Bulk Status
+            </Link>
+            <div className="w-full max-w-xs">
+              <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Search orders</label>
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search by order, agent, or bundle"
+                className="mt-2 w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {typeof onBulkFulfillHour === "function" ? (
-        <div className="card-outline rounded-3xl bg-surface-card p-6">
-          <div className="flex flex-col gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Bulk action</p>
-              <p className="mt-1 text-sm text-ink-muted">
-                Mark all paid orders within a selected hour as delivered.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="w-full sm:w-auto">
-                <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Date</label>
-                <input
-                  type="date"
-                  value={bulkDate}
-                  onChange={(event) => setBulkDate(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm sm:w-auto"
-                />
-              </div>
-
-              <form action={onBulkFulfillHour} className="w-full">
-                <input type="hidden" name="date" value={bulkDate} />
-                <input type="hidden" name="tzOffsetMinutes" value={new Date().getTimezoneOffset()} />
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-8">
-                  {Array.from({ length: 24 }).map((_, hour) => (
-                    <button
-                      key={hour}
-                      type="submit"
-                      name="hour"
-                      value={hour}
-                      className="flex h-10 items-center justify-center rounded-2xl border border-accent/10 bg-surface-card px-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-muted transition-all hover:bg-surface-card active:scale-95 sm:h-auto sm:py-2 sm:text-xs sm:tracking-[0.18em]"
-                      title={`Mark ${hour}:00 to ${hour}:59 as delivered`}
-                    >
-                      {String(hour).padStart(2, "0")}:00
-                    </button>
-                  ))}
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
+      {/* Date Range Filter */}
       <div className="card-outline rounded-3xl bg-surface-card p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-wrap items-end gap-4">
+            <div>
+              <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">From</label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="mt-2 block rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">To</label>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="mt-2 block rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
+              />
+            </div>
+            {(dateFrom || dateTo) ? (
+              <button
+                type="button"
+                onClick={() => { setDateFrom(""); setDateTo(""); }}
+                className="rounded-full border border-red-500/30 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-red-400"
+              >
+                Clear dates
+              </button>
+            ) : null}
+          </div>
+          {dateQueryString && pagination ? (
+            <Link
+              href={`/admin/orders?page=1&${dateQueryString}`}
+              className="rounded-full bg-accent px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-night"
+            >
+              Apply server filter
+            </Link>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Orders List */}
+      <div className="card-outline rounded-3xl bg-surface-card p-6">
+        {filteredOrders.length > 0 ? (
+          <div className="mb-4 flex items-center gap-2 border-b border-accent/10 pb-3">
+            <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+              {filteredOrders.length} order{filteredOrders.length !== 1 ? "s" : ""}
+            </span>
+            {dateFrom || dateTo ? (
+              <span className="rounded-full bg-ink/5 px-3 py-1 text-[10px] text-ink-muted">
+                {dateFrom ? `From ${dateFrom}` : ""}
+                {dateFrom && dateTo ? " — " : ""}
+                {dateTo ? `To ${dateTo}` : ""}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
         <div className="space-y-4">
           {filteredOrders.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-accent/15 px-4 py-6 text-center text-sm text-ink-muted">
-              No orders found. Try another search term.
+              No orders found. Try adjusting your search or date filter.
             </div>
           ) : (
             filteredOrders.map((order) => {

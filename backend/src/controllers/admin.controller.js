@@ -767,9 +767,35 @@ async function listOrders(req, res, next) {
     const limit = Number.isFinite(Number(limitRaw)) ? Math.min(50, Math.max(1, parseInt(limitRaw, 10))) : 10;
     const skip = (page - 1) * limit;
 
+    // Date range filtering
+    const dateFromRaw = req.query.dateFrom;
+    const dateToRaw = req.query.dateTo;
+    const where = {};
+    if (dateFromRaw || dateToRaw) {
+      where.createdAt = {};
+      if (dateFromRaw) {
+        const fromDate = new Date(dateFromRaw);
+        if (!isNaN(fromDate.getTime())) {
+          where.createdAt.gte = fromDate;
+        }
+      }
+      if (dateToRaw) {
+        const toDate = new Date(dateToRaw);
+        if (!isNaN(toDate.getTime())) {
+          toDate.setHours(23, 59, 59, 999);
+          where.createdAt.lte = toDate;
+        }
+      }
+      // If both dates are invalid, remove the filter
+      if (!where.createdAt.gte && !where.createdAt.lte) {
+        delete where.createdAt;
+      }
+    }
+
     const [total, orders] = await Promise.all([
-      prisma.order.count(),
+      prisma.order.count({ where }),
       prisma.order.findMany({
+        where,
         include: { items: { include: { product: { include: { category: true } } } }, agent: true },
         orderBy: { createdAt: "desc" },
         skip,
@@ -1440,6 +1466,185 @@ async function getProviderBalance(req, res, next) {
   }
 }
 
+async function bulkUpdateOrders(req, res, next) {
+  try {
+    const { orderIds, statusFilter, status, dateFrom, dateTo } = req.body;
+    const allowedStatuses = new Set(["PAID", "CREATED", "FULFILLED", "FAILED"]);
+
+    const targetStatus = String(status || "").trim().toUpperCase();
+    if (!allowedStatuses.has(targetStatus)) {
+      return res.status(400).json({
+        success: false,
+        error: "Target status must be one of: PAID, CREATED, FULFILLED, FAILED"
+      });
+    }
+
+    // Build the where clause
+    const where = {};
+
+    // Specific order IDs provided
+    if (Array.isArray(orderIds) && orderIds.length > 0) {
+      where.id = { in: orderIds };
+    }
+
+    // Filter by current status
+    if (statusFilter) {
+      const filterStatus = String(statusFilter).trim().toUpperCase();
+      if (allowedStatuses.has(filterStatus)) {
+        where.status = filterStatus;
+      }
+    }
+
+    // Date range
+    if (dateFrom || dateTo) {
+      where.createdAt = {};
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        if (!isNaN(fromDate.getTime())) {
+          where.createdAt.gte = fromDate;
+        }
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        if (!isNaN(toDate.getTime())) {
+          toDate.setHours(23, 59, 59, 999);
+          where.createdAt.lte = toDate;
+        }
+      }
+      if (!where.createdAt.gte && !where.createdAt.lte) {
+        delete where.createdAt;
+      }
+    }
+
+    // Count matching orders first
+    const matchCount = await prisma.order.count({ where });
+    if (matchCount === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "No orders match the given criteria"
+      });
+    }
+
+    // Perform the bulk update
+    const result = await prisma.order.updateMany({
+      where,
+      data: { status: targetStatus }
+    });
+
+    // Audit log
+    await prisma.auditLog.create({
+      data: {
+        actorId: req.user.sub,
+        action: "ORDER_BULK_STATUS_UPDATE",
+        meta: {
+          orderIds: orderIds || null,
+          statusFilter: statusFilter || null,
+          targetStatus,
+          dateFrom: dateFrom || null,
+          dateTo: dateTo || null,
+          updatedCount: result.count
+        }
+      }
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        updatedCount: result.count,
+        targetStatus
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function listOrdersForBulk(req, res, next) {
+  try {
+    const pageRaw = req.query.page;
+    const limitRaw = req.query.limit;
+    const page = Number.isFinite(Number(pageRaw)) ? Math.max(1, parseInt(pageRaw, 10)) : 1;
+    const limit = Number.isFinite(Number(limitRaw)) ? Math.min(100, Math.max(1, parseInt(limitRaw, 10))) : 50;
+    const skip = (page - 1) * limit;
+
+    // Filters
+    const statusFilter = String(req.query.status || "").trim().toUpperCase();
+    const dateFromRaw = req.query.dateFrom;
+    const dateToRaw = req.query.dateTo;
+    const search = String(req.query.search || "").trim().toLowerCase();
+
+    const where = {};
+
+    if (statusFilter && ["PAID", "CREATED", "FULFILLED", "FAILED"].includes(statusFilter)) {
+      where.status = statusFilter;
+    }
+
+    if (dateFromRaw || dateToRaw) {
+      where.createdAt = {};
+      if (dateFromRaw) {
+        const fromDate = new Date(dateFromRaw);
+        if (!isNaN(fromDate.getTime())) {
+          where.createdAt.gte = fromDate;
+        }
+      }
+      if (dateToRaw) {
+        const toDate = new Date(dateToRaw);
+        if (!isNaN(toDate.getTime())) {
+          toDate.setHours(23, 59, 59, 999);
+          where.createdAt.lte = toDate;
+        }
+      }
+      if (!where.createdAt.gte && !where.createdAt.lte) {
+        delete where.createdAt;
+      }
+    }
+
+    if (search) {
+      where.OR = [
+        { id: { contains: search } },
+        { customerName: { contains: search } },
+        { customerPhone: { contains: search } }
+      ];
+    }
+
+    const [total, orders] = await Promise.all([
+      prisma.order.count({ where }),
+      prisma.order.findMany({
+        where,
+        select: {
+          id: true,
+          status: true,
+          totalAmountGhs: true,
+          customerPhone: true,
+          customerName: true,
+          createdAt: true,
+          agent: { select: { name: true } }
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit
+      })
+    ]);
+
+    const totalPages = total === 0 ? 1 : Math.ceil(total / limit);
+
+    return res.json({
+      success: true,
+      data: {
+        items: orders,
+        page,
+        limit,
+        total,
+        totalPages,
+        hasPrev: page > 1,
+        hasNext: page < totalPages
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   dashboard,
   getSettings,
@@ -1486,5 +1691,7 @@ module.exports = {
   updateProviderConfig,
   getProviderBalance,
   listApiAccessRequests,
-  updateApiAccessRequest
+  updateApiAccessRequest,
+  bulkUpdateOrders,
+  listOrdersForBulk
 };
