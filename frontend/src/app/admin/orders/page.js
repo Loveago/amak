@@ -90,10 +90,18 @@ export default async function AdminOrdersPage({ searchParams }) {
     const pageRaw = searchParams?.page;
     const page = Number.isFinite(Number(pageRaw)) ? Math.max(1, parseInt(pageRaw, 10)) : 1;
 
-    // Build query with optional date filters
+    // Build query with search, filter, and date params
     const params = new URLSearchParams({ page, limit: "10" });
+
+    const search = searchParams?.search;
+    const searchBy = searchParams?.searchBy;
+    const status = searchParams?.status;
     const dateFrom = searchParams?.dateFrom;
     const dateTo = searchParams?.dateTo;
+
+    if (search) params.set("search", search);
+    if (searchBy) params.set("searchBy", searchBy);
+    if (status) params.set("status", status);
     if (dateFrom) params.set("dateFrom", dateFrom);
     if (dateTo) params.set("dateTo", dateTo);
 

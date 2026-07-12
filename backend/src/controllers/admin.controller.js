@@ -767,10 +767,23 @@ async function listOrders(req, res, next) {
     const limit = Number.isFinite(Number(limitRaw)) ? Math.min(50, Math.max(1, parseInt(limitRaw, 10))) : 10;
     const skip = (page - 1) * limit;
 
+    // Search params
+    const search = String(req.query.search || "").trim();
+    const searchBy = String(req.query.searchBy || "").trim().toLowerCase();
+    const statusFilter = String(req.query.status || "").trim().toUpperCase();
+
     // Date range filtering
     const dateFromRaw = req.query.dateFrom;
     const dateToRaw = req.query.dateTo;
     const where = {};
+
+    // Status filter
+    const ALLOWED_STATUSES = ["CREATED", "PAID", "FULFILLED", "FAILED", "CANCELED"];
+    if (statusFilter && ALLOWED_STATUSES.includes(statusFilter)) {
+      where.status = statusFilter;
+    }
+
+    // Date range filter
     if (dateFromRaw || dateToRaw) {
       where.createdAt = {};
       if (dateFromRaw) {
@@ -786,9 +799,35 @@ async function listOrders(req, res, next) {
           where.createdAt.lte = toDate;
         }
       }
-      // If both dates are invalid, remove the filter
       if (!where.createdAt.gte && !where.createdAt.lte) {
         delete where.createdAt;
+      }
+    }
+
+    // Search filter (server-side)
+    const VALID_SEARCH_BYS = ["id", "customerName", "customerPhone", "agent", "all"];
+    if (search && VALID_SEARCH_BYS.includes(searchBy)) {
+      if (searchBy === "id") {
+        where.id = { contains: search, mode: "insensitive" };
+      } else if (searchBy === "customerName") {
+        where.customerName = { contains: search, mode: "insensitive" };
+      } else if (searchBy === "customerPhone") {
+        where.customerPhone = { contains: search };
+      } else if (searchBy === "agent") {
+        where.agent = {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { email: { contains: search, mode: "insensitive" } }
+          ]
+        };
+      } else if (searchBy === "all") {
+        where.OR = [
+          { id: { contains: search, mode: "insensitive" } },
+          { customerName: { contains: search, mode: "insensitive" } },
+          { customerPhone: { contains: search } },
+          { agent: { name: { contains: search, mode: "insensitive" } } },
+          { agent: { email: { contains: search, mode: "insensitive" } } }
+        ];
       }
     }
 

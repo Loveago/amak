@@ -1,10 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, useRef, useCallback } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 const PAID_STATUSES = new Set(["PAID", "FULFILLED"]);
 const FAILED_PROVIDER_OPTIONS = ["ENCARTA", "GRANDAPI", "DATAHUBNET", "ELITENUT", "SHANKA", "XPRESS"];
+
+const SEARCH_OPTIONS = [
+  { value: "all", label: "All fields" },
+  { value: "id", label: "Order ID" },
+  { value: "customerName", label: "Customer name" },
+  { value: "customerPhone", label: "Phone number" },
+  { value: "agent", label: "Agent name/email" }
+];
+
+const STATUS_OPTIONS = [
+  { value: "", label: "All statuses" },
+  { value: "CREATED", label: "Created" },
+  { value: "PAID", label: "Paid" },
+  { value: "FULFILLED", label: "Delivered" },
+  { value: "FAILED", label: "Failed" },
+  { value: "CANCELED", label: "Canceled" }
+];
 
 function normalizeProvider(value) {
   if (!value) return null;
@@ -92,62 +110,52 @@ export default function AdminOrdersClient({
   onResendFailedOrder,
   onDeleteOrder
 }) {
-  const [query, setQuery] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Local state for filter inputs (mirrors URL params)
+  const [searchInput, setSearchInput] = useState(searchParams.get("search") || "");
+  const [searchByInput, setSearchByInput] = useState(searchParams.get("searchBy") || "all");
+  const [statusInput, setStatusInput] = useState(searchParams.get("status") || "");
+  const [dateFromInput, setDateFromInput] = useState(searchParams.get("dateFrom") || "");
+  const [dateToInput, setDateToInput] = useState(searchParams.get("dateTo") || "");
+
   const [copiedOrderId, setCopiedOrderId] = useState("");
   const [actionFeedback, setActionFeedback] = useState({});
   const [isPending, startTransition] = useTransition();
-  const normalizedQuery = query.trim().toLowerCase();
+  const searchInputRef = useRef(null);
 
-  const filteredOrders = useMemo(() => {
-    let result = orders;
+  const hasActiveFilters = searchInput || statusInput || dateFromInput || dateToInput;
 
-    // Apply search filter
-    if (normalizedQuery) {
-      result = result.filter((order) => {
-        const items = order.items || [];
-        const haystack = [
-          order.id,
-          order.customerName,
-          order.customerPhone,
-          order.status,
-          order.agent?.name,
-          order.agent?.email,
-          ...items.map((item) => item.product?.name)
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        return haystack.includes(normalizedQuery);
-      });
-    }
-
-    // Apply date range filter (client-side as a supplement to server filter)
-    if (dateFrom || dateTo) {
-      result = result.filter((order) => {
-        if (!order.createdAt) return true;
-        const orderDate = new Date(order.createdAt);
-        if (dateFrom && orderDate < new Date(dateFrom)) return false;
-        if (dateTo) {
-          const endDate = new Date(dateTo);
-          endDate.setHours(23, 59, 59, 999);
-          if (orderDate > endDate) return false;
-        }
-        return true;
-      });
-    }
-
-    return result;
-  }, [orders, normalizedQuery, dateFrom, dateTo]);
-
-  // Build query string for server-side date filtering
-  const dateQueryString = useMemo(() => {
+  const applyFilters = useCallback(() => {
     const params = new URLSearchParams();
-    if (dateFrom) params.set("dateFrom", dateFrom);
-    if (dateTo) params.set("dateTo", dateTo);
-    return params.toString();
-  }, [dateFrom, dateTo]);
+    params.set("page", "1");
+    if (searchInput) params.set("search", searchInput);
+    if (searchByInput && searchByInput !== "all") params.set("searchBy", searchByInput);
+    if (statusInput) params.set("status", statusInput);
+    if (dateFromInput) params.set("dateFrom", dateFromInput);
+    if (dateToInput) params.set("dateTo", dateToInput);
+    router.push(`${pathname}?${params.toString()}`);
+  }, [searchInput, searchByInput, statusInput, dateFromInput, dateToInput, router, pathname]);
+
+  const clearFilters = useCallback(() => {
+    setSearchInput("");
+    setSearchByInput("all");
+    setStatusInput("");
+    setDateFromInput("");
+    setDateToInput("");
+    router.push(pathname);
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [router, pathname]);
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === "Enter") {
+      applyFilters();
+    }
+  }, [applyFilters]);
 
   const copyRecipientNumber = async (orderId, phone) => {
     const normalizedPhone = String(phone || "").trim();
@@ -243,6 +251,15 @@ export default function AdminOrdersClient({
     return <p className="mt-2 text-[11px] text-yellow-400">{feedback.message}</p>;
   }
 
+  const activeFilterCount = [
+    searchInput,
+    statusInput,
+    dateFromInput || dateToInput
+  ].filter(Boolean).length;
+
+  // Status badge for the selected status
+  const selectedStatusLabel = STATUS_OPTIONS.find((o) => o.value === statusInput)?.label || "All statuses";
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -259,85 +276,212 @@ export default function AdminOrdersClient({
             >
               Bulk Status
             </Link>
-            <div className="w-full max-w-xs">
-              <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">Search orders</label>
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search by order, agent, or bundle"
-                className="mt-2 w-full rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
-              />
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Date Range Filter */}
-      <div className="card-outline rounded-3xl bg-surface-card p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex flex-wrap items-end gap-4">
-            <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">From</label>
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="mt-2 block rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
-              />
+      {/* Revamped Search & Filter Bar */}
+      <div className="card-outline rounded-3xl bg-surface-card p-5">
+        <div className="flex flex-col gap-4">
+          {/* Top row: search input + search-by dropdown */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            {/* Search type selector */}
+            <div className="w-full sm:w-44">
+              <label className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">Search by</label>
+              <select
+                value={searchByInput}
+                onChange={(e) => setSearchByInput(e.target.value)}
+                className="mt-1.5 w-full rounded-xl border border-accent/10 bg-surface-card px-3 py-2.5 text-sm focus:border-accent/30 focus:outline-none"
+              >
+                {SEARCH_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
             </div>
-            <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">To</label>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="mt-2 block rounded-2xl border border-accent/10 bg-surface-card px-4 py-3 text-sm"
-              />
+
+            {/* Search input */}
+            <div className="flex-1">
+              <label className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">Search</label>
+              <div className="relative mt-1.5">
+                <input
+                  ref={searchInputRef}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={
+                    searchByInput === "id" ? "e.g. cm8x3..." :
+                    searchByInput === "customerName" ? "e.g. John Doe" :
+                    searchByInput === "customerPhone" ? "e.g. 024..." :
+                    searchByInput === "agent" ? "e.g. Agent name or email" :
+                    "Search orders..."
+                  }
+                  className="w-full rounded-xl border border-accent/10 bg-surface-card px-4 py-2.5 pr-10 text-sm focus:border-accent/30 focus:outline-none"
+                />
+                {searchInput && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchInput("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted transition hover:text-ink"
+                    aria-label="Clear search"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
-            {(dateFrom || dateTo) ? (
+          </div>
+
+          {/* Bottom row: status filter + date range + action buttons */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex flex-wrap items-end gap-3">
+              {/* Status filter */}
+              <div className="w-full sm:w-40">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">Status</label>
+                <select
+                  value={statusInput}
+                  onChange={(e) => setStatusInput(e.target.value)}
+                  className="mt-1.5 w-full rounded-xl border border-accent/10 bg-surface-card px-3 py-2.5 text-sm focus:border-accent/30 focus:outline-none"
+                >
+                  {STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Date range */}
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">From</label>
+                <input
+                  type="date"
+                  value={dateFromInput}
+                  onChange={(e) => setDateFromInput(e.target.value)}
+                  className="mt-1.5 block rounded-xl border border-accent/10 bg-surface-card px-3 py-2.5 text-sm focus:border-accent/30 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">To</label>
+                <input
+                  type="date"
+                  value={dateToInput}
+                  onChange={(e) => setDateToInput(e.target.value)}
+                  className="mt-1.5 block rounded-xl border border-accent/10 bg-surface-card px-3 py-2.5 text-sm focus:border-accent/30 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-wrap items-center gap-2">
+              {hasActiveFilters ? (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="rounded-full border border-red-500/30 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-red-400 transition hover:bg-red-500/5"
+                >
+                  Clear all
+                </button>
+              ) : null}
               <button
                 type="button"
-                onClick={() => { setDateFrom(""); setDateTo(""); }}
-                className="rounded-full border border-red-500/30 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-red-400"
+                onClick={applyFilters}
+                disabled={isPending}
+                className="rounded-full bg-accent px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-night transition hover:bg-accent/90 disabled:opacity-50"
               >
-                Clear dates
+                {isPending ? "Searching..." : "Search"}
               </button>
-            ) : null}
+            </div>
           </div>
-          {dateQueryString && pagination ? (
-            <Link
-              href={`/admin/orders?page=1&${dateQueryString}`}
-              className="rounded-full bg-accent px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-night"
-            >
-              Apply server filter
-            </Link>
+
+          {/* Active filter badges */}
+          {hasActiveFilters ? (
+            <div className="flex flex-wrap items-center gap-2 border-t border-accent/5 pt-3">
+              <span className="text-[10px] text-ink-muted">Active filters:</span>
+              {searchInput ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-1 text-[10px] font-medium text-accent">
+                  <span className="opacity-60">{SEARCH_OPTIONS.find(o => o.value === searchByInput)?.label}:</span>
+                  {searchInput.length > 20 ? searchInput.slice(0, 20) + "..." : searchInput}
+                </span>
+              ) : null}
+              {statusInput ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-ink/10 px-2.5 py-1 text-[10px] font-medium text-ink">
+                  Status: {selectedStatusLabel}
+                </span>
+              ) : null}
+              {dateFromInput || dateToInput ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-elevated px-2.5 py-1 text-[10px] font-medium text-ink-muted">
+                  {dateFromInput || "..."} → {dateToInput || "..."}
+                </span>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </div>
 
-      {/* Orders List */}
+      {/* Results Summary */}
       <div className="card-outline rounded-3xl bg-surface-card p-6">
-        {filteredOrders.length > 0 ? (
-          <div className="mb-4 flex items-center gap-2 border-b border-accent/10 pb-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-accent/10 pb-3">
+          <div className="flex items-center gap-2">
             <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
-              {filteredOrders.length} order{filteredOrders.length !== 1 ? "s" : ""}
+              {orders.length} order{orders.length !== 1 ? "s" : ""}
             </span>
-            {dateFrom || dateTo ? (
-              <span className="rounded-full bg-ink/5 px-3 py-1 text-[10px] text-ink-muted">
-                {dateFrom ? `From ${dateFrom}` : ""}
-                {dateFrom && dateTo ? " — " : ""}
-                {dateTo ? `To ${dateTo}` : ""}
+            {pagination ? (
+              <span className="text-xs text-ink-muted">
+                Page {pagination.page} of {pagination.totalPages}
+                {pagination.total > 0 ? ` · ${pagination.total} total` : ""}
               </span>
             ) : null}
           </div>
-        ) : null}
+          {pagination ? (
+            <div className="flex items-center gap-2">
+              {pagination.hasPrev ? (
+                <Link
+                  href={`${pathname}?${new URLSearchParams({ ...Object.fromEntries(searchParams.entries()), page: String(pagination.page - 1) }).toString()}`}
+                  className="rounded-full border border-accent/10 bg-surface-card px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink transition hover:bg-accent/5"
+                >
+                  Prev
+                </Link>
+              ) : (
+                <span className="rounded-full border border-accent/10 bg-surface-elevated px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-muted">
+                  Prev
+                </span>
+              )}
+              {pagination.hasNext ? (
+                <Link
+                  href={`${pathname}?${new URLSearchParams({ ...Object.fromEntries(searchParams.entries()), page: String(pagination.page + 1) }).toString()}`}
+                  className="rounded-full bg-accent px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-night transition hover:bg-accent/90"
+                >
+                  Next
+                </Link>
+              ) : (
+                <span className="rounded-full bg-ink/20 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-night/70">
+                  Next
+                </span>
+              )}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Orders List */}
         <div className="space-y-4">
-          {filteredOrders.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-accent/15 px-4 py-6 text-center text-sm text-ink-muted">
-              No orders found. Try adjusting your search or date filter.
+          {orders.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-accent/15 px-4 py-10 text-center">
+              <svg className="mx-auto mb-3 h-8 w-8 text-ink-muted/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+              <p className="text-sm text-ink-muted">No orders match your search criteria.</p>
+              {hasActiveFilters ? (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="mt-3 rounded-full border border-accent/10 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-accent transition hover:bg-accent/5"
+                >
+                  Clear all filters
+                </button>
+              ) : null}
             </div>
           ) : (
-            filteredOrders.map((order) => {
+            orders.map((order) => {
               const items = order.items || [];
               const createdAt = order.createdAt ? new Date(order.createdAt) : null;
               const isPaid = PAID_STATUSES.has(order.status);
@@ -550,41 +694,6 @@ export default function AdminOrdersClient({
             })
           )}
         </div>
-        {pagination ? (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-accent/10 pt-5 text-xs">
-            <p className="text-ink-muted">
-              Page <span className="font-semibold text-ink">{pagination.page}</span> of{" "}
-              <span className="font-semibold text-ink">{pagination.totalPages}</span> ·{" "}
-              <span className="font-semibold text-ink">{pagination.total}</span> total
-            </p>
-            <div className="flex items-center gap-2">
-              {pagination.hasPrev ? (
-                <Link
-                  href={`/admin/orders?page=${pagination.page - 1}`}
-                  className="rounded-full border border-accent/10 bg-surface-card px-4 py-2 font-semibold uppercase tracking-[0.2em] text-ink"
-                >
-                  Prev
-                </Link>
-              ) : (
-                <span className="rounded-full border border-accent/10 bg-surface-elevated px-4 py-2 font-semibold uppercase tracking-[0.2em] text-ink-muted">
-                  Prev
-                </span>
-              )}
-              {pagination.hasNext ? (
-                <Link
-                  href={`/admin/orders?page=${pagination.page + 1}`}
-                  className="rounded-full bg-accent px-4 py-2 font-semibold uppercase tracking-[0.2em] text-night"
-                >
-                  Next
-                </Link>
-              ) : (
-                <span className="rounded-full bg-ink/20 px-4 py-2 font-semibold uppercase tracking-[0.2em] text-night/70">
-                  Next
-                </span>
-              )}
-            </div>
-          </div>
-        ) : null}
       </div>
     </div>
   );
