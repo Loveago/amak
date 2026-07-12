@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const env = require("../config/env");
 const prisma = require("../config/prisma");
 const { recordPaymentEvent, markPaymentVerified } = require("../services/payment.service");
-const { ensureOrderWalletCredits } = require("../services/order.service");
+const { ensureOrderWalletCredits, creditOrderCommissionsOnDelivery } = require("../services/order.service");
 const { normalizeStatus: normalizeShankaStatus } = require("../services/shanka.service");
 const { normalizeStatus: normalizeXpressStatus } = require("../services/xpress.service");
 
@@ -136,7 +136,14 @@ async function shankaWebhook(req, res, next) {
       await prisma.order.update({ where: { id: order.id }, data });
 
       if (delivered && order.status === "FAILED") {
-        await ensureOrderWalletCredits({ ...order, status: data.status || order.status });
+        const refreshedOrder = { ...order, status: data.status || order.status };
+        await ensureOrderWalletCredits(refreshedOrder);
+        await creditOrderCommissionsOnDelivery(refreshedOrder);
+      }
+
+      // Commission on delivery for PAID → FULFILLED transition
+      if (delivered && order.status === "PAID") {
+        await creditOrderCommissionsOnDelivery(order);
       }
 
       results.push({ reference: update.reference, matched: true, status: providerStatus });
@@ -219,6 +226,12 @@ async function xpressWebhook(req, res, next) {
 
         if (delivered && order.status === "FAILED") {
           await ensureOrderWalletCredits({ ...order, status: data.status || order.status });
+          await creditOrderCommissionsOnDelivery({ ...order, status: data.status || order.status });
+        }
+
+        // Commission on delivery for PAID → FULFILLED transition
+        if (delivered && order.status === "PAID") {
+          await creditOrderCommissionsOnDelivery(order);
         }
 
         results.push({ reference: item.reference, matched: true, status: providerStatus });
@@ -268,6 +281,12 @@ async function xpressWebhook(req, res, next) {
 
         if (delivered && fallbackOrder.status === "FAILED") {
           await ensureOrderWalletCredits({ ...fallbackOrder, status: data.status || fallbackOrder.status });
+          await creditOrderCommissionsOnDelivery({ ...fallbackOrder, status: data.status || fallbackOrder.status });
+        }
+
+        // Commission on delivery for PAID → FULFILLED transition
+        if (delivered && fallbackOrder.status === "PAID") {
+          await creditOrderCommissionsOnDelivery(fallbackOrder);
         }
 
         return res.json({
@@ -301,6 +320,12 @@ async function xpressWebhook(req, res, next) {
 
     if (delivered && order.status === "FAILED") {
       await ensureOrderWalletCredits({ ...order, status: data.status || order.status });
+      await creditOrderCommissionsOnDelivery({ ...order, status: data.status || order.status });
+    }
+
+    // Commission on delivery for PAID → FULFILLED transition
+    if (delivered && order.status === "PAID") {
+      await creditOrderCommissionsOnDelivery(order);
     }
 
     return res.json({

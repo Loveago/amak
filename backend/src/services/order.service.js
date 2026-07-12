@@ -3,6 +3,7 @@ const env = require("../config/env");
 const logger = require("../config/logger");
 const { creditWallet, debitWallet } = require("./wallet.service");
 const { creditAffiliateCommissions } = require("./affiliate.service");
+const { COMMISSION_RATES } = require("../config/affiliate");
 const {
   purchaseDataBundle: purchaseEncartaBundle,
   fetchOrderStatus: fetchEncartaOrderStatus,
@@ -227,6 +228,22 @@ async function ensureOrderWalletCredits(order) {
     });
   }
 
+  // NOTE: Commissions are NOT credited here. They are deferred until the order
+  // is actually delivered (FULFILLED). See creditOrderCommissionsOnDelivery().
+}
+
+/**
+ * Credit affiliate commissions when an order transitions to a DELIVERED / FULFILLED
+ * state. This ensures upline agents only receive their commission after the
+ * end customer's order is actually delivered (not when it is merely paid).
+ *
+ * Idempotent: will skip if a net-positive commission already exists for this order.
+ */
+async function creditOrderCommissionsOnDelivery(order) {
+  if (!order?.agentId || !order.totalAmountGhs) {
+    return;
+  }
+
   const referrals = await prisma.referral.findMany({
     where: { childId: order.agentId },
     orderBy: { level: "asc" }
@@ -237,7 +254,7 @@ async function ensureOrderWalletCredits(order) {
       continue;
     }
 
-    const rate = require("../config/affiliate").COMMISSION_RATES[referral.level];
+    const rate = COMMISSION_RATES[referral.level];
     if (!rate) {
       continue;
     }
@@ -252,6 +269,7 @@ async function ensureOrderWalletCredits(order) {
     });
     const netCommission = Number(commissionAgg._sum?.amountGhs || 0);
 
+    // Only credit if no net-positive commission exists yet for this order
     if (netCommission <= 0) {
       const amount = Number(order.totalAmountGhs) * rate;
       await creditWallet({
@@ -259,7 +277,7 @@ async function ensureOrderWalletCredits(order) {
         amountGhs: amount,
         type: "COMMISSION",
         reference: order.id,
-        metadata: { level: referral.level, sourceAgentId: order.agentId, reason: "failed_order_retry_success" }
+        metadata: { level: referral.level, sourceAgentId: order.agentId, delivered: true }
       });
     }
   }
@@ -492,6 +510,7 @@ async function dispatchOrderToProvider(orderId, options = {}) {
             : await purchaseEncartaBundle({ networkKey, recipient, capacity });
 
     const status = normalizeStatus(result.status) || "PLACED";
+    const deliveredNow = DELIVERED_STATUSES.has(status);
     const updates = {
       providerReference: result.reference ? String(result.reference) : null,
       providerStatus: status,
@@ -502,19 +521,34 @@ async function dispatchOrderToProvider(orderId, options = {}) {
       providerLastCheckedAt: new Date()
     };
 
-    if (DELIVERED_STATUSES.has(status)) {
+    if (deliveredNow) {
       updates.status = "FULFILLED";
     }
 
     await prisma.order.update({ where: { id: orderId }, data: updates });
 
-    if (DELIVERED_STATUSES.has(status) && order.status === "FAILED") {
+    // --- Commission crediting on delivery ---
+    // This handles the case where a fresh PAID order gets dispatched and the
+    // provider immediately confirms delivery (common for auto-fulfillment).
+    if (deliveredNow && order.status === "PAID") {
+      const refreshedOrder = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: { items: { include: { product: { include: { category: true } } } } }
+      });
+      if (refreshedOrder) {
+        await creditOrderCommissionsOnDelivery(refreshedOrder);
+      }
+    }
+
+    // This handles the case where a previously FAILED order is retried and succeeds
+    if (deliveredNow && order.status === "FAILED") {
       const refreshedOrder = await prisma.order.findUnique({
         where: { id: orderId },
         include: { items: { include: { product: { include: { category: true } } } } }
       });
       if (refreshedOrder) {
         await ensureOrderWalletCredits(refreshedOrder);
+        await creditOrderCommissionsOnDelivery(refreshedOrder);
       }
     }
   } catch (error) {
@@ -588,6 +622,10 @@ async function refreshOrderProviderStatus(order, options = {}) {
       return { ...order, providerLastCheckedAt: new Date() };
     }
 
+    const deliveredNow = DELIVERED_STATUSES.has(status);
+    const revivedFromFailed = deliveredNow && order.status === "FAILED";
+    const deliveredFromPaid = deliveredNow && order.status === "PAID";
+
     const updates = {
       providerStatus: status,
       providerPayload:
@@ -596,7 +634,8 @@ async function refreshOrderProviderStatus(order, options = {}) {
           : { provider, raw: result.raw },
       providerLastCheckedAt: new Date()
     };
-    if (DELIVERED_STATUSES.has(status)) {
+
+    if (deliveredNow) {
       updates.status = "FULFILLED";
     } else if (
       status === "FAILED" &&
@@ -616,13 +655,23 @@ async function refreshOrderProviderStatus(order, options = {}) {
     }
     await prisma.order.update({ where: { id: order.id }, data: updates });
 
-    if (DELIVERED_STATUSES.has(status) && order.status === "FAILED") {
+    // --- Commission crediting on delivery ---
+    if (revivedFromFailed) {
       const refreshedOrder = await prisma.order.findUnique({
         where: { id: order.id },
         include: { items: { include: { product: { include: { category: true } } } } }
       });
       if (refreshedOrder) {
         await ensureOrderWalletCredits(refreshedOrder);
+        await creditOrderCommissionsOnDelivery(refreshedOrder);
+      }
+    } else if (deliveredFromPaid) {
+      const refreshedOrder = await prisma.order.findUnique({
+        where: { id: order.id },
+        include: { items: { include: { product: { include: { category: true } } } } }
+      });
+      if (refreshedOrder) {
+        await creditOrderCommissionsOnDelivery(refreshedOrder);
       }
     }
 
@@ -690,11 +739,9 @@ async function settleOrderPayment(orderId, reference) {
     });
   }
 
-  await creditAffiliateCommissions({
-    agentId: order.agentId,
-    orderId,
-    orderTotalGhs: order.totalAmountGhs
-  });
+  // NOTE: Commissions are NOT credited here at payment time. They will be
+  // credited when the order is actually delivered (FULFILLED), which happens
+  // inside dispatchOrderToProvider() or refreshOrderProviderStatus().
 
   await dispatchOrderToProvider(orderId);
 
@@ -705,5 +752,6 @@ module.exports = {
   settleOrderPayment,
   dispatchOrderToProvider,
   refreshOrderProviderStatus,
-  ensureOrderWalletCredits
+  ensureOrderWalletCredits,
+  creditOrderCommissionsOnDelivery
 };

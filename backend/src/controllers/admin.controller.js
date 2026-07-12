@@ -19,7 +19,7 @@ const { COMMISSION_RATES } = require("../config/affiliate");
 const env = require("../config/env");
 const logger = require("../config/logger");
 const { enforceProductLimit } = require("../services/subscription.service");
-const { refreshOrderProviderStatus, settleOrderPayment, dispatchOrderToProvider, ensureOrderWalletCredits } = require("../services/order.service");
+const { refreshOrderProviderStatus, settleOrderPayment, dispatchOrderToProvider, ensureOrderWalletCredits, creditOrderCommissionsOnDelivery } = require("../services/order.service");
 const { markPaymentVerified } = require("../services/payment.service");
 const { verifyTransaction } = require("../services/paystack.service");
 const { getProviderConfig, setForceProvider, resolveActiveProvider } = require("../services/provider.service");
@@ -1048,6 +1048,19 @@ async function fulfillOrder(req, res, next) {
       where: { id },
       data: { status }
     });
+
+    // Credit commissions when admin manually marks an order as fulfilled
+    if (status === "FULFILLED") {
+      const fullOrder = await prisma.order.findUnique({
+        where: { id },
+        include: { items: { include: { product: { include: { category: true } } } } }
+      });
+      if (fullOrder) {
+        await ensureOrderWalletCredits(fullOrder);
+        await creditOrderCommissionsOnDelivery(fullOrder);
+      }
+    }
+
     return res.json({ success: true, data: order });
   } catch (error) {
     return next(error);
@@ -1177,6 +1190,18 @@ async function fulfillOrdersByHour(req, res, next) {
       return res.status(400).json({ success: false, error: "invalid time window" });
     }
 
+    // Fetch matching orders before updating so we can credit commissions
+    const matchingOrders = await prisma.order.findMany({
+      where: {
+        status: "PAID",
+        createdAt: {
+          gte: start,
+          lt: end
+        }
+      },
+      select: { id: true, agentId: true, totalAmountGhs: true }
+    });
+
     const result = await prisma.order.updateMany({
       where: {
         status: "PAID",
@@ -1191,6 +1216,11 @@ async function fulfillOrdersByHour(req, res, next) {
         providerLastCheckedAt: new Date()
       }
     });
+
+    // Credit commissions for each fulfilled order
+    for (const match of matchingOrders) {
+      await creditOrderCommissionsOnDelivery(match);
+    }
 
     await prisma.auditLog.create({
       data: {
@@ -1569,6 +1599,17 @@ async function bulkUpdateOrders(req, res, next) {
       where,
       data: { status: targetStatus }
     });
+
+    // Credit commissions for orders being set to FULFILLED
+    if (targetStatus === "FULFILLED") {
+      const fulfilledOrders = await prisma.order.findMany({
+        where,
+        select: { id: true, agentId: true, totalAmountGhs: true }
+      });
+      for (const fulfilledOrder of fulfilledOrders) {
+        await creditOrderCommissionsOnDelivery(fulfilledOrder);
+      }
+    }
 
     // Audit log
     await prisma.auditLog.create({
