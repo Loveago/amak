@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 
 export default function MobileDrawer({ title, buttonLabel = "Menu", items = [], footer = null }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [animating, setAnimating] = useState(false);
+  const closeTimerRef = useRef(null);
 
   useEffect(() => {
     setMounted(true);
@@ -20,13 +21,22 @@ export default function MobileDrawer({ title, buttonLabel = "Menu", items = [], 
     } else {
       document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+    };
   }, [open]);
 
   const handleClose = useCallback(() => {
     setAnimating(false);
-    setTimeout(() => setOpen(false), 300);
+    closeTimerRef.current = setTimeout(() => setOpen(false), 300);
   }, []);
+
+  // Guard against removeChild errors when component unmounts during portal lifecycle
+  const portalContainer = mounted ? document.body : null;
 
   return (
     <div className="lg:hidden">
@@ -44,7 +54,7 @@ export default function MobileDrawer({ title, buttonLabel = "Menu", items = [], 
         <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-ink">{buttonLabel}</span>
       </button>
 
-      {open && mounted
+      {open && portalContainer
         ? createPortal(
             <div className={`fixed inset-0 z-[100] mobile-drawer-root ${animating ? "drawer-open" : "drawer-closing"}`}>
               <button
@@ -125,7 +135,7 @@ export default function MobileDrawer({ title, buttonLabel = "Menu", items = [], 
                 </div>
               </div>
             </div>,
-            document.body
+            portalContainer
           )
         : null}
     </div>

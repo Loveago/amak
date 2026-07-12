@@ -15,7 +15,12 @@ const manrope = Manrope({
 
 export const metadata = {
   title: "ABK Enterprise",
-  description: "Ultra-modern mobile data bundle platform for Ghana."
+  description: "Ultra-modern mobile data bundle platform for Ghana.",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" }
+    ]
+  }
 };
 
 export default function RootLayout({ children }) {

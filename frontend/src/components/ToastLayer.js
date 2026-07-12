@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 const VARIANT_STYLES = {
   success: "border-accent/20 bg-accent/10 text-accent",
   warning: "border-yellow-500/20 bg-yellow-500/10 text-yellow-300",
-  error: "border-red-500/20 bg-red-500/50/10 text-red-400",
+  error: "border-red-500/20 bg-red-500/10 text-red-400",
   info: "border-accent/10 bg-surface-card text-ink"
 };
 
