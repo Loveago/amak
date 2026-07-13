@@ -248,7 +248,7 @@ cd backend && npm install
 npx prisma migrate deploy
 npx prisma generate
 pm2 restart amak-backend --update-env
-cd ../frontend && npm install && npm run build && c
+cd ../frontend && npm install && npm run build && pm2 restart amak-frontend
 ```
 
 ---

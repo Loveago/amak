@@ -133,6 +133,7 @@ export default function AdminOrdersClient({
     params.set("page", "1");
     if (searchInput) params.set("search", searchInput);
     if (searchByInput && searchByInput !== "all") params.set("searchBy", searchByInput);
+    if (searchInput && searchByInput === "all") params.set("searchBy", "all");
     if (statusInput) params.set("status", statusInput);
     if (dateFromInput) params.set("dateFrom", dateFromInput);
     if (dateToInput) params.set("dateTo", dateToInput);
