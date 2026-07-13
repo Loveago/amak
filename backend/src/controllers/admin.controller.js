@@ -772,9 +772,8 @@ async function listOrders(req, res, next) {
     const searchBy = String(req.query.searchBy || "").trim().toLowerCase();
     const statusFilter = String(req.query.status || "").trim().toUpperCase();
 
-    // Date range filtering
-    const dateFromRaw = req.query.dateFrom;
-    const dateToRaw = req.query.dateTo;
+    // Single date filtering
+    const dateRaw = req.query.date;
     const where = {};
 
     // Status filter
@@ -783,24 +782,18 @@ async function listOrders(req, res, next) {
       where.status = statusFilter;
     }
 
-    // Date range filter
-    if (dateFromRaw || dateToRaw) {
-      where.createdAt = {};
-      if (dateFromRaw) {
-        const fromDate = new Date(dateFromRaw);
-        if (!isNaN(fromDate.getTime())) {
-          where.createdAt.gte = fromDate;
-        }
-      }
-      if (dateToRaw) {
-        const toDate = new Date(dateToRaw);
-        if (!isNaN(toDate.getTime())) {
-          toDate.setHours(23, 59, 59, 999);
-          where.createdAt.lte = toDate;
-        }
-      }
-      if (!where.createdAt.gte && !where.createdAt.lte) {
-        delete where.createdAt;
+    // Single date filter (full day: 00:00:00.000 to 23:59:59.999)
+    if (dateRaw) {
+      const dateObj = new Date(dateRaw);
+      if (!isNaN(dateObj.getTime())) {
+        const startOfDay = new Date(dateObj);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(dateObj);
+        endOfDay.setHours(23, 59, 59, 999);
+        where.createdAt = {
+          gte: startOfDay,
+          lte: endOfDay
+        };
       }
     }
 

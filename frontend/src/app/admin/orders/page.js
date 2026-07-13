@@ -96,14 +96,12 @@ export default async function AdminOrdersPage({ searchParams }) {
     const search = searchParams?.search;
     const searchBy = searchParams?.searchBy;
     const status = searchParams?.status;
-    const dateFrom = searchParams?.dateFrom;
-    const dateTo = searchParams?.dateTo;
+    const date = searchParams?.date;
 
     if (search) params.set("search", search);
     if (searchBy) params.set("searchBy", searchBy);
     if (status) params.set("status", status);
-    if (dateFrom) params.set("dateFrom", dateFrom);
-    if (dateTo) params.set("dateTo", dateTo);
+    if (date) params.set("date", date);
 
     const payload = await serverApi(`/admin/orders?${params.toString()}`);
     orders = payload?.items || [];

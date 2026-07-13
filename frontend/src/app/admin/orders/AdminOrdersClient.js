@@ -118,15 +118,14 @@ export default function AdminOrdersClient({
   const [searchInput, setSearchInput] = useState(searchParams.get("search") || "");
   const [searchByInput, setSearchByInput] = useState(searchParams.get("searchBy") || "all");
   const [statusInput, setStatusInput] = useState(searchParams.get("status") || "");
-  const [dateFromInput, setDateFromInput] = useState(searchParams.get("dateFrom") || "");
-  const [dateToInput, setDateToInput] = useState(searchParams.get("dateTo") || "");
+  const [dateInput, setDateInput] = useState(searchParams.get("date") || "");
 
   const [copiedOrderId, setCopiedOrderId] = useState("");
   const [actionFeedback, setActionFeedback] = useState({});
   const [isPending, startTransition] = useTransition();
   const searchInputRef = useRef(null);
 
-  const hasActiveFilters = searchInput || statusInput || dateFromInput || dateToInput;
+  const hasActiveFilters = searchInput || statusInput || dateInput;
 
   const applyFilters = useCallback(() => {
     const params = new URLSearchParams();
@@ -135,17 +134,15 @@ export default function AdminOrdersClient({
     if (searchByInput && searchByInput !== "all") params.set("searchBy", searchByInput);
     if (searchInput && searchByInput === "all") params.set("searchBy", "all");
     if (statusInput) params.set("status", statusInput);
-    if (dateFromInput) params.set("dateFrom", dateFromInput);
-    if (dateToInput) params.set("dateTo", dateToInput);
+    if (dateInput) params.set("date", dateInput);
     router.push(`${pathname}?${params.toString()}`);
-  }, [searchInput, searchByInput, statusInput, dateFromInput, dateToInput, router, pathname]);
+  }, [searchInput, searchByInput, statusInput, dateInput, router, pathname]);
 
   const clearFilters = useCallback(() => {
     setSearchInput("");
     setSearchByInput("all");
     setStatusInput("");
-    setDateFromInput("");
-    setDateToInput("");
+    setDateInput("");
     router.push(pathname);
     if (searchInputRef.current) {
       searchInputRef.current.focus();
@@ -255,7 +252,7 @@ export default function AdminOrdersClient({
   const activeFilterCount = [
     searchInput,
     statusInput,
-    dateFromInput || dateToInput
+    dateInput
   ].filter(Boolean).length;
 
   // Status badge for the selected status
@@ -351,22 +348,13 @@ export default function AdminOrdersClient({
                 </select>
               </div>
 
-              {/* Date range */}
+              {/* Single date filter */}
               <div>
-                <label className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">From</label>
+                <label className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">Date</label>
                 <input
                   type="date"
-                  value={dateFromInput}
-                  onChange={(e) => setDateFromInput(e.target.value)}
-                  className="mt-1.5 block rounded-xl border border-accent/10 bg-surface-card px-3 py-2.5 text-sm focus:border-accent/30 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">To</label>
-                <input
-                  type="date"
-                  value={dateToInput}
-                  onChange={(e) => setDateToInput(e.target.value)}
+                  value={dateInput}
+                  onChange={(e) => setDateInput(e.target.value)}
                   className="mt-1.5 block rounded-xl border border-accent/10 bg-surface-card px-3 py-2.5 text-sm focus:border-accent/30 focus:outline-none"
                 />
               </div>
@@ -409,9 +397,9 @@ export default function AdminOrdersClient({
                   Status: {selectedStatusLabel}
                 </span>
               ) : null}
-              {dateFromInput || dateToInput ? (
+              {dateInput ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-elevated px-2.5 py-1 text-[10px] font-medium text-ink-muted">
-                  {dateFromInput || "..."} → {dateToInput || "..."}
+                  Date: {dateInput}
                 </span>
               ) : null}
             </div>
