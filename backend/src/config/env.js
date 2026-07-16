@@ -29,7 +29,7 @@ const env = {
   orderWorkerIntervalMs: Number(process.env.ORDER_WORKER_INTERVAL_MS || 10000),
   shankaStatusWorkerIntervalMs: Number(process.env.SHANKA_STATUS_WORKER_INTERVAL_MS || 90000),
   elitnutStatusWorkerIntervalMs: Number(process.env.ELITENUT_STATUS_WORKER_INTERVAL_MS || 90000),
-  reconcilerIntervalMs: Number(process.env.RECONCILER_INTERVAL_MS || 120000),
+  reconcilerIntervalMs: Number(process.env.RECONCILER_INTERVAL_MS || 60000),
   encartaBaseUrl:
     process.env.ENCARTA_BASE_URL || process.env.ACKMORRE_BASE_URL || "https://encartastores.com/api",
   encartaStatusUrl: process.env.ENCARTA_STATUS_URL || process.env.ACKMORRE_STATUS_URL || "",

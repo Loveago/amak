@@ -11,8 +11,16 @@ async function tick() {
   try {
     const results = await runReconciliation();
     const reconciled = results.filter((result) => result.reconciled);
-    if (reconciled.length > 0) {
-      logger.info(`Reconciler tick: ${reconciled.length}/${results.length} order(s) reconciled`);
+    if (reconciled.length > 0 || results.length > 0) {
+      logger.info(
+        `Reconciler tick: ${reconciled.length}/${results.length} order(s) reconciled` +
+          (results.length > 0
+            ? ` (not_reconciled: ${results
+                .filter((r) => !r.reconciled)
+                .map((r) => `${r.orderId}=${r.reason || r.paystackStatus || "?"}`)
+                .join(", ")})`
+            : "")
+      );
     }
   } catch (error) {
     logger.error(`Reconciler worker tick error: ${error.message}`);
@@ -29,13 +37,15 @@ async function start() {
 
   try {
     const config = await ensureReconcilerActive();
-    logger.info(`Reconciler active since ${config.activatedAt.toISOString()} (orders before this are ignored)`);
+    logger.info(
+      `Reconciler active since ${config.activatedAt.toISOString()} (orders before this are ignored)`
+    );
   } catch (error) {
     logger.error(`Reconciler activation failed: ${error.message}`);
     return;
   }
 
-  const intervalMs = env.reconcilerIntervalMs || 120000;
+  const intervalMs = env.reconcilerIntervalMs || 60000;
   logger.info(`Reconciler worker started (interval: ${intervalMs}ms)`);
   setInterval(tick, intervalMs);
   tick();
