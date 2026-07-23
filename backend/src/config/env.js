@@ -30,6 +30,14 @@ const env = {
   shankaStatusWorkerIntervalMs: Number(process.env.SHANKA_STATUS_WORKER_INTERVAL_MS || 90000),
   elitnutStatusWorkerIntervalMs: Number(process.env.ELITENUT_STATUS_WORKER_INTERVAL_MS || 90000),
   reconcilerIntervalMs: Number(process.env.RECONCILER_INTERVAL_MS || 60000),
+  // Wait before reconciling so webhook/callback can settle first.
+  reconcilerMinAgeMs: Number(process.env.RECONCILER_MIN_AGE_MS || 120000),
+  // Ignore ancient abandoned CREATED carts so they cannot monopolize the batch.
+  reconcilerMaxAgeMs: Number(process.env.RECONCILER_MAX_AGE_MS || 7 * 24 * 60 * 60 * 1000),
+  reconcilerBatchSize: Number(process.env.RECONCILER_BATCH_SIZE || 50),
+  // Optional ISO timestamp to raise the cutover above process start time.
+  // By default every backend restart is the cutover ("now").
+  reconcilerActivatedAt: process.env.RECONCILER_ACTIVATED_AT || "",
   encartaBaseUrl:
     process.env.ENCARTA_BASE_URL || process.env.ACKMORRE_BASE_URL || "https://encartastores.com/api",
   encartaStatusUrl: process.env.ENCARTA_STATUS_URL || process.env.ACKMORRE_STATUS_URL || "",

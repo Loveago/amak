@@ -29,8 +29,9 @@ export default async function AdminReconciledOrdersPage() {
       <div className="glass rounded-3xl p-6">
         <h2 className="font-display text-2xl text-ink">Reconciled Orders</h2>
         <p className="text-sm text-ink-muted">
-          Orders automatically settled by the reconciler after confirming payment on Paystack. The reconciler runs every 2
-          minutes and only inspects unpaid orders placed after it became active.
+          Orders automatically settled by the reconciler after confirming payment on Paystack. Each backend restart sets a
+          fresh cutover at process start — only unpaid orders placed after that restart are inspected. Brand-new checkouts
+          are skipped briefly so the normal callback/webhook path can finish first.
         </p>
         <p className="mt-2 text-xs uppercase tracking-[0.2em] text-ink-muted">Total reconciled: {total}</p>
       </div>

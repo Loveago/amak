@@ -1,6 +1,10 @@
 const env = require("../config/env");
 const logger = require("../config/logger");
-const { ensureReconcilerActive, runReconciliation } = require("../services/reconciler.service");
+const {
+  ensureReconcilerActive,
+  resolveActivationFloor,
+  runReconciliation
+} = require("../services/reconciler.service");
 
 let running = false;
 
@@ -12,14 +16,14 @@ async function tick() {
     const results = await runReconciliation();
     const reconciled = results.filter((result) => result.reconciled);
     if (reconciled.length > 0 || results.length > 0) {
+      const notReconciled = results
+        .filter((r) => !r.reconciled)
+        .slice(0, 15)
+        .map((r) => `${r.orderId}=${r.reason || r.paystackStatus || r.error || "?"}`)
+        .join(", ");
       logger.info(
         `Reconciler tick: ${reconciled.length}/${results.length} order(s) reconciled` +
-          (results.length > 0
-            ? ` (not_reconciled: ${results
-                .filter((r) => !r.reconciled)
-                .map((r) => `${r.orderId}=${r.reason || r.paystackStatus || "?"}`)
-                .join(", ")})`
-            : "")
+          (notReconciled ? ` (sample not_reconciled: ${notReconciled})` : "")
       );
     }
   } catch (error) {
@@ -37,8 +41,11 @@ async function start() {
 
   try {
     const config = await ensureReconcilerActive();
+    const floor = resolveActivationFloor(config);
     logger.info(
-      `Reconciler active since ${config.activatedAt.toISOString()} (orders before this are ignored)`
+      `Reconciler cutover is process start ${floor.toISOString()} ` +
+        `(orders created before this restart are ignored` +
+        `${env.reconcilerActivatedAt ? `; env raise RECONCILER_ACTIVATED_AT=${env.reconcilerActivatedAt}` : ""})`
     );
   } catch (error) {
     logger.error(`Reconciler activation failed: ${error.message}`);

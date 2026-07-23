@@ -43,7 +43,7 @@ async function verifyTransaction(reference) {
   }
 
   const response = await fetcher(
-    `https://api.paystack.co/transaction/verify/${reference}`,
+    `https://api.paystack.co/transaction/verify/${encodeURIComponent(String(reference || "").trim())}`,
     {
       headers: { Authorization: `Bearer ${env.paystackSecret}` }
     }
